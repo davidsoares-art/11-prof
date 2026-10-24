@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guia Prático de Tecnologia: Derivadas nas Calculadoras Gráficas</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        casio: { DEFAULT: '#005dac', light: '#e6f0fa', dark: '#003a6c' },
+                        tinspire: { DEFAULT: '#cc0000', light: '#fde8e8', dark: '#800000' },
+                        numworks: { DEFAULT: '#ffb700', light: '#fff8e6', dark: '#b38000' },
+                        ti84: { DEFAULT: '#2e7d32', light: '#e8f5e9', dark: '#1b5e20' },
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .key-btn {
+            display: inline-block;
+            background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+            border: 1px solid #cbd5e1;
+            border-bottom: 3px solid #94a3b8;
+            border-radius: 6px;
+            padding: 2px 8px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #1e293b;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            font-family: monospace;
+            white-space: nowrap;
+        }
+        .key-btn-dark {
+            background: linear-gradient(180deg, #334155 0%, #0f172a 100%);
+            border: 1px solid #1e293b;
+            border-bottom: 3px solid #020617;
+            color: #ffffff;
+        }
+        .key-btn-yellow {
+            background: linear-gradient(180deg, #fef08a 0%, #facc15 100%);
+            border: 1px solid #eab308;
+            border-bottom: 3px solid #ca8a04;
+            color: #854d0e;
+        }
+        .active-tab {
+            border-bottom: 3px solid currentColor;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen flex flex-col text-slate-800">
+
+    <!-- Header / Navbar Principal -->
+    <header class="bg-slate-900 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-blue-600 rounded-lg text-white">
+                    <i class="fa-solid fa-calculator text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight">Guia Prático de Tecnologia</h1>
+                    <p class="text-xs text-slate-400">Cálculo de Derivadas & Taxa de Variação nas Calculadoras Gráficas</p>
+                </div>
+            </div>
+            
+            <!-- Modalidade e Seleção da Calculadora (Tabs Principais) -->
+            <nav class="flex space-x-1 sm:space-x-2 bg-slate-800 p-1.5 rounded-xl border border-slate-700 overflow-x-auto max-w-full">
+                <button onclick="switchCalculator('casio')" id="tab-casio" class="calc-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition flex items-center space-x-1.5 text-slate-300 hover:text-white">
+                    <i class="fa-solid fa-microchip"></i>
+                    <span>CASIO fx-CG50</span>
+                </button>
+                <button onclick="switchCalculator('tinspire')" id="tab-tinspire" class="calc-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition flex items-center space-x-1.5 text-slate-300 hover:text-white">
+                    <i class="fa-solid fa-square-root-variable"></i>
+                    <span>TI-Nspire</span>
+                </button>
+                <button onclick="switchCalculator('numworks')" id="tab-numworks" class="calc-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition flex items-center space-x-1.5 text-slate-300 hover:text-white">
+                    <i class="fa-solid fa-gamepad"></i>
+                    <span>NumWorks</span>
+                </button>
+                <button onclick="switchCalculator('ti84')" id="tab-ti84" class="calc-tab px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition flex items-center space-x-1.5 text-slate-300 hover:text-white">
+                    <i class="fa-solid fa-laptop-code"></i>
+                    <span>TI-84 Plus</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Sub-Navbar de Tópicos (Derivadas) -->
+    <section class="bg-white border-b border-slate-200 shadow-sm sticky top-[61px] z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex overflow-x-auto space-x-6 py-3 text-sm font-medium text-slate-600 no-scrollbar">
+                <button onclick="switchTopic('ponto-calc')" id="topic-ponto-calc" class="topic-tab flex items-center space-x-2 text-blue-600 active-tab pb-1 whitespace-nowrap">
+                    <i class="fa-solid fa-hashtag"></i>
+                    <span>1. Derivada num Ponto (Cálculo)</span>
+                </button>
+                <button onclick="switchTopic('ponto-grafico')" id="topic-ponto-grafico" class="topic-tab flex items-center space-x-2 hover:text-blue-600 pb-1 whitespace-nowrap">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>2. Derivada num Ponto (Gráfico / Trace)</span>
+                </button>
+                <button onclick="switchTopic('tangente')" id="topic-tangente" class="topic-tab flex items-center space-x-2 hover:text-blue-600 pb-1 whitespace-nowrap">
+                    <i class="fa-solid fa-ruler-combined"></i>
+                    <span>3. Reta Tangente ao Gráfico</span>
+                </button>
+                <button onclick="switchTopic('funcao-derivada')" id="topic-funcao-derivada" class="topic-tab flex items-center space-x-2 hover:text-blue-600 pb-1 whitespace-nowrap">
+                    <i class="fa-solid fa-wave-square"></i>
+                    <span>4. Gráfico da Função Derivada f'(x)</span>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Conteúdo Principal -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- Banner Exemplo Global -->
+        <div class="bg-gradient-to-r from-slate-800 to-slate-900 rounded-2xl p-4 sm:p-5 text-white mb-6 shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <span class="bg-blue-500/20 text-blue-300 text-xs font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider border border-blue-400/30">Exemplo do Manual</span>
+                <h2 class="text-lg sm:text-xl font-bold mt-1 text-slate-100">Função de Estudo: <span class="text-yellow-400 font-mono">f(x) = 0.5(x - 3)² - 2</span> &nbsp;|&nbsp; <span class="text-emerald-400 font-mono">f(x) = x³ - 2x² - 5x</span></h2>
+                <p class="text-xs sm:text-sm text-slate-300 mt-1">Aprenda a calcular a taxa de variação (derivada) num ponto (ex: <span class="font-mono text-yellow-300">x = 6</span>) e a traçar a função derivada $f'(x)$.</p>
+            </div>
+            <div class="bg-slate-800/80 p-3 rounded-xl border border-slate-700 text-xs font-mono space-y-1 self-stretch md:self-auto min-w-[200px]">
+                <div class="text-slate-400 font-sans font-semibold mb-1">Resultados Esperados:</div>
+                <div><i class="fa-solid fa-check text-green-400 mr-1"></i> f'(6) de (0.5(x-3)²-2) = <strong class="text-yellow-300">3</strong></div>
+                <div><i class="fa-solid fa-check text-green-400 mr-1"></i> Reta Tangente em x=6: <strong class="text-emerald-300">y = 3x - 11</strong></div>
+            </div>
+        </div>
+
+        <!-- =================================================================== -->
+        <!-- SEÇÃO: CASIO fx-CG50 -->
+        <!-- =================================================================== -->
+        <div id="calc-casio" class="calc-content space-y-6">
+            
+            <!-- Header do Modelo -->
+            <div class="flex items-center space-x-3 bg-casio-light border-l-4 border-casio p-4 rounded-r-xl">
+                <div class="p-3 bg-casio rounded-lg text-white font-bold text-lg">CASIO</div>
+                <div>
+                    <h3 class="text-lg font-bold text-casio-dark">CASIO fx-CG50</h3>
+                    <p class="text-xs text-slate-600">Instruções passo a passo baseadas no Guia Prático de Tecnologia (Páginas 70-71 do manual)</p>
+                </div>
+            </div>
+
+            <!-- Tópico 1: Derivada num ponto (Run-Matrix) -->
+            <div class="topic-content topic-ponto-calc bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b pb-3">
+                    <h4 class="font-bold text-slate-800 text-lg flex items-center space-x-2">
+                        <span class="w-7 h-7 rounded-full bg-casio text-white text-sm flex items-center justify-center font-bold">1</span>
+                        <span>Taxa de variação num ponto no Menu Run-Matrix</span>
+                    </h4>
+                    <span class="bg-slate-100 text-slate-600 text-xs font-mono px-2.5 py-1 rounded-md">Menu 1: Run-Matrix</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Passo 1 -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-casio uppercase tracking-wide mb-1">Passo 1</div>
+                        <p class="text-sm font-medium mb-2">Acede ao ecrã principal</p>
+                        <p class="text-xs text-slate-600 mb-3">Prime a tecla <span class="key-btn">MENU</span> e seleciona a opção <span class="key-btn">1</span> <strong>Run-Matrix</strong>.</p>
+                        <div class="bg-slate-900 text-emerald-400 font-mono text-xs p-3 rounded-lg">
+                            MAIN MENU<br>
+                            > 1: Run-Matrix
+                        </div>
+                    </div>
+
+                    <!-- Passo 2 -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-casio uppercase tracking-wide mb-1">Passo 2</div>
+                        <p class="text-sm font-medium mb-2">Selecionar o comando de derivada</p>
+                        <p class="text-xs text-slate-600 mb-3">Prima <span class="key-btn">OPTN</span>, escolha as opções <span class="key-btn">CALC</span> (<span class="key-btn">F4</span>) e depois <span class="key-btn">d/dx</span> (<span class="key-btn">F2</span>).</p>
+                        <div class="bg-slate-900 text-emerald-400 font-mono text-xs p-3 rounded-lg">
+                            [OPTN] -> [F4] CALC<br>
+                            [F2] d/dx
+                        </div>
+                    </div>
+
+                    <!-- Passo 3 -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-casio uppercase tracking-wide mb-1">Passo 3</div>
+                        <p class="text-sm font-medium mb-2">Introduzir a expressão e o ponto</p>
+                        <p class="text-xs text-slate-600 mb-3">Insira a expressão na caixa principal e o valor de $x$ no ponto (ex: $x=6$). Prima <span class="key-btn key-btn-dark">EXE</span>.</p>
+                        <div class="bg-slate-900 text-yellow-300 font-mono text-xs p-3 rounded-lg">
+                            d/dx(0.5(x-3)²-2)|x=6<br>
+                            <span class="text-white text-right block mt-2 font-bold text-sm">3</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tópico 2: Derivada num ponto (Graph - Trace) -->
+            <div class="topic-content topic-ponto-grafico hidden bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b pb-3">
+                    <h4 class="font-bold text-slate-800 text-lg flex items-center space-x-2">
+                        <span class="w-7 h-7 rounded-full bg-casio text-white text-sm flex items-center justify-center font-bold">2</span>
+                        <span>Taxa de Variação no Gráfico (Trace)</span>
+                    </h4>
+                    <span class="bg-slate-100 text-slate-600 text-xs font-mono px-2.5 py-1 rounded-md">Menu 5: Graph</span>
+                </div>
+
+                <div class="bg-amber-50 border-l-4 border-amber-400 p-3.5 rounded-r-xl text-xs text-amber-800 mb-2">
+                    <i class="fa-solid fa-triangle-exclamation mr-1"></i> <strong>Nota Importante (SET UP):</strong> Para que a taxa de variação surja no ecrã quando ativada a função Trace, a opção <strong>Derivative</strong> da configuração da calculadora (<span class="key-btn key-btn-yellow">SHIFT</span> <span class="key-btn">MENU</span> [SET UP]) deverá estar em <strong>On</strong>.
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-casio uppercase tracking-wide mb-1">Passo 1</div>
+                        <p class="text-sm font-medium mb-2">Inserir a Função</p>
+                        <p class="text-xs text-slate-600 mb-2">Aceda ao menu <span class="key-btn">5 Graph</span>, insira em <strong>Y1</strong> a expressão <span class="font-mono text-blue-700">0.5(x-3)²-2</span>.</p>
+                        <p class="text-xs text-slate-600">Prima <span class="key-btn">F6</span> (DRAW) para obter o gráfico.</p>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-casio uppercase tracking-wide mb-1">Passo 2</div>
+                        <p class="text-sm font-medium mb-2">Ativar Função Trace</p>
+                        <p class="text-xs text-slate-600 mb-2">Aceda à função <strong>Trace</strong> premindo <span class="key-btn key-btn-yellow">SHIFT</span> <span class="key-btn">F1</span>.</p>
+                        <p class="text-xs text-slate-600">Escreva diretamente o número correspondente ao valor de $x$ pretendido (ex: <span class="font-mono font-bold">6</span>).</p>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-casio uppercase tracking-wide mb-1">Passo 3</div>
+                        <p class="text-sm font-medium mb-2">Confirmar e Ler a Derivada</p>
+                        <p class="text-xs text-slate-600 mb-2">Surgirá a caixa <span class="font-mono bg-slate-200 px-1 rounded">Enter X-Value: 6</span>. Prima <span class="key-btn key-btn-dark">EXE</span>.</p>
+                        <p class="text-xs text-slate-600">No rodapé do ecrã surgirá: <span class="font-mono text-blue-700 font-bold">dY/dX = 3</span> juntamente com as coordenadas <span class="font-mono">(X=6, Y=2.5)</span>.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tópico 3: Reta Tangente -->
+            <div class="topic-content topic-tangente hidden bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b pb-3">
+                    <h4 class="font-bold text-slate-800 text-lg flex items-center space-x-2">
+                        <span class="w-7 h-7 rounded-full bg-casio text-white text-sm flex items-center justify-center font-bold">3</span>
+                        <span>Traçar a Reta Tangente ao Gráfico</span>
+                    </h4>
+                    <span class="bg-slate-100 text-slate-600 text-xs font-mono px-2.5 py-1 rounded-md">Menu Graph -> Sketch</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-casio uppercase tracking-wide mb-1">Passo 1</div>
+                        <p class="text-sm font-medium mb-2">Desenhar o Gráfico</p>
+                        <p class="text-xs text-slate-600">Insira a função em <strong>Y1</strong> e prima <span class="key-btn">F6</span> (DRAW).</p>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-casio uppercase tracking-wide mb-1">Passo 2</div>
+                        <p class="text-sm font-medium mb-2">Ativar opção Tangent</p>
+                        <p class="text-xs text-slate-600 mb-2">Prima as teclas <span class="key-btn key-btn-yellow">SHIFT</span> <span class="key-btn">F4</span> (Sketch).</p>
+                        <p class="text-xs text-slate-600">Selecione a opção <strong>Tangent</strong> premindo <span class="key-btn">F2</span>.</p>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-casio uppercase tracking-wide mb-1">Passo 3</div>
+                        <p class="text-sm font-medium mb-2">Definir Abscissa do Ponto</p>
+                        <p class="text-xs text-slate-600 mb-2">Utilize as teclas de navegação ou digite diretamente a abcissa do ponto de tangência (ex: <span class="font-mono">6</span>) com o teclado.</p>
+                        <p class="text-xs text-slate-600">Prima <span class="key-btn key-btn-dark">EXE</span> para traçar e ver a equação da reta tangente no ecrã.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tópico 4: Gráfico da Função Derivada -->
+            <div class="topic-content topic-funcao-derivada hidden bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b pb-3">
+                    <h4 class="font-bold text-slate-800 text-lg flex items-center space-x-2">
+                        <span class="w-7 h-7 rounded-full bg-casio text-white text-sm flex items-center justify-center font-bold">4</span>
+                        <span>Gráfico da Função Taxa de Variação $f'(x)$</span>
+                    </h4>
+                    <span class="bg-slate-100 text-slate-600 text-xs font-mono px-2.5 py-1 rounded-md">Menu Graph -> CALC</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-casio uppercase tracking-wide mb-1">Passo 1</div>
+                        <p class="text-sm font-medium mb-2">Inserir o operador d/dx em Y1</p>
+                        <p class="text-xs text-slate-600 mb-2">Coloque o cursor em Y1, prima a tecla <span class="key-btn">OPTN</span> e escolha as opções <span class="key-btn">CALC</span> (<span class="key-btn">F2</span>) e <span class="key-btn">d/dx</span> (<span class="key-btn">F1</span>).</p>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-casio uppercase tracking-wide mb-1">Passo 2</div>
+                        <p class="text-sm font-medium mb-2">Definir para $x = x$</p>
+                        <p class="text-xs text-slate-600 mb-2">Insira a expressão da função (ex: <span class="font-mono">x³ - 2x² - 5x</span>) na caixa correspondente.</p>
+                        <p class="text-xs text-slate-600">Na caixa do valor de $x$, digite a variável <span class="key-btn">x,θ,T</span> para obter $x=x$. Prima <span class="key-btn key-btn-dark">EXE</span>.</p>
+                        <div class="bg-slate-900 text-yellow-300 font-mono text-xs p-2 rounded mt-2">Y1 = d/dx(x³-2x²-5x)|x=x</div>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-casio uppercase tracking-wide mb-1">Passo 3</div>
+                        <p class="text-sm font-medium mb-2">Visualizar a Derivada</p>
+                        <p class="text-xs text-slate-600">Prima a tecla <span class="key-btn">F6</span> (DRAW) para visualizar a representação gráfica contínua da função taxa de variação $f'(x)$.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactive Quiz / Checklist para CASIO -->
+            <div class="bg-slate-800 text-white p-5 rounded-2xl shadow-md">
+                <h5 class="font-bold text-base mb-3 flex items-center space-x-2 text-casio-light">
+                    <i class="fa-solid fa-list-check text-yellow-400"></i>
+                    <span>Checklist Rápida de Comandos CASIO fx-CG50</span>
+                </h5>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <label class="flex items-center space-x-2 bg-slate-700/60 p-2.5 rounded-lg border border-slate-600 cursor-pointer hover:bg-slate-700">
+                        <input type="checkbox" class="rounded text-casio focus:ring-casio">
+                        <span>Derivada no Run-Matrix: <span class="font-mono text-yellow-300">OPTN -> F4 (CALC) -> F2 (d/dx)</span></span>
+                    </label>
+                    <label class="flex items-center space-x-2 bg-slate-700/60 p-2.5 rounded-lg border border-slate-600 cursor-pointer hover:bg-slate-700">
+                        <input type="checkbox" class="rounded text-casio focus:ring-casio">
+                        <span>Mostrar Derivative no Trace: <span class="font-mono text-yellow-300">SHIFT MENU (SET UP) -> Derivative On</span></span>
+                    </label>
+                    <label class="flex items-center space-x-2 bg-slate-700/60 p-2.5 rounded-lg border border-slate-600 cursor-pointer hover:bg-slate-700">
+                        <input type="checkbox" class="rounded text-casio focus:ring-casio">
+                        <span>Reta Tangente: <span class="font-mono text-yellow-300">SHIFT F4 (Sketch) -> F2 (Tangent)</span></span>
+                    </label>
+                    <label class="flex items-center space-x-2 bg-slate-700/60 p-2.5 rounded-lg border border-slate-600 cursor-pointer hover:bg-slate-700">
+                        <input type="checkbox" class="rounded text-casio focus:ring-casio">
+                        <span>Gráfico de $f'(x)$: <span class="font-mono text-yellow-300">Y1 = d/dx(f(x))|x=x</span></span>
+                    </label>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- =================================================================== -->
+        <!-- SEÇÃO: TI-Nspire -->
+        <!-- =================================================================== -->
+        <div id="calc-tinspire" class="calc-content hidden space-y-6">
+            
+            <!-- Header do Modelo -->
+            <div class="flex items-center space-x-3 bg-tinspire-light border-l-4 border-tinspire p-4 rounded-r-xl">
+                <div class="p-3 bg-tinspire rounded-lg text-white font-bold text-lg">TI</div>
+                <div>
+                    <h3 class="text-lg font-bold text-tinspire-dark">Texas Instruments TI-Nspire</h3>
+                    <p class="text-xs text-slate-600">Instruções passo a passo baseadas no Guia Prático de Tecnologia (Página 71 do manual)</p>
+                </div>
+            </div>
+
+            <!-- Tópico 1: Derivada num ponto (Calculadora) -->
+            <div class="topic-content topic-ponto-calc bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b pb-3">
+                    <h4 class="font-bold text-slate-800 text-lg flex items-center space-x-2">
+                        <span class="w-7 h-7 rounded-full bg-tinspire text-white text-sm flex items-center justify-center font-bold">1</span>
+                        <span>Derivada Numérica num Ponto (Aplicação Calculadora)</span>
+                    </h4>
+                    <span class="bg-slate-100 text-slate-600 text-xs font-mono px-2.5 py-1 rounded-md">Calculadora -> menu</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-tinspire uppercase tracking-wide mb-1">Passo 1</div>
+                        <p class="text-sm font-medium mb-2">Aceder ao Menu de Cálculo</p>
+                        <p class="text-xs text-slate-600 mb-2">Prima a tecla <span class="key-btn">menu</span> na aplicação Calculadora.</p>
+                        <p class="text-xs text-slate-600">Selecione a opção <strong>4 Cálculo</strong> e depois <strong>1 Derivada numérica num ponto...</strong></p>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-tinspire uppercase tracking-wide mb-1">Passo 2</div>
+                        <p class="text-sm font-medium mb-2">Preencher o Caixa de Diálogo</p>
+                        <p class="text-xs text-slate-600 mb-2">Preencha os campos:</p>
+                        <ul class="text-xs text-slate-600 space-y-1 list-disc list-inside bg-white p-2 rounded border">
+                            <li>Variável: <span class="font-mono font-bold">x</span></li>
+                            <li>Valor: <span class="font-mono font-bold">6</span></li>
+                            <li>Ordem: <span class="font-mono font-bold">1.ª derivada</span></li>
+                        </ul>
+                        <p class="text-xs text-slate-600 mt-2">Prima <span class="key-btn">OK</span>.</p>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-tinspire uppercase tracking-wide mb-1">Passo 3</div>
+                        <p class="text-sm font-medium mb-2">Introduzir a Expressão</p>
+                        <p class="text-xs text-slate-600 mb-2">Introduza a expressão da função na caixa indicada no modelo $\frac{d}{dx}(\dots)|_{x=6}$.</p>
+                        <p class="text-xs text-slate-600">Prima a tecla <span class="key-btn key-btn-dark">enter</span> para obter o resultado.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tópico 2: Derivada no Gráfico -->
+            <div class="topic-content topic-ponto-grafico hidden bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b pb-3">
+                    <h4 class="font-bold text-slate-800 text-lg flex items-center space-x-2">
+                        <span class="w-7 h-7 rounded-full bg-tinspire text-white text-sm flex items-center justify-center font-bold">2</span>
+                        <span>Analisar Gráficos: Derivada num Ponto</span>
+                    </h4>
+                    <span class="bg-slate-100 text-slate-600 text-xs font-mono px-2.5 py-1 rounded-md">Gráficos -> Analisar gráfico</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-tinspire uppercase tracking-wide mb-1">Passo 1</div>
+                        <p class="text-sm font-medium mb-2">Desenhar a Função</p>
+                        <p class="text-xs text-slate-600 mb-2">Insira em <strong>f1(x)</strong> a expressão algébrica da função e prima <span class="key-btn key-btn-dark">enter</span>.</p>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-tinspire uppercase tracking-wide mb-1">Passo 2</div>
+                        <p class="text-sm font-medium mb-2">Ativar opção dy/dx</p>
+                        <p class="text-xs text-slate-600 mb-2">Prima <span class="key-btn">menu</span> e selecione as opções <strong>6 Analisar gráfico</strong> e <strong>5 dy/dx</strong>.</p>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-tinspire uppercase tracking-wide mb-1">Passo 3</div>
+                        <p class="text-sm font-medium mb-2">Definir o Ponto</p>
+                        <p class="text-xs text-slate-600 mb-2">Escreva diretamente o valor para o qual pretende a derivada (ex: <span class="font-mono">6</span>) ou defina no gráfico a posição pretendida com o cursor/TouchPad.</p>
+                        <p class="text-xs text-slate-600">O valor da derivada surgirá junto ao ponto.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tópico 3: Reta Tangente -->
+            <div class="topic-content topic-tangente hidden bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b pb-3">
+                    <h4 class="font-bold text-slate-800 text-lg flex items-center space-x-2">
+                        <span class="w-7 h-7 rounded-full bg-tinspire text-white text-sm flex items-center justify-center font-bold">3</span>
+                        <span>Traçar a Reta Tangente (Geometria)</span>
+                    </h4>
+                    <span class="bg-slate-100 text-slate-600 text-xs font-mono px-2.5 py-1 rounded-md">Gráficos -> Geometria</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-tinspire uppercase tracking-wide mb-1">Passo 1</div>
+                        <p class="text-sm font-medium mb-2">Inserir a Função</p>
+                        <p class="text-xs text-slate-600">Insira em <strong>f1(x)</strong> a expressão algébrica da função e prima <span class="key-btn key-btn-dark">enter</span>.</p>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-tinspire uppercase tracking-wide mb-1">Passo 2</div>
+                        <p class="text-sm font-medium mb-2">Menu Geometria Tangente</p>
+                        <p class="text-xs text-slate-600 mb-2">Prima a tecla <span class="key-btn">menu</span> e selecione as opções <strong>8 Geometria</strong>, <strong>1 Pontos e Retas</strong> e <strong>8 Tangente</strong>.</p>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-tinspire uppercase tracking-wide mb-1">Passo 3</div>
+                        <p class="text-sm font-medium mb-2">Selecionar o Ponto</p>
+                        <p class="text-xs text-slate-600">Clique no gráfico e indique o ponto pretendido para traçar e exibir a equação cartesiana da reta tangente.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tópico 4: Gráfico da Função Derivada -->
+            <div class="topic-content topic-funcao-derivada hidden bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b pb-3">
+                    <h4 class="font-bold text-slate-800 text-lg flex items-center space-x-2">
+                        <span class="w-7 h-7 rounded-full bg-tinspire text-white text-sm flex items-center justify-center font-bold">4</span>
+                        <span>Gráfico da Função Taxa de Variação (nDerivative)</span>
+                    </h4>
+                    <span class="bg-slate-100 text-slate-600 text-xs font-mono px-2.5 py-1 rounded-md">Atalhos / nDerivative</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-tinspire uppercase tracking-wide mb-1">Passo 1</div>
+                        <p class="text-sm font-medium mb-2">Escolher nDerivative no Separador de Modelos</p>
+                        <p class="text-xs text-slate-600 mb-2">Coloque o cursor em <strong>f1(x)</strong>, prima a tecla do catálogo/modelos <span class="key-btn">|{|</span> e escolha a função <strong>nDerivative()</strong> do separador 1 (ou escreva <span class="font-mono">nDerivative</span>).</p>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-tinspire uppercase tracking-wide mb-1">Passo 2</div>
+                        <p class="text-sm font-medium mb-2">Sintaxe da Função</p>
+                        <p class="text-xs text-slate-600 mb-2">Insira a expressão da função e a variável separados por vírgula:</p>
+                        <div class="bg-slate-900 text-yellow-300 font-mono text-xs p-3 rounded-lg">
+                            f1(x) = nDerivative(x³ - 2x² - 5x, x)
+                        </div>
+                        <p class="text-xs text-slate-600 mt-2">Prima a tecla <span class="key-btn key-btn-dark">enter</span> para desenhar a curva derivada $f'(x)$.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Checklist TI-Nspire -->
+            <div class="bg-slate-800 text-white p-5 rounded-2xl shadow-md">
+                <h5 class="font-bold text-base mb-3 flex items-center space-x-2 text-tinspire-light">
+                    <i class="fa-solid fa-list-check text-yellow-400"></i>
+                    <span>Checklist Rápida de Comandos TI-Nspire</span>
+                </h5>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <label class="flex items-center space-x-2 bg-slate-700/60 p-2.5 rounded-lg border border-slate-600 cursor-pointer hover:bg-slate-700">
+                        <input type="checkbox" class="rounded text-tinspire">
+                        <span>Calculadora: <span class="font-mono text-yellow-300">menu -> 4 Cálculo -> 1 Derivada numérica num ponto</span></span>
+                    </label>
+                    <label class="flex items-center space-x-2 bg-slate-700/60 p-2.5 rounded-lg border border-slate-600 cursor-pointer hover:bg-slate-700">
+                        <input type="checkbox" class="rounded text-tinspire">
+                        <span>Ver dy/dx no gráfico: <span class="font-mono text-yellow-300">menu -> 6 Analisar gráfico -> 5 dy/dx</span></span>
+                    </label>
+                    <label class="flex items-center space-x-2 bg-slate-700/60 p-2.5 rounded-lg border border-slate-600 cursor-pointer hover:bg-slate-700">
+                        <input type="checkbox" class="rounded text-tinspire">
+                        <span>Reta Tangente: <span class="font-mono text-yellow-300">menu -> 8 Geometria -> 1 Pontos e Retas -> 8 Tangente</span></span>
+                    </label>
+                    <label class="flex items-center space-x-2 bg-slate-700/60 p-2.5 rounded-lg border border-slate-600 cursor-pointer hover:bg-slate-700">
+                        <input type="checkbox" class="rounded text-tinspire">
+                        <span>Gráfico de $f'(x)$: <span class="font-mono text-yellow-300">f1(x) = nDerivative(f(x), x)</span></span>
+                    </label>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- =================================================================== -->
+        <!-- SEÇÃO: NumWorks -->
+        <!-- =================================================================== -->
+        <div id="calc-numworks" class="calc-content hidden space-y-6">
+            
+            <!-- Header do Modelo -->
+            <div class="flex items-center space-x-3 bg-numworks-light border-l-4 border-numworks p-4 rounded-r-xl">
+                <div class="p-3 bg-numworks rounded-lg text-slate-900 font-bold text-lg">NumWorks</div>
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900">Calculadora NumWorks</h3>
+                    <p class="text-xs text-slate-600">Instruções passo a passo baseadas no Guia Prático de Tecnologia (Páginas 72-73 do manual)</p>
+                </div>
+            </div>
+
+            <!-- Tópico 1: Derivada num ponto (Cálculo) -->
+            <div class="topic-content topic-ponto-calc bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b pb-3">
+                    <h4 class="font-bold text-slate-800 text-lg flex items-center space-x-2">
+                        <span class="w-7 h-7 rounded-full bg-numworks text-slate-900 text-sm flex items-center justify-center font-bold">1</span>
+                        <span>Taxa de Variação no Aplicação Cálculo</span>
+                    </h4>
+                    <span class="bg-slate-100 text-slate-600 text-xs font-mono px-2.5 py-1 rounded-md">Aplicação Cálculo</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-numworks-dark uppercase tracking-wide mb-1">Passo 1</div>
+                        <p class="text-sm font-medium mb-2">Selecionar Operador de Derivada</p>
+                        <p class="text-xs text-slate-600 mb-2">Prima a tecla Home <span class="key-btn"><i class="fa-solid fa-house"></i></span>, escolha a opção <strong>Cálculo</strong>.</p>
+                        <p class="text-xs text-slate-600">Prima a tecla <span class="key-btn">toolbox</span> e selecione a opção <strong>Derivada</strong> (ou digite directamente o modelo de derivada <span class="font-mono">d/dx</span>).</p>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-numworks-dark uppercase tracking-wide mb-1">Passo 2</div>
+                        <p class="text-sm font-medium mb-2">Introduzir Valores</p>
+                        <p class="text-xs text-slate-600 mb-2">Introduza a expressão da função e o valor de $x$ nas caixas correspondentes (ex: $x=6$).</p>
+                        <p class="text-xs text-slate-600">Prima a tecla <span class="key-btn key-btn-dark">EXE</span> para obter a taxa de variação instante.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tópico 2: Derivada na Aplicação Funções -->
+            <div class="topic-content topic-ponto-grafico hidden bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b pb-3">
+                    <h4 class="font-bold text-slate-800 text-lg flex items-center space-x-2">
+                        <span class="w-7 h-7 rounded-full bg-numworks text-slate-900 text-sm flex items-center justify-center font-bold">2</span>
+                        <span>Derivada no Separador Gráfico / Opções</span>
+                    </h4>
+                    <span class="bg-slate-100 text-slate-600 text-xs font-mono px-2.5 py-1 rounded-md">Aplicação Funções</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-numworks-dark uppercase tracking-wide mb-1">Passo 1</div>
+                        <p class="text-sm font-medium mb-2">Inserir Expressão</p>
+                        <p class="text-xs text-slate-600 mb-2">No separador <strong>Expressões</strong> da aplicação Funções, insira a expressão da função em <span class="font-mono">f(x)</span>.</p>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-numworks-dark uppercase tracking-wide mb-1">Passo 2</div>
+                        <p class="text-sm font-medium mb-2">Ativar Derivadas</p>
+                        <p class="text-xs text-slate-600 mb-2">Aceda ao menu de três pontos <span class="key-btn">...</span> do lado direito da função, selecione <strong>Derivadas</strong> e ative a opção <strong>Valor da 1.ª derivada</strong> premindo <span class="key-btn key-btn-dark">OK</span>.</p>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-numworks-dark uppercase tracking-wide mb-1">Passo 3</div>
+                        <p class="text-sm font-medium mb-2">Consultar no Gráfico</p>
+                        <p class="text-xs text-slate-600 mb-2">Prima duas vezes a tecla <span class="key-btn"><i class="fa-solid fa-arrow-up"></i></span> para voltar ao separador <strong>Gráfico</strong>.</p>
+                        <p class="text-xs text-slate-600">Para obter a taxa de variação num ponto específico, utilize as setas de navegação ou digite o valor de $x$ diretamente.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tópico 3: Reta Tangente -->
+            <div class="topic-content topic-tangente hidden bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b pb-3">
+                    <h4 class="font-bold text-slate-800 text-lg flex items-center space-x-2">
+                        <span class="w-7 h-7 rounded-full bg-numworks text-slate-900 text-sm flex items-center justify-center font-bold">3</span>
+                        <span>Traçar a Reta Tangente na NumWorks</span>
+                    </h4>
+                    <span class="bg-slate-100 text-slate-600 text-xs font-mono px-2.5 py-1 rounded-md">Gráfico -> Cálculo</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-numworks-dark uppercase tracking-wide mb-1">Passo 1</div>
+                        <p class="text-sm font-medium mb-2">Visualizar Gráfico</p>
+                        <p class="text-xs text-slate-600">Insira a função e aceda ao separador <strong>Gráfico</strong>.</p>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-numworks-dark uppercase tracking-wide mb-1">Passo 2</div>
+                        <p class="text-sm font-medium mb-2">Menu Encontrar Tangente</p>
+                        <p class="text-xs text-slate-600 mb-2">Aceda à opção <strong>Cálculo</strong> do separador Gráfico (ou prima <span class="key-btn key-btn-dark">OK</span>).</p>
+                        <p class="text-xs text-slate-600">Escolha <strong>Encontrar</strong> e selecione a opção <strong>Tangente</strong>.</p>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-numworks-dark uppercase tracking-wide mb-1">Passo 3</div>
+                        <p class="text-sm font-medium mb-2">Definir Abscissa</p>
+                        <p class="text-xs text-slate-600">Mova o cursor para a abcissa pretendida ou digite o número diretamente. A reta e a respetiva equação surgirão no ecrã.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tópico 4: Gráfico da Função Derivada -->
+            <div class="topic-content topic-funcao-derivada hidden bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b pb-3">
+                    <h4 class="font-bold text-slate-800 text-lg flex items-center space-x-2">
+                        <span class="w-7 h-7 rounded-full bg-numworks text-slate-900 text-sm flex items-center justify-center font-bold">4</span>
+                        <span>Gráfico do Traçado da 1.ª Derivada</span>
+                    </h4>
+                    <span class="bg-slate-100 text-slate-600 text-xs font-mono px-2.5 py-1 rounded-md">Expressões -> Opções (...)</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-numworks-dark uppercase tracking-wide mb-1">Passo 1</div>
+                        <p class="text-sm font-medium mb-2">Inserir Expressão f(x)</p>
+                        <p class="text-xs text-slate-600">Na aplicação Funções, insira a expressão da função (ex: <span class="font-mono">x³ - 2x² - 5x</span>).</p>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-numworks-dark uppercase tracking-wide mb-1">Passo 2</div>
+                        <p class="text-sm font-medium mb-2">Ativar Traçado da Derivada</p>
+                        <p class="text-xs text-slate-600 mb-2">Selecione o menu de opções <span class="key-btn">...</span> no lado direito da expressão, vá a <strong>Derivadas</strong> e ative a opção <strong>Traçado da 1.ª derivada</strong>.</p>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-numworks-dark uppercase tracking-wide mb-1">Passo 3</div>
+                        <p class="text-sm font-medium mb-2">Ver Gráfico</p>
+                        <p class="text-xs text-slate-600">Prima duas vezes a tecla de subida <span class="key-btn"><i class="fa-solid fa-arrow-up"></i></span> para voltar ao separador <strong>Expressões</strong> e aceda ao separador <strong>Gráfico</strong> para ver a curva derivada traçada em simultâneo.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Checklist NumWorks -->
+            <div class="bg-slate-800 text-white p-5 rounded-2xl shadow-md">
+                <h5 class="font-bold text-base mb-3 flex items-center space-x-2 text-yellow-400">
+                    <i class="fa-solid fa-list-check"></i>
+                    <span>Checklist Rápida de Comandos NumWorks</span>
+                </h5>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <label class="flex items-center space-x-2 bg-slate-700/60 p-2.5 rounded-lg border border-slate-600 cursor-pointer hover:bg-slate-700">
+                        <input type="checkbox" class="rounded text-numworks">
+                        <span>Cálculo: <span class="font-mono text-yellow-300">Toolbox -> Derivada d/dx</span></span>
+                    </label>
+                    <label class="flex items-center space-x-2 bg-slate-700/60 p-2.5 rounded-lg border border-slate-600 cursor-pointer hover:bg-slate-700">
+                        <input type="checkbox" class="rounded text-numworks">
+                        <span>Valor no Gráfico: <span class="font-mono text-yellow-300">Opções (...) -> Derivadas -> Valor da 1.ª derivada</span></span>
+                    </label>
+                    <label class="flex items-center space-x-2 bg-slate-700/60 p-2.5 rounded-lg border border-slate-600 cursor-pointer hover:bg-slate-700">
+                        <input type="checkbox" class="rounded text-numworks">
+                        <span>Reta Tangente: <span class="font-mono text-yellow-300">Gráfico -> Cálculo -> Encontrar -> Tangente</span></span>
+                    </label>
+                    <label class="flex items-center space-x-2 bg-slate-700/60 p-2.5 rounded-lg border border-slate-600 cursor-pointer hover:bg-slate-700">
+                        <input type="checkbox" class="rounded text-numworks">
+                        <span>Gráfico de $f'(x)$: <span class="font-mono text-yellow-300">Opções (...) -> Traçado da 1.ª derivada</span></span>
+                    </label>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- =================================================================== -->
+        <!-- SEÇÃO: TI-84 Plus -->
+        <!-- =================================================================== -->
+        <div id="calc-ti84" class="calc-content hidden space-y-6">
+            
+            <!-- Header do Modelo -->
+            <div class="flex items-center space-x-3 bg-ti84-light border-l-4 border-ti84 p-4 rounded-r-xl">
+                <div class="p-3 bg-ti84 rounded-lg text-white font-bold text-lg">TI-84</div>
+                <div>
+                    <h3 class="text-lg font-bold text-ti84-dark">Texas Instruments TI-84 Plus</h3>
+                    <p class="text-xs text-slate-600">Instruções passo a passo baseadas no Guia Prático de Tecnologia (Páginas 74-75 do manual)</p>
+                </div>
+            </div>
+
+            <!-- Tópico 1: Derivada num ponto (nDeriv na Calculadora) -->
+            <div class="topic-content topic-ponto-calc bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b pb-3">
+                    <h4 class="font-bold text-slate-800 text-lg flex items-center space-x-2">
+                        <span class="w-7 h-7 rounded-full bg-ti84 text-white text-sm flex items-center justify-center font-bold">1</span>
+                        <span>Taxa de Variação num Ponto (Comando nDeriv)</span>
+                    </h4>
+                    <span class="bg-slate-100 text-slate-600 text-xs font-mono px-2.5 py-1 rounded-md">MATH -> 8:nDeriv(</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-ti84 uppercase tracking-wide mb-1">Passo 1</div>
+                        <p class="text-sm font-medium mb-2">Aceder ao Menu MATH</p>
+                        <p class="text-xs text-slate-600 mb-2">Prima a tecla <span class="key-btn">MATH</span> no ecrã principal.</p>
+                        <p class="text-xs text-slate-600">Selecione a opção <strong>8:nDeriv(</strong>.</p>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-ti84 uppercase tracking-wide mb-1">Passo 2</div>
+                        <p class="text-sm font-medium mb-2">Preencher o Modelo Natural</p>
+                        <p class="text-xs text-slate-600 mb-2">Preencha as caixas na ecrã:</p>
+                        <div class="bg-slate-900 text-emerald-400 font-mono text-xs p-2.5 rounded">
+                            d/d<span class="text-yellow-300">x</span>( <span class="text-white">0.5(x-3)²-2</span> ) | x = <span class="text-yellow-300">6</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-ti84 uppercase tracking-wide mb-1">Passo 3</div>
+                        <p class="text-sm font-medium mb-2">Obter Resultado</p>
+                        <p class="text-xs text-slate-600 mb-2">Prima a tecla <span class="key-btn key-btn-dark">ENTER</span>.</p>
+                        <p class="text-xs text-slate-600">O valor numérico da derivada (ex: <span class="font-mono font-bold">3</span>) é apresentado no ecrã principal.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tópico 2: Derivada no Gráfico (dy/dx) -->
+            <div class="topic-content topic-ponto-grafico hidden bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b pb-3">
+                    <h4 class="font-bold text-slate-800 text-lg flex items-center space-x-2">
+                        <span class="w-7 h-7 rounded-full bg-ti84 text-white text-sm flex items-center justify-center font-bold">2</span>
+                        <span>Taxa de Variação no Gráfico (dy/dx)</span>
+                    </h4>
+                    <span class="bg-slate-100 text-slate-600 text-xs font-mono px-2.5 py-1 rounded-md">2nd TRACE (CALC) -> 6:dy/dx</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-ti84 uppercase tracking-wide mb-1">Passo 1</div>
+                        <p class="text-sm font-medium mb-2">Inserir Expressão em Y1</p>
+                        <p class="text-xs text-slate-600 mb-2">Prima a tecla <span class="key-btn">Y=</span>, insira em Y1 a expressão <span class="font-mono">0.5(x-3)²-2</span> e prima <span class="key-btn">GRAPH</span>.</p>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-ti84 uppercase tracking-wide mb-1">Passo 2</div>
+                        <p class="text-sm font-medium mb-2">Ativar Menu CALC</p>
+                        <p class="text-xs text-slate-600 mb-2">Aceda ao menu [CALC] premindo as teclas <span class="key-btn key-btn-yellow">2nd</span> <span class="key-btn">TRACE</span>.</p>
+                        <p class="text-xs text-slate-600">Escolha a opção <strong>6: dy/dx</strong>.</p>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-ti84 uppercase tracking-wide mb-1">Passo 3</div>
+                        <p class="text-sm font-medium mb-2">Indicar o Valor de x</p>
+                        <p class="text-xs text-slate-600 mb-2">Escreva diretamente o valor pretendido para $x$ (ex: <span class="font-mono">6</span>) e prima a tecla <span class="key-btn key-btn-dark">ENTER</span> três vezes.</p>
+                        <p class="text-xs text-slate-600">No rodapé surgirá o valor: <span class="font-mono font-bold text-emerald-700">dy/dx = 3</span>.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tópico 3: Reta Tangente -->
+            <div class="topic-content topic-tangente hidden bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b pb-3">
+                    <h4 class="font-bold text-slate-800 text-lg flex items-center space-x-2">
+                        <span class="w-7 h-7 rounded-full bg-ti84 text-white text-sm flex items-center justify-center font-bold">3</span>
+                        <span>Traçar a Reta Tangente no Gráfico</span>
+                    </h4>
+                    <span class="bg-slate-100 text-slate-600 text-xs font-mono px-2.5 py-1 rounded-md">2nd PRGM (DRAW) -> 5:Tangent</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-ti84 uppercase tracking-wide mb-1">Passo 1</div>
+                        <p class="text-sm font-medium mb-2">Desenhar Função</p>
+                        <p class="text-xs text-slate-600">Insira a função em Y1 e prima <span class="key-btn">GRAPH</span>.</p>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-ti84 uppercase tracking-wide mb-1">Passo 2</div>
+                        <p class="text-sm font-medium mb-2">Menu DRAW Tangent</p>
+                        <p class="text-xs text-slate-600 mb-2">Aceda ao menu DRAW premindo <span class="key-btn key-btn-yellow">2nd</span> <span class="key-btn">PRGM</span>.</p>
+                        <p class="text-xs text-slate-600">Selecione a opção <strong>5: Tangent(</strong>.</p>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-ti84 uppercase tracking-wide mb-1">Passo 3</div>
+                        <p class="text-sm font-medium mb-2">Digitar Abscissa</p>
+                        <p class="text-xs text-slate-600 mb-2">Digita o valor do ponto de tangência (ex: <span class="font-mono">6</span>) com o teclado numérico.</p>
+                        <p class="text-xs text-slate-600">Prima <span class="key-btn key-btn-dark">ENTER</span> para desenhar a reta e obter a equação no ecrã.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tópico 4: Gráfico da Função Derivada -->
+            <div class="topic-content topic-funcao-derivada hidden bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b pb-3">
+                    <h4 class="font-bold text-slate-800 text-lg flex items-center space-x-2">
+                        <span class="w-7 h-7 rounded-full bg-ti84 text-white text-sm flex items-center justify-center font-bold">4</span>
+                        <span>Gráfico da Função Taxa de Variação</span>
+                    </h4>
+                    <span class="bg-slate-100 text-slate-600 text-xs font-mono px-2.5 py-1 rounded-md">Y= -> MATH 8:nDeriv</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-ti84 uppercase tracking-wide mb-1">Passo 1</div>
+                        <p class="text-sm font-medium mb-2">Inserir nDeriv em Y1</p>
+                        <p class="text-xs text-slate-600 mb-2">Prima <span class="key-btn">Y=</span>, coloque o cursor em Y1 e selecione a opção <span class="key-btn">MATH</span> -> <strong>8:nDeriv(</strong>.</p>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <div class="text-xs font-bold text-ti84 uppercase tracking-wide mb-1">Passo 2</div>
+                        <p class="text-sm font-medium mb-2">Configurar nDeriv com x</p>
+                        <p class="text-xs text-slate-600 mb-2">Preencha as caixas com a expressão da função, a variável <span class="key-btn">X,T,θ,n</span> e a condição <span class="font-mono">x = X</span>:</p>
+                        <div class="bg-slate-900 text-yellow-300 font-mono text-xs p-2.5 rounded">
+                            Y1 = d/dx( x³ - 2x² - 5x ) | x = X
+                        </div>
+                        <p class="text-xs text-slate-600 mt-2">Prima a tecla <span class="key-btn">GRAPH</span> para visualizar a representação gráfica da derivada.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Checklist TI-84 Plus -->
+            <div class="bg-slate-800 text-white p-5 rounded-2xl shadow-md">
+                <h5 class="font-bold text-base mb-3 flex items-center space-x-2 text-ti84-light">
+                    <i class="fa-solid fa-list-check text-yellow-400"></i>
+                    <span>Checklist Rápida de Comandos TI-84 Plus</span>
+                </h5>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <label class="flex items-center space-x-2 bg-slate-700/60 p-2.5 rounded-lg border border-slate-600 cursor-pointer hover:bg-slate-700">
+                        <input type="checkbox" class="rounded text-ti84">
+                        <span>Calculadora: <span class="font-mono text-yellow-300">MATH -> 8:nDeriv(</span></span>
+                    </label>
+                    <label class="flex items-center space-x-2 bg-slate-700/60 p-2.5 rounded-lg border border-slate-600 cursor-pointer hover:bg-slate-700">
+                        <input type="checkbox" class="rounded text-ti84">
+                        <span>Ver dy/dx no gráfico: <span class="font-mono text-yellow-300">2nd TRACE (CALC) -> 6:dy/dx</span></span>
+                    </label>
+                    <label class="flex items-center space-x-2 bg-slate-700/60 p-2.5 rounded-lg border border-slate-600 cursor-pointer hover:bg-slate-700">
+                        <input type="checkbox" class="rounded text-ti84">
+                        <span>Reta Tangente: <span class="font-mono text-yellow-300">2nd PRGM (DRAW) -> 5:Tangent</span></span>
+                    </label>
+                    <label class="flex items-center space-x-2 bg-slate-700/60 p-2.5 rounded-lg border border-slate-600 cursor-pointer hover:bg-slate-700">
+                        <input type="checkbox" class="rounded text-ti84">
+                        <span>Gráfico de $f'(x)$: <span class="font-mono text-yellow-300">Y1 = d/dx(f(x))|x=X</span></span>
+                    </label>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Simulator Interativo de Treino -->
+        <section class="mt-10 bg-white rounded-2xl p-6 border border-slate-200 shadow-md">
+            <div class="flex items-center space-x-3 mb-4">
+                <div class="p-2.5 bg-indigo-600 text-white rounded-xl">
+                    <i class="fa-solid fa-graduation-cap text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-slate-800 text-base sm:text-lg">Simulador de Treino & Verificação de Passos</h3>
+                    <p class="text-xs text-slate-500">Testa se sabes a sequência correta de botões para o modelo selecionado!</p>
+                </div>
+            </div>
+
+            <div id="sim-container" class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-sm">
+                <p class="text-xs text-slate-600 mb-3">Qual a sequência de teclas para calcular a <strong>reta tangente no gráfico</strong> na <strong id="sim-calc-name" class="text-indigo-600">CASIO fx-CG50</strong>?</p>
+                
+                <div id="sim-options" class="space-y-2">
+                    <!-- Opções geradas dinamicamente via JS -->
+                </div>
+
+                <div id="sim-feedback" class="mt-3 p-3 rounded-lg hidden text-xs font-semibold"></div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Rodapé -->
+    <footer class="bg-slate-900 text-slate-400 text-xs py-6 border-t border-slate-800 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 text-center space-y-2">
+            <p>Guia Prático de Tecnologia — Tutorial de Calculadoras Gráficas (Ensino Secundário / Matemática A)</p>
+            <p class="text-slate-500">Modelos suportados: CASIO fx-CG50 • Texas Instruments TI-Nspire • NumWorks • Texas Instruments TI-84 Plus</p>
+        </div>
+    </footer>
+
+    <!-- Lógica de Navegação em JS -->
+    <script>
+        let currentCalc = 'casio';
+        let currentTopic = 'ponto-calc';
+
+        const calcNames = {
+            'casio': 'CASIO fx-CG50',
+            'tinspire': 'TI-Nspire',
+            'numworks': 'NumWorks',
+            'ti84': 'TI-84 Plus'
+        };
+
+        const simQuestions = {
+            'casio': {
+                q: "Como ativas a opção de traçar a Reta Tangente no gráfico na CASIO fx-CG50?",
+                options: [
+                    { text: "SHIFT + F4 (Sketch) -> F2 (Tangent)", correct: true },
+                    { text: "OPTN -> F4 (CALC) -> F2 (d/dx)", correct: false },
+                    { text: "SHIFT + MENU (SET UP) -> Derivative On", correct: false }
+                ]
+            },
+            'tinspire': {
+                q: "Qual o caminho para calcular a derivada num ponto na aplicação Calculadora da TI-Nspire?",
+                options: [
+                    { text: "menu -> 4 Cálculo -> 1 Derivada numérica num ponto...", correct: true },
+                    { text: "menu -> 8 Geometria -> 8 Tangente", correct: false },
+                    { text: "catálogo -> nDerivative()", correct: false }
+                ]
+            },
+            'numworks': {
+                q: "Como ativas o valor da 1.ª derivada na aplicação Funções da NumWorks?",
+                options: [
+                    { text: "Menu '...' da função -> Derivadas -> Valor da 1.ª derivada", correct: true },
+                    { text: "Toolbox -> Cálculo -> Derivada", correct: false },
+                    { text: "Separador Gráfico -> Cálculo -> Encontrar", correct: false }
+                ]
+            },
+            'ti84': {
+                q: "Onde se encontra o comando para calcular a derivada no ecrã principal da TI-84 Plus?",
+                options: [
+                    { text: "Tecla MATH -> 8:nDeriv(", correct: true },
+                    { text: "2nd + TRACE -> 6:dy/dx", correct: false },
+                    { text: "2nd + PRGM -> 5:Tangent", correct: false }
+                ]
+            }
+        };
+
+        function switchCalculator(calcId) {
+            currentCalc = calcId;
+            
+            // Esconder todas as calculadoras
+            document.querySelectorAll('.calc-content').forEach(el => el.classList.add('hidden'));
+            
+            // Mostrar calculadora selecionada
+            document.getElementById(`calc-${calcId}`).classList.remove('hidden');
+
+            // Atualizar estilo das tabs
+            document.querySelectorAll('.calc-tab').forEach(tab => {
+                tab.classList.remove('bg-blue-600', 'text-white', 'shadow');
+                tab.classList.add('text-slate-300');
+            });
+            const activeTab = document.getElementById(`tab-${calcId}`);
+            activeTab.classList.add('bg-blue-600', 'text-white', 'shadow');
+            activeTab.classList.remove('text-slate-300');
+
+            updateSimulator();
+        }
+
+        function switchTopic(topicId) {
+            currentTopic = topicId;
+
+            // Esconder todos os tópicos
+            document.querySelectorAll('.topic-content').forEach(el => el.classList.add('hidden'));
+
+            // Mostrar o tópico selecionado em todas as seções de calculadoras
+            document.querySelectorAll(`.topic-${topicId}`).forEach(el => el.classList.remove('hidden'));
+
+            // Atualizar abas do tópico
+            document.querySelectorAll('.topic-tab').forEach(tab => {
+                tab.classList.remove('text-blue-600', 'active-tab');
+                tab.classList.add('text-slate-600');
+            });
+            const activeTopicTab = document.getElementById(`topic-${topicId}`);
+            activeTopicTab.classList.add('text-blue-600', 'active-tab');
+            activeTopicTab.classList.remove('text-slate-600');
+        }
+
+        function updateSimulator() {
+            document.getElementById('sim-calc-name').innerText = calcNames[currentCalc];
+            const qData = simQuestions[currentCalc];
+            
+            const container = document.getElementById('sim-options');
+            const feedback = document.getElementById('sim-feedback');
+            feedback.classList.add('hidden');
+
+            container.innerHTML = `<p class="font-medium text-slate-700 mb-2">${qData.q}</p>`;
+
+            qData.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-2.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 transition text-xs font-mono flex items-center justify-between";
+                btn.innerHTML = `<span>${opt.text}</span> <i class="fa-solid fa-chevron-right text-slate-400 text-xs"></i>`;
+                btn.onclick = () => {
+                    feedback.classList.remove('hidden', 'bg-green-100', 'text-green-800', 'bg-red-100', 'text-red-800');
+                    if(opt.correct) {
+                        feedback.classList.add('bg-green-100', 'text-green-800');
+                        feedback.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i> <strong>Correto!</strong> Essa é a sequência de teclas correta na ${calcNames[currentCalc]}.`;
+                    } else {
+                        feedback.classList.add('bg-red-100', 'text-red-800');
+                        feedback.innerHTML = `<i class="fa-solid fa-circle-xmark mr-1"></i> <strong>Incorreto.</strong> Tenta novamente ou consulta os passos detalhados acima!`;
+                    }
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        // Inicialização
+        window.onload = function() {
+            switchCalculator('casio');
+            switchTopic('ponto-calc');
+        };
+    </script>
+</body>
+</html>
