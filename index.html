@@ -1,1 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulo 2 - Taxa de Variação e Otimização</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
 
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        header h1 {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .module-tab {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px 8px 0 0;
+            display: inline-block;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .lessons-wrapper {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 0 8px 8px 8px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .lesson-card {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            background-color: #fff;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .lesson-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .lesson-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+        }
+
+        .lesson-title {
+            font-size: 1.25rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .lesson-descriptor {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+        }
+
+        .file-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .file-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1rem;
+            background-color: #f1f5f9;
+            color: var(--text-main);
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .file-link:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .file-icon {
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Plataforma de Aulas</h1>
+            <p>Recursos e materiais das aulas de Matemática</p>
+        </header>
+
+        <main>
+            <!-- Separador do Módulo -->
+            <div class="module-tab">
+                Módulo 2 - Taxa de Variação e Otimização
+            </div>
+
+            <div class="lessons-wrapper">
+                
+                <!-- Aula 1 -->
+                <section class="lesson-card">
+                    <h2 class="lesson-title">Aula 1</h2>
+                    <p class="lesson-descriptor">
+                        Introdução às funções e conceito intuitivo de velocidade/taxa.
+                    </p>
+                    <ul class="file-list">
+                        <li>
+                            <a class="file-link" href="Aula1_11GEI_Funcoes_e_Graficos.html">
+                                <span class="file-icon">📄</span> Aula 1 - Funções e Gráficos (11GEI)
+                            </a>
+                        </li>
+                        <li>
+                            <a class="file-link" href="Aula1_11PSI_Funcoes_e_Graficos.html">
+                                <span class="file-icon">📄</span> Aula 1 - Funções e Gráficos (11PSI)
+                            </a>
+                        </li>
+                        <li>
+                            <a class="file-link" href="conceito_intuitivo_função.html">
+                                <span class="file-icon">📄</span> Conceito Intuitivo de Função
+                            </a>
+                        </li>
+                    </ul>
+                </section>
+
+                <!-- Aula 2 -->
+                <section class="lesson-card">
+                    <h2 class="lesson-title">Aula 2</h2>
+                    <p class="lesson-descriptor">
+                        Questionário / Quizz interativo para consolidação de conteúdos.
+                    </p>
+                    <ul class="file-list">
+                        <li>
+                            <a class="file-link" href="Aula2_Ler_e_Comparar_Graficos.html">
+                                <span class="file-icon">📝</span> Quizz: Ler e Comparar Gráficos
+                            </a>
+                        </li>
+                    </ul>
+                </section>
+
+                <!-- Aula 3 -->
+                <section class="lesson-card">
+                    <h2 class="lesson-title">Aula 3</h2>
+                    <p class="lesson-descriptor">
+                        Taxa média de variação.
+                    </p>
+                    <ul class="file-list">
+                        <li>
+                            <a class="file-link" href="taxa_media_variacao.html">
+                                <span class="file-icon">📄</span> Taxa Média de Variação
+                            </a>
+                        </li>
+                        <li>
+                            <a class="file-link" href="taxa_media_variacao_updated_melhorada.html">
+                                <span class="file-icon">📄</span> Taxa Média de Variação (Versão Atualizada)
+                            </a>
+                        </li>
+                    </ul>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+</body>
+</html>
