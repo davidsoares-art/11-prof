@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aula 2 — Funções, gráficos e velocidade (11.º ano)</title>
+<style>
+  *{box-sizing:border-box}
+  body{
+    margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    background:#eef2f7;color:#0f172a;line-height:1.6;font-size:20px;
+  }
+  .vers{
+    background:#4338ca;color:#fff;text-align:center;font-weight:600;font-size:13px;line-height:1.35;
+    padding:6px 10px;
+  }
+  header.top{
+    position:sticky;top:0;z-index:80;background:linear-gradient(100deg,#1e3a8a,#4338ca 55%,#6d28d9);
+    color:#fff;padding:12px 20px 11px;box-shadow:0 6px 22px rgba(15,23,42,.22);
+  }
+  .top-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:space-between;max-width:1200px;margin:0 auto}
+  .brand b{font-size:22px;letter-spacing:.2px}
+  .brand p{margin:2px 0 0;font-size:14px;opacity:.9}
+  .chip{
+    background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);color:#fff;
+    font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;
+    padding:4px 9px;border-radius:999px;
+  }
+  .chip.dark{background:#eef2ff;border-color:#c7d2fe;color:#3730a3}
+  main{max-width:1200px;margin:0 auto;padding:22px 20px 70px}
+  .page{display:none}
+  .page.active{display:block}
+  .page-head{margin-bottom:18px}
+  .page-head h2{font-size:34px;margin:6px 0 4px;color:#1e293b;line-height:1.2}
+  .page-head .lead{font-size:20px;color:#475569;margin:4px 0 0}
+  .card{
+    background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:22px 24px;margin-bottom:18px;
+    box-shadow:0 2px 10px rgba(15,23,42,.05);
+  }
+  .card h3{margin:0 0 6px;font-size:24px;color:#1e293b}
+  .card h4{margin:14px 0 8px;font-size:20px;color:#334155}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:900px){.grid2{grid-template-columns:1fr}}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  @media(max-width:900px){.grid3{grid-template-columns:1fr}}
+  .btn{
+    border:1px solid #cbd5e1;background:#fff;color:#334155;padding:9px 16px;border-radius:10px;
+    font-size:17px;font-weight:700;cursor:pointer;transition:.15s;font-family:inherit;
+  }
+  .btn.ghost{background:#f1f5f9;border-color:#cbd5e1}
+  .btn.mini{padding:6px 12px;font-size:15px}
+  .btn:hover{filter:brightness(.97)}
+  .keybox{
+    background:#eef2ff;border:1px solid #c7d2fe;border-left:5px solid #4338ca;border-radius:10px;
+    padding:14px 18px;margin-top:14px;font-size:19px;
+  }
+  .gcard{border:1.5px solid #e2e8f0;border-radius:12px;padding:12px;background:#fff}
+  .gtag{font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#64748b;margin-bottom:6px;font-size:12.5px}
+  footer.nav{
+    position:static;margin:24px auto 10px;max-width:1200px;width:auto;background:#fff;
+    border:1px solid #e2e8f0;border-radius:12px;padding:10px 18px;
+    display:flex;justify-content:space-between;align-items:center;gap:12px;
+  }
+  footer.nav .pgnum{font-size:15px;font-weight:700;color:#64748b}
+
+  /* ---- Rondas de escolha ---- */
+  .rhead{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+  .rhead .rtools{display:flex;align-items:center;gap:12px}
+  .sc{font-size:16px;font-weight:800;color:#64748b;background:#f1f5f9;padding:5px 12px;border-radius:999px}
+  .rlead{color:#475569;font-size:17px;margin:2px 0 16px}
+  .rlead b{color:#3730a3}
+  .q{margin:0 0 20px;padding:16px 18px;border:1.5px solid #e2e8f0;border-radius:14px;background:#fafbfd}
+  .qstem{font-size:20.5px;margin:0 0 12px;color:#0f172a}
+  .qstem b{color:#4338ca}
+  .opt{
+    display:block;width:100%;text-align:left;margin:8px 0;border:1.5px solid #cbd5e1;background:#fff;
+    border-radius:10px;padding:10px 14px;font-size:19px;font-weight:600;color:#334155;
+    cursor:pointer;transition:.12s;font-family:inherit;
+  }
+  .opt:hover{background:#eef2ff;border-color:#a5b4fc}
+  .opt:disabled{cursor:default}
+  .opt.dim{opacity:.5}
+  .opt.certo{background:#f0fdf4;border-color:#22c55e;color:#14532d;opacity:1}
+  .opt.errado{background:#fef2f2;border-color:#ef4444;color:#7f1d1d;opacity:1}
+  .fb{margin-top:10px;font-size:18px;min-height:24px}
+  .fok{color:#15803d;font-weight:800}
+  .fno{color:#b91c1c;font-weight:800}
+
+  @media print{
+    header.top,footer.nav,.vers{display:none!important}
+    .page{display:block!important;page-break-after:always}
+  }
+</style>
+</head>
+<body>
+<div class="vers">Aula 2 · 11.º ano · Funções, gráficos e velocidade · v2.3 (18/10/2026)</div>
+
+<header class="top">
+  <div class="top-row">
+    <div class="brand"><b>Aula 2 — Funções, gráficos e velocidade</b><p>Matemática · Módulo: Taxa de variação e otimização · 1 hora</p></div>
+    <span class="chip">Consolidação leve</span>
+  </div>
+</header>
+
+<main>
+
+<!-- ================= PÁGINA 1 — AQUECIMENTO ================= -->
+<section class="page active" id="p1">
+  <div class="page-head">
+    <span class="chip dark">Aquecimento · 0–5 min · em pares</span>
+    <h2>Duas curiosidades da turma</h2>
+    <p class="lead">Lembram-se disto? Escolham uma opção em cada pergunta.</p>
+  </div>
+
+  <div class="card ronda" id="ronda0">
+    <div class="rhead">
+      <h3>O caso dos dois Gonçalos</h3>
+      <div class="rtools">
+        <span class="sc">Acertos: 0 / 2</span>
+        <button class="btn ghost mini" onclick="resetRonda(this)">Reiniciar</button>
+      </div>
+    </div>
+    <p class="rlead"><b>Regra:</b> escolham UMA opção. Depois de escolherem, fica <b>bloqueada</b> — não dá para mudar.</p>
+
+    <div class="q" id="p1q1">
+      <p class="qstem"><b>1.</b> Há dois Gonçalos na turma: o <b>nº 7</b> e o <b>nº 8</b>. O teu amigo diz: «O <b>Gonçalo</b> marcou um golo ontem.»</p>
+      <button class="opt" data-v="A" onclick="pick('p1q1',this,'B')">A) Sei logo de que Gonçalo ele está a falar.</button>
+      <button class="opt" data-v="B" onclick="pick('p1q1',this,'B')">B) Não posso ter a certeza — pode ser o nº 7 ou o nº 8.</button>
+      <button class="opt" data-v="C" onclick="pick('p1q1',this,'B')">C) Ele está a falar dos dois Gonçalos.</button>
+      <div class="fb"></div>
+    </div>
+
+    <div class="q" id="p1q2">
+      <p class="qstem"><b>2.</b> E se o teu amigo disser: «O <b>nº 7</b> marcou um golo ontem»?</p>
+      <button class="opt" data-v="A" onclick="pick('p1q2',this,'A')">A) Sei logo que é o Gonçalo do nº 7 — não há confusão.</button>
+      <button class="opt" data-v="B" onclick="pick('p1q2',this,'A')">B) Continuo sem saber de quem é que ele fala.</button>
+      <button class="opt" data-v="C" onclick="pick('p1q2',this,'A')">C) Pode ser qualquer um da turma.</button>
+      <div class="fb"></div>
+    </div>
+
+    <div class="keybox"><b>O que fica:</b> chamar pelo número dá sempre o mesmo aluno. É por isso que os números da turma existem!</div>
+  </div>
+</section>
+
+<!-- ================= PÁGINA 2 — A IDEIA DE FUNÇÃO ================= -->
+<section class="page" id="p2">
+  <div class="page-head">
+    <span class="chip dark">A ideia de função · 5–13 min · em pares</span>
+    <h2>Função ou não função?</h2>
+    <p class="lead">Recordam a ideia: cada coisa de entrada dá só um resultado.</p>
+  </div>
+
+  <div class="card ronda" id="ronda1">
+    <div class="rhead">
+      <h3>Associações do dia a dia</h3>
+      <div class="rtools">
+        <span class="sc">Acertos: 0 / 3</span>
+        <button class="btn ghost mini" onclick="resetRonda(this)">Reiniciar</button>
+      </div>
+    </div>
+    <p class="rlead"><b>Regra:</b> escolham UMA opção. Depois de escolherem, fica <b>bloqueada</b>.</p>
+
+    <div class="q" id="p2q1">
+      <p class="qstem"><b>1.</b> <b>Número da turma → primeiro nome.</b> É uma função?</p>
+      <button class="opt" data-v="A" onclick="pick('p2q1',this,'A')">A) Sim — cada número dá um único nome.</button>
+      <button class="opt" data-v="B" onclick="pick('p2q1',this,'A')">B) Não — há nomes que se repetem.</button>
+      <button class="opt" data-v="C" onclick="pick('p2q1',this,'A')">C) Só às vezes.</button>
+      <div class="fb"></div>
+    </div>
+
+    <div class="q" id="p2q2">
+      <p class="qstem"><b>2.</b> <b>Primeiro nome → número da turma.</b> É uma função? (Cuidado com os dois Gonçalos…)</p>
+      <button class="opt" data-v="A" onclick="pick('p2q2',this,'B')">A) Sim, é uma função.</button>
+      <button class="opt" data-v="B" onclick="pick('p2q2',this,'B')">B) Não — «Gonçalo» pode ser o nº 7 ou o nº 8.</button>
+      <button class="opt" data-v="C" onclick="pick('p2q2',this,'B')">C) É, mas só com nomes diferentes.</button>
+      <div class="fb"></div>
+    </div>
+
+    <div class="q" id="p2q3">
+      <p class="qstem"><b>3.</b> No teu computador: <b>ficheiro → tamanho em MB.</b> É uma função?</p>
+      <button class="opt" data-v="A" onclick="pick('p2q3',this,'A')">A) Sim — cada ficheiro tem um único tamanho.</button>
+      <button class="opt" data-v="B" onclick="pick('p2q3',this,'A')">B) Não — há ficheiros com o mesmo tamanho.</button>
+      <button class="opt" data-v="C" onclick="pick('p2q3',this,'A')">C) Depende do tipo de ficheiro.</button>
+      <div class="fb"></div>
+    </div>
+
+    <div class="keybox"><b>O que fica:</b> ter entradas ou resultados repetidos não interessa — o que conta é cada entrada dar <b>um único</b> resultado.</div>
+  </div>
+</section>
+
+<!-- ================= PÁGINA 3 — LER GRÁFICOS ================= -->
+<section class="page" id="p3">
+  <div class="page-head">
+    <span class="chip dark">Ler gráficos · 13–25 min · em pares</span>
+    <h2>O telemóvel a carregar</h2>
+    <p class="lead">Tudo com gráficos à frente dos olhos — nada de adivinhar.</p>
+  </div>
+
+  <div class="card ronda" id="ronda2">
+    <div class="rhead">
+      <h3>Bateria ao longo do tempo</h3>
+      <div class="rtools">
+        <span class="sc">Acertos: 0 / 3</span>
+        <button class="btn ghost mini" onclick="resetRonda(this)">Reiniciar</button>
+      </div>
+    </div>
+    <p class="rlead"><b>Regra:</b> escolham UMA opção. Depois de escolherem, fica <b>bloqueada</b>.</p>
+
+    <div class="q" id="p3q1">
+      <p class="qstem"><b>1.</b> O teu telemóvel está a carregar. Observa o gráfico (os números <b>1</b> e <b>2</b> marcam os dois intervalos). Em que intervalo é que a bateria <b>sobe mais depressa</b>?</p>
+      <div class="gcard" style="max-width:540px;margin:0 0 12px">
+        <div class="gtag">Bateria (%) ao longo do tempo</div>
+        <svg viewBox="0 0 420 250" style="width:100%;height:auto" aria-label="Gráfico: uma única linha reta, com os intervalos 1 e 2 marcados">
+          <line x1="55" y1="15" x2="55" y2="205" stroke="#94a3b8" stroke-width="1.5"/>
+          <line x1="55" y1="205" x2="395" y2="205" stroke="#94a3b8" stroke-width="1.5"/>
+          <text x="22" y="112" text-anchor="middle" font-size="15" fill="#334155" font-weight="700">%</text>
+          <text x="225" y="238" text-anchor="middle" font-size="15" fill="#334155" font-weight="700">tempo</text>
+          <rect x="55" y="15" width="160" height="190" fill="#dbeafe" opacity=".55"/>
+          <rect x="215" y="15" width="180" height="190" fill="#dcfce7" opacity=".55"/>
+          <line x1="215" y1="15" x2="215" y2="205" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6,5"/>
+          <g stroke="#4338ca" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="55,196 215,118"/>
+            <polyline points="215,118 395,30.25"/>
+          </g>
+          <g>
+            <circle cx="135" cy="157" r="17" fill="#fff" stroke="#4338ca" stroke-width="2.5"/>
+            <text x="135" y="157" dy=".35em" text-anchor="middle" font-size="19" font-weight="800" fill="#1e293b">1</text>
+            <circle cx="305" cy="74" r="17" fill="#fff" stroke="#4338ca" stroke-width="2.5"/>
+            <text x="305" y="73" dy=".35em" text-anchor="middle" font-size="19" font-weight="800" fill="#1e293b">2</text>
+          </g>
+        </svg>
+      </div>
+      <button class="opt" data-v="A" onclick="pick('p3q1',this,'C')">A) No intervalo 1</button>
+      <button class="opt" data-v="B" onclick="pick('p3q1',this,'C')">B) No intervalo 2</button>
+      <button class="opt" data-v="C" onclick="pick('p3q1',this,'C')">C) Nos dois, igual</button>
+      <div class="fb"></div>
+    </div>
+
+    <div class="q" id="p3q2">
+      <p class="qstem"><b>2.</b> Observa este gráfico. O que está a acontecer no <b>trecho plano</b>?</p>
+      <div class="gcard" style="max-width:540px;margin:0 0 12px">
+        <div class="gtag">Bateria (%) ao longo do tempo</div>
+        <svg viewBox="0 0 420 250" style="width:100%;height:auto" aria-label="Gráfico que sobe e depois fica plano">
+          <line x1="55" y1="15" x2="55" y2="205" stroke="#94a3b8" stroke-width="1.5"/>
+          <line x1="55" y1="205" x2="395" y2="205" stroke="#94a3b8" stroke-width="1.5"/>
+          <text x="22" y="112" text-anchor="middle" font-size="15" fill="#334155" font-weight="700">%</text>
+          <text x="225" y="238" text-anchor="middle" font-size="15" fill="#334155" font-weight="700">tempo</text>
+          <polyline points="55,196 135,95 395,95" fill="none" stroke="#4338ca" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <button class="opt" data-v="A" onclick="pick('p3q2',this,'A')">A) A bateria deixou de subir — nesse trecho não está a carregar.</button>
+      <button class="opt" data-v="B" onclick="pick('p3q2',this,'A')">B) Está a carregar mais depressa do que antes.</button>
+      <button class="opt" data-v="C" onclick="pick('p3q2',this,'A')">C) A bateria descarregou.</button>
+      <div class="fb"></div>
+    </div>
+
+    <div class="q" id="p3q3">
+      <p class="qstem"><b>3.</b> Qual destes gráficos mostra um telemóvel que <b>carrega, depois fica um bocado sem carregar e volta a carregar</b>?</p>
+      <div class="grid3" style="margin:0 0 12px">
+        <div class="gcard">
+          <div class="gtag">Gráfico 1</div>
+          <svg viewBox="0 0 260 150" style="width:100%;height:auto" aria-label="Linha a subir sempre">
+            <line x1="30" y1="10" x2="30" y2="125" stroke="#94a3b8" stroke-width="1.5"/>
+            <line x1="30" y1="125" x2="240" y2="125" stroke="#94a3b8" stroke-width="1.5"/>
+            <polyline points="30,115 240,20" fill="none" stroke="#4338ca" stroke-width="4" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="gcard">
+          <div class="gtag">Gráfico 2</div>
+          <svg viewBox="0 0 260 150" style="width:100%;height:auto" aria-label="Linha sobe, fica plana, volta a subir">
+            <line x1="30" y1="10" x2="30" y2="125" stroke="#94a3b8" stroke-width="1.5"/>
+            <line x1="30" y1="125" x2="240" y2="125" stroke="#94a3b8" stroke-width="1.5"/>
+            <polyline points="30,115 100,45 170,45 240,20" fill="none" stroke="#4338ca" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="gcard">
+          <div class="gtag">Gráfico 3</div>
+          <svg viewBox="0 0 260 150" style="width:100%;height:auto" aria-label="Linha plana e depois sobe">
+            <line x1="30" y1="10" x2="30" y2="125" stroke="#94a3b8" stroke-width="1.5"/>
+            <line x1="30" y1="125" x2="240" y2="125" stroke="#94a3b8" stroke-width="1.5"/>
+            <polyline points="30,125 120,125 240,30" fill="none" stroke="#4338ca" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+      <button class="opt" data-v="A" onclick="pick('p3q3',this,'B')">A) Gráfico 1</button>
+      <button class="opt" data-v="B" onclick="pick('p3q3',this,'B')">B) Gráfico 2</button>
+      <button class="opt" data-v="C" onclick="pick('p3q3',this,'B')">C) Gráfico 3</button>
+      <div class="fb"></div>
+    </div>
+
+    <div class="keybox"><b>O que fica:</b> mais inclinado = muda mais depressa · plano = não muda.</div>
+  </div>
+</section>
+
+<!-- ================= PÁGINA 4 — VELOCIDADE ================= -->
+<section class="page" id="p4">
+  <div class="page-head">
+    <span class="chip dark">Velocidade · 25–35 min · em pares</span>
+    <h2>Fazer as contas</h2>
+    <p class="lead">Velocidade média = quantidade a mudar ÷ tempo.</p>
+  </div>
+
+  <div class="card ronda" id="ronda3">
+    <div class="rhead">
+      <h3>Correr, água e bicicleta</h3>
+      <div class="rtools">
+        <span class="sc">Acertos: 0 / 3</span>
+        <button class="btn ghost mini" onclick="resetRonda(this)">Reiniciar</button>
+      </div>
+    </div>
+    <p class="rlead"><b>Regra:</b> escolham UMA opção. Depois de escolherem, fica <b>bloqueada</b>.</p>
+
+    <div class="q" id="p4q1">
+      <p class="qstem"><b>1.</b> Corres-te <b>400 metros em 80 segundos</b>. Qual foi a tua <b>velocidade média</b>? (A velocidade média é o ritmo constante que dá o mesmo resultado.)</p>
+      <button class="opt" data-v="A" onclick="pick('p4q1',this,'B')">A) 2 m/s</button>
+      <button class="opt" data-v="B" onclick="pick('p4q1',this,'B')">B) 5 m/s</button>
+      <button class="opt" data-v="C" onclick="pick('p4q1',this,'B')">C) 320 m/s</button>
+      <div class="fb"></div>
+    </div>
+
+    <div class="q" id="p4q2">
+      <p class="qstem"><b>2.</b> Uma torneira enche um balde com <b>6 litros em 2 minutos</b>. Ao mesmo ritmo, quantos litros entram em cada minuto?</p>
+      <button class="opt" data-v="A" onclick="pick('p4q2',this,'B')">A) 0,5 litros por minuto</button>
+      <button class="opt" data-v="B" onclick="pick('p4q2',this,'B')">B) 3 litros por minuto</button>
+      <button class="opt" data-v="C" onclick="pick('p4q2',this,'B')">C) 12 litros por minuto</button>
+      <div class="fb"></div>
+    </div>
+
+    <div class="q" id="p4q3">
+      <p class="qstem"><b>3.</b> O André vai de bicicleta. Observa o gráfico de posição (os números marcam os três trechos). Em que trecho é que ele está <b>parado</b>?</p>
+      <div class="gcard" style="max-width:540px;margin:0 0 12px">
+        <div class="gtag">Posição do André ao longo do tempo</div>
+        <svg viewBox="0 0 420 250" style="width:100%;height:auto" aria-label="Posição: sobe, fica plano, volta a subir, com etiquetas nos trechos">
+          <line x1="55" y1="15" x2="55" y2="205" stroke="#94a3b8" stroke-width="1.5"/>
+          <line x1="55" y1="205" x2="395" y2="205" stroke="#94a3b8" stroke-width="1.5"/>
+          <text x="22" y="112" text-anchor="middle" font-size="15" fill="#334155" font-weight="700">posição</text>
+          <text x="225" y="238" text-anchor="middle" font-size="15" fill="#334155" font-weight="700">tempo</text>
+          <rect x="55" y="15" width="110" height="190" fill="#dbeafe" opacity=".55"/>
+          <rect x="165" y="15" width="100" height="190" fill="#fee2e2" opacity=".55"/>
+          <rect x="265" y="15" width="130" height="190" fill="#dcfce7" opacity=".55"/>
+          <line x1="165" y1="15" x2="165" y2="205" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6,5"/>
+          <line x1="265" y1="15" x2="265" y2="205" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6,5"/>
+          <g stroke="#4338ca" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="55,196 165,150"/>
+            <line x1="165" y1="150" x2="265" y2="150"/>
+            <polyline points="265,150 395,50"/>
+          </g>
+          <g>
+            <circle cx="110" cy="173" r="17" fill="#fff" stroke="#4338ca" stroke-width="2.5"/>
+            <text x="110" y="173" dy=".35em" text-anchor="middle" font-size="19" font-weight="800" fill="#1e293b">1</text>
+            <circle cx="215" cy="150" r="17" fill="#fff" stroke="#4338ca" stroke-width="2.5"/>
+            <text x="215" y="150" dy=".35em" text-anchor="middle" font-size="19" font-weight="800" fill="#1e293b">2</text>
+            <circle cx="330" cy="100" r="17" fill="#fff" stroke="#4338ca" stroke-width="2.5"/>
+            <text x="330" y="100" dy=".35em" text-anchor="middle" font-size="19" font-weight="800" fill="#1e293b">3</text>
+          </g>
+        </svg>
+      </div>
+      <button class="opt" data-v="A" onclick="pick('p4q3',this,'B')">A) No trecho 1</button>
+      <button class="opt" data-v="B" onclick="pick('p4q3',this,'B')">B) No trecho 2</button>
+      <button class="opt" data-v="C" onclick="pick('p4q3',this,'B')">C) No trecho 3</button>
+      <div class="fb"></div>
+    </div>
+
+    <div class="keybox"><b>O que fica:</b> velocidade média = mudança ÷ tempo · no gráfico, plano = parado.</div>
+  </div>
+</section>
+
+<!-- ================= PÁGINA 5 — COMPARAR ================= -->
+<section class="page" id="p5">
+  <div class="page-head">
+    <span class="chip dark">Comparar · 35–43 min · em pares</span>
+    <h2>Quem está à frente no fim?</h2>
+    <p class="lead">Comparar com os dois gráficos à frente — até ao fim.</p>
+  </div>
+
+  <div class="card ronda" id="ronda4">
+    <div class="rhead">
+      <h3>Pontos num jogo e o autocarro</h3>
+      <div class="rtools">
+        <span class="sc">Acertos: 0 / 2</span>
+        <button class="btn ghost mini" onclick="resetRonda(this)">Reiniciar</button>
+      </div>
+    </div>
+    <p class="rlead"><b>Regra:</b> escolham UMA opção. Depois de escolherem, fica <b>bloqueada</b>.</p>
+
+    <div class="q" id="p5q1">
+      <p class="qstem"><b>1.</b> O Bruno começou o jogo <b>muito forte</b> mas depois <b>parou</b> de marcar. A Ana foi <b>marcando devagar</b> mas sem parar. Os dois gráficos têm eixos iguais. <b>No fim do tempo mostrado, quem tem mais pontos?</b></p>
+      <div class="grid2" style="margin:0 0 12px">
+        <div class="gcard">
+          <div class="gtag">Bruno — pontos ao longo do tempo</div>
+          <svg viewBox="0 0 300 200" style="width:100%;height:auto" aria-label="Bruno: sobe muito depressa e depois fica plano">
+            <line x1="40" y1="10" x2="40" y2="170" stroke="#94a3b8" stroke-width="1.5"/>
+            <line x1="40" y1="170" x2="280" y2="170" stroke="#94a3b8" stroke-width="1.5"/>
+            <text x="22" y="92" text-anchor="middle" font-size="13" fill="#334155" font-weight="700">pontos</text>
+            <text x="160" y="192" text-anchor="middle" font-size="13" fill="#334155" font-weight="700">tempo</text>
+            <polyline points="40,160 150,55 280,55" fill="none" stroke="#4338ca" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="gcard">
+          <div class="gtag">Ana — pontos ao longo do tempo</div>
+          <svg viewBox="0 0 300 200" style="width:100%;height:auto" aria-label="Ana: sobe devagar mas sempre, ultrapassando o Bruno no fim">
+            <line x1="40" y1="10" x2="40" y2="170" stroke="#94a3b8" stroke-width="1.5"/>
+            <line x1="40" y1="170" x2="280" y2="170" stroke="#94a3b8" stroke-width="1.5"/>
+            <text x="22" y="92" text-anchor="middle" font-size="13" fill="#334155" font-weight="700">pontos</text>
+            <text x="160" y="192" text-anchor="middle" font-size="13" fill="#334155" font-weight="700">tempo</text>
+            <polyline points="40,160 280,25" fill="none" stroke="#4338ca" stroke-width="4" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+      <button class="opt" data-v="A" onclick="pick('p5q1',this,'B')">A) O Bruno</button>
+      <button class="opt" data-v="B" onclick="pick('p5q1',this,'B')">B) A Ana</button>
+      <button class="opt" data-v="C" onclick="pick('p5q1',this,'B')">C) Empate</button>
+      <div class="fb"></div>
+    </div>
+
+    <div class="q" id="p5q2">
+      <p class="qstem"><b>2.</b> O gráfico mostra a posição do autocarro ao longo da viagem. Em que trecho é que ele anda <b>mais depressa</b>?</p>
+      <div class="gcard" style="max-width:540px;margin:0 0 12px">
+        <div class="gtag">Posição do autocarro ao longo do tempo</div>
+        <svg viewBox="0 0 420 250" style="width:100%;height:auto" aria-label="Posição do autocarro: sobe devagar e depois sobe depressa, com etiquetas">
+          <line x1="55" y1="15" x2="55" y2="205" stroke="#94a3b8" stroke-width="1.5"/>
+          <line x1="55" y1="205" x2="395" y2="205" stroke="#94a3b8" stroke-width="1.5"/>
+          <text x="22" y="112" text-anchor="middle" font-size="15" fill="#334155" font-weight="700">posição</text>
+          <text x="225" y="238" text-anchor="middle" font-size="15" fill="#334155" font-weight="700">tempo</text>
+          <rect x="55" y="15" width="160" height="190" fill="#dbeafe" opacity=".55"/>
+          <rect x="215" y="15" width="180" height="190" fill="#dcfce7" opacity=".55"/>
+          <line x1="215" y1="15" x2="215" y2="205" stroke="#94a3b8" stroke-width="2" stroke-dasharray="6,5"/>
+          <g stroke="#4338ca" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="55,196 215,150"/>
+            <polyline points="215,150 395,30"/>
+          </g>
+          <g>
+            <circle cx="135" cy="173" r="17" fill="#fff" stroke="#4338ca" stroke-width="2.5"/>
+            <text x="135" y="173" dy=".35em" text-anchor="middle" font-size="19" font-weight="800" fill="#1e293b">1</text>
+            <circle cx="305" cy="90" r="17" fill="#fff" stroke="#4338ca" stroke-width="2.5"/>
+            <text x="305" y="90" dy=".35em" text-anchor="middle" font-size="19" font-weight="800" fill="#1e293b">2</text>
+          </g>
+        </svg>
+      </div>
+      <button class="opt" data-v="A" onclick="pick('p5q2',this,'B')">A) No trecho 1</button>
+      <button class="opt" data-v="B" onclick="pick('p5q2',this,'B')">B) No trecho 2</button>
+      <button class="opt" data-v="C" onclick="pick('p5q2',this,'B')">C) Sempre igual</button>
+      <div class="fb"></div>
+    </div>
+
+    <div class="keybox"><b>O que fica:</b> mais inclinado = mais rápido nesse momento · mas no fim, o que importa é o total.</div>
+  </div>
+</section>
+
+<!-- ================= PÁGINA 6 — FECHO ================= -->
+<section class="page" id="p6">
+  <div class="page-head">
+    <span class="chip dark">Fecho · 43–60 min · individual</span>
+    <h2>Uma frase e uma dúvida</h2>
+    <p class="lead">No caderno, cada um para si.</p>
+  </div>
+
+  <div class="card">
+    <ol style="font-size:20px;padding-left:26px;line-height:2">
+      <li>Escreve <b>uma frase</b> sobre algo que percebeste hoje.</li>
+      <li>Escreve <b>uma dúvida</b> que ainda tenhas (se não tiveres, escreve que não tens).</li>
+      <li>Desenha num minuto um <b>esboço</b>: «Começou rápido, depois ficou parado e voltou a andar devagar.» Só a forma e os nomes dos eixos.</li>
+    </ol>
+    <div class="keybox"><b>O que fica desta aula:</b> cada número aponta para um único aluno · mais inclinado = muda mais depressa · plano = não muda · velocidade média = mudança ÷ tempo.</div>
+  </div>
+
+  <div class="card" id="resumoFinal" style="background:#eef2ff;border-color:#c7d2fe">
+    <h3>A vossa pontuação final</h3>
+    <p style="font-size:30px;font-weight:800;margin:4px 0 2px;color:#3730a3" id="totalFinal">—</p>
+    <p style="font-size:20px;font-weight:700;margin:0 0 8px" id="classFinal"></p>
+    <p style="font-size:15px;color:#64748b;margin:0" id="detFinal"></p>
+  </div>
+</section>
+
+</main>
+
+<footer class="nav">
+  <button class="btn" id="prevBtn">← Anterior</button>
+  <span class="pgnum" id="pgnum">1 / 6</span>
+  <button class="btn primary" id="nextBtn">Seguinte →</button>
+</footer>
+
+<script>
+/* =========================================================
+   AULA 2 — Funções, gráficos e velocidade (v2.3)
+   Navegação + rondas de escolha com bloqueio (1 tentativa).
+   ========================================================= */
+var PAGES = ["p1","p2","p3","p4","p5","p6"];
+var cur = 0;
+
+function show(i){
+  if(i < 0) i = 0;
+  if(i >= PAGES.length) i = PAGES.length - 1;
+  cur = i;
+  for(var j=0;j<PAGES.length;j++){
+    document.getElementById(PAGES[j]).classList.toggle("active", j === cur);
+  }
+  document.getElementById("pgnum").textContent = (cur+1) + " / " + PAGES.length;
+  if(PAGES[cur] === "p6") preencherFinal();
+  window.scrollTo(0,0);
+}
+
+/* ---- Escolha com bloqueio ---- */
+function pick(qid, btn, correct){
+  var q = document.getElementById(qid);
+  if(!q || q.classList.contains("locked")) return;
+  q.classList.add("locked");
+
+  var opts = q.querySelectorAll(".opt");
+  for(var i=0;i<opts.length;i++){
+    opts[i].disabled = true;
+    opts[i].classList.add("dim");
+  }
+
+  var fb = q.querySelector(".fb");
+  var chosen = btn.getAttribute("data-v");
+  if(chosen === correct){
+    q.classList.add("qcerto");
+    btn.classList.remove("dim");
+    btn.classList.add("certo");
+    fb.innerHTML = '<span class="fok">✓ Correto!</span>';
+  } else {
+    q.classList.add("qerrado");
+    btn.classList.remove("dim");
+    btn.classList.add("errado");
+    fb.innerHTML = '<span class="fno">✗ Errado — a resposta certa está a verde.</span>';
+    var co = q.querySelector('.opt[data-v="' + correct + '"]');
+    if(co){ co.classList.remove("dim"); co.classList.add("certo"); }
+  }
+  updateScore(q);
+}
+
+function updateScore(q){
+  var ronda = q.closest(".ronda");
+  if(!ronda) return;
+  var tot = ronda.querySelectorAll(".q").length;
+  var ok = ronda.querySelectorAll(".q.qcerto").length;
+  var sc = ronda.querySelector(".sc");
+  if(sc) sc.textContent = "Acertos: " + ok + " / " + tot;
+}
+
+function resetRonda(btn){
+  var ronda = btn.closest(".ronda");
+  if(!ronda) return;
+  var qs = ronda.querySelectorAll(".q");
+  for(var i=0;i<qs.length;i++){
+    qs[i].classList.remove("locked","qcerto","qerrado");
+    var opts = qs[i].querySelectorAll(".opt");
+    for(var j=0;j<opts.length;j++){
+      opts[j].disabled = false;
+      opts[j].classList.remove("dim","certo","errado");
+    }
+    var fb = qs[i].querySelector(".fb");
+    if(fb) fb.innerHTML = "";
+  }
+  var sc = ronda.querySelector(".sc");
+  if(sc) sc.textContent = "Acertos: 0 / " + qs.length;
+}
+
+/* ---- Pontuação final (página 6) ---- */
+function preencherFinal(){
+  var rondas = document.querySelectorAll(".ronda");
+  var ok = 0, tot = 0, det = [];
+  for(var i=0;i<rondas.length;i++){
+    var qs = rondas[i].querySelectorAll(".q");
+    var o = rondas[i].querySelectorAll(".q.qcerto").length;
+    ok += o; tot += qs.length;
+    var titulo = rondas[i].querySelector("h3");
+    det.push((titulo ? titulo.textContent.trim() : "Ronda") + ": " + o + "/" + qs.length);
+  }
+  var tf = document.getElementById("totalFinal"), cf = document.getElementById("classFinal"), df = document.getElementById("detFinal");
+  if(!tf || tot === 0) return;
+  tf.textContent = ok + " / " + tot;
+  var cls;
+  if(ok === 0) cls = "Ainda não responderam a nenhuma pergunta — podem voltar atrás e tentar.";
+  else if(ok === tot) cls = "Perfeito! Dominam as ideias da aula.";
+  else if(ok >= tot - 2) cls = "Muito Bom — quase tudo certo.";
+  else if(ok >= Math.ceil(tot * 0.7)) cls = "Bom — as ideias principais estão lá.";
+  else if(ok >= Math.ceil(tot * 0.55)) cls = "Suficiente — vale a pena rever algumas.";
+  else cls = "Vamos rever com calma — anotem a dúvida abaixo.";
+  cf.textContent = cls;
+  df.textContent = det.join(" · ");
+}
+
+window.addEventListener("DOMContentLoaded", function(){
+  document.getElementById("prevBtn").addEventListener("click", function(){ show(cur-1); });
+  document.getElementById("nextBtn").addEventListener("click", function(){ show(cur+1); });
+  document.addEventListener("keydown", function(e){
+    var tag = (e.target.tagName || "").toLowerCase();
+    if(tag === "input" || tag === "textarea" || tag === "select") return;
+    if(e.key === "ArrowRight") show(cur+1);
+    if(e.key === "ArrowLeft") show(cur-1);
+  });
+  show(0);
+});
+</script>
+</body>
+</html>

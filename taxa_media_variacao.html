@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aula 4 — Do declive à taxa média de variação</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  background:#eef2f7;color:#0f172a;font-size:18px;line-height:1.55;
+  padding-bottom:104px;-webkit-text-size-adjust:100%;
+}
+.wrap{max-width:1120px;margin:0 auto;padding:0 18px}
+
+/* ---------- cabeçalho ---------- */
+header.top{background:linear-gradient(135deg,#1e3a8a,#1d4ed8);color:#fff;padding:22px 0 20px}
+header.top h1{margin:0;font-size:30px;font-weight:800;letter-spacing:-.3px;line-height:1.2}
+header.top .sub{margin:8px 0 0;font-size:16px;color:#c7d7fe}
+header.top .chips{margin-top:12px;display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:3px 12px;font-size:14px;font-weight:600}
+
+/* ---------- cartões ---------- */
+.card{background:#fff;border:1px solid #dbe3ec;border-radius:16px;padding:20px 22px;margin:18px 0;box-shadow:0 1px 3px rgba(15,23,42,.06)}
+.card.tight{padding:16px 18px}
+h2.sec{font-size:25px;margin:0 0 6px;font-weight:800;letter-spacing:-.2px}
+h3.sub{font-size:19px;margin:22px 0 8px;font-weight:800}
+p{margin:10px 0}
+.lead{font-size:19px;color:#334155}
+.meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:6px}
+.tag{display:inline-block;font-size:13px;font-weight:800;border-radius:999px;padding:3px 11px;background:#e0e7ff;color:#3730a3}
+.tag.time{background:#fef3c7;color:#92400e}
+.tag.pair{background:#dcfce7;color:#166534}
+.tag.solo{background:#fce7f3;color:#9d174d}
+hr.sep{border:none;border-top:1px dashed #cbd5e1;margin:22px 0}
+
+/* ---------- caixas ---------- */
+.key{background:#ecfdf5;border:2px solid #6ee7b7;border-radius:14px;padding:14px 18px;margin:16px 0;font-size:19px}
+.key strong{color:#065f46}
+.note{background:#f8fafc;border-left:5px solid #94a3b8;border-radius:8px;padding:10px 14px;margin:14px 0;font-size:16px;color:#334155}
+.psi{background:#f5f3ff;border-left:5px solid #7c3aed;border-radius:10px;padding:12px 16px;margin:16px 0}
+.psi .lbl{font-weight:800;color:#5b21b6;font-size:13px;letter-spacing:.6px;text-transform:uppercase;display:block;margin-bottom:4px}
+.gei{background:#eff6ff;border-left:5px solid #2563eb;border-radius:10px;padding:12px 16px;margin:16px 0}
+.gei .lbl{font-weight:800;color:#1e40af;font-size:13px;letter-spacing:.6px;text-transform:uppercase;display:block;margin-bottom:4px}
+.hint{display:none;background:#fffbeb;border-left:5px solid #f59e0b;border-radius:10px;padding:11px 15px;margin-top:12px;font-size:16px}
+.hint.show{display:block}
+.pause{background:#0f172a;color:#fff;border-radius:14px;padding:16px 20px;margin:18px 0;text-align:center;font-size:19px;font-weight:700}
+
+/* ---------- botões ---------- */
+.btn{font:inherit;font-weight:700;border-radius:12px;border:1px solid #cbd5e1;background:#fff;color:#0f172a;padding:10px 16px;cursor:pointer;transition:.15s}
+.btn:hover{background:#f1f5f9}
+.btn.primary{background:#1d4ed8;border-color:#1d4ed8;color:#fff}
+.btn.primary:hover{background:#1e40af}
+.btn.small{font-size:15px;padding:7px 12px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btnrow{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
+
+/* ---------- quizzes ---------- */
+.quiz{margin:16px 0;padding:14px 16px;border:1px solid #e2e8f0;border-radius:14px;background:#fbfdff}
+.quiz .qtext{font-weight:700;margin:0 0 10px;font-size:18px}
+.opts{display:flex;flex-wrap:wrap;gap:10px}
+.opt{font:inherit;font-weight:600;border:2px solid #cbd5e1;background:#fff;border-radius:12px;padding:10px 16px;cursor:pointer;transition:.15s;text-align:left}
+.opt:hover:not(:disabled){border-color:#1d4ed8;background:#eff6ff}
+.opt:disabled{cursor:default}
+.opt.correct{border-color:#15803d;background:#dcfce7;color:#14532d}
+.opt.wrong{border-color:#b91c1c;background:#fee2e2;color:#7f1d1d}
+.opt.dim{opacity:.5}
+.fb{display:none;margin-top:12px;font-size:16px;background:#f1f5f9;border-radius:10px;padding:10px 14px;border-left:5px solid #64748b}
+.fb.show{display:block}
+.fb.ok{border-left-color:#15803d;background:#f0fdf4}
+.fb.no{border-left-color:#b91c1c;background:#fef2f2}
+
+/* ---------- gráficos ---------- */
+.chart{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:6px;margin:14px 0}
+.chart svg{display:block;width:100%;height:auto;touch-action:none}
+.readout{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
+.rd{background:#f1f5f9;border:1px solid #dbe3ec;border-radius:12px;padding:8px 14px;font-size:16px;min-width:150px}
+.rd b{display:block;font-size:22px;color:#1d4ed8}
+.rd.g b{color:#15803d}
+
+/* ---------- tabelas ---------- */
+table.data{border-collapse:collapse;width:100%;font-size:17px;margin:12px 0}
+table.data th,table.data td{border:1px solid #dbe3ec;padding:9px 12px;text-align:right}
+table.data th:first-child,table.data td:first-child{text-align:left}
+table.data thead th{background:#f1f5f9;font-weight:800}
+table.data tbody tr:nth-child(even){background:#fbfdff}
+
+/* ---------- inputs ---------- */
+input.num{font:inherit;width:120px;padding:8px 10px;border:2px solid #cbd5e1;border-radius:10px;text-align:right}
+input.num.ok{border-color:#15803d;background:#f0fdf4}
+input.num.bad{border-color:#b91c1c;background:#fef2f2}
+textarea{font:inherit;width:100%;min-height:96px;padding:10px 12px;border:2px solid #cbd5e1;border-radius:10px;resize:vertical}
+input[type=text]{font:inherit;padding:9px 12px;border:2px solid #cbd5e1;border-radius:10px;width:100%}
+select{font:inherit;padding:9px 12px;border:2px solid #cbd5e1;border-radius:10px;background:#fff;max-width:100%;min-width:300px}
+.item{margin:18px 0;padding:14px 16px;border:1px solid #e2e8f0;border-radius:14px;background:#fbfdff}
+.item .qtext{margin-top:0}
+
+/* ---------- páginas ---------- */
+.page{display:none}
+.page.active{display:block;animation:fade .18s ease-in}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ---------- barra de navegação (no fim, fixa em baixo) ---------- */
+.navbar{position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.98);border-top:1px solid #cbd5e1;padding:9px 0;z-index:60;box-shadow:0 -2px 10px rgba(15,23,42,.06)}
+.navbar .inner{max-width:1120px;margin:0 auto;padding:0 18px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+.pagenum{font-weight:800;font-size:16px;white-space:nowrap}
+.dots{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.dot{width:12px;height:12px;border-radius:50%;background:#cbd5e1;border:none;cursor:pointer;padding:0;transition:.15s}
+.dot:hover{background:#94a3b8}
+.dot.active{background:#1d4ed8;transform:scale(1.3)}
+.dot.done{background:#86efac}
+.score{font-size:15px;font-weight:700;color:#475569;white-space:nowrap}
+.progress{height:5px;background:#dbe3ec}
+.progress > i{display:block;height:100%;background:#1d4ed8;width:11%;transition:width .2s}
+
+/* ---------- fórmulas ---------- */
+.formulas{display:flex;flex-wrap:wrap;gap:18px;margin:16px 0}
+.formula{flex:1 1 280px;background:#f8fafc;border:2px solid #dbe3ec;border-radius:14px;padding:14px 16px;text-align:center}
+.formula .fname{display:block;font-weight:800;font-size:15px;color:#475569;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.frac{display:inline-flex;flex-direction:column;vertical-align:middle;font-size:20px;font-weight:700}
+.frac .num{padding:0 8px 3px}
+.frac .den{border-top:2px solid #0f172a;padding:3px 8px 0}
+.formula .eq{font-size:20px;font-weight:700}
+
+@media (max-width:760px){
+  body{font-size:17px}
+  header.top h1{font-size:23px}
+  h2.sec{font-size:21px}
+  .card{padding:16px}
+  .navbar .inner{flex-wrap:wrap;justify-content:center;gap:8px}
+  .dots{display:none}
+  .rd{min-width:120px}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <h1>Taxa média de variação</h1>
+    <p class="sub">Módulo: Taxa de Variação e Otimização · 11.º ano · Cursos Profissionais de Informática</p>
+    <div class="chips">
+      <span class="chip">2 horas</span>
+      <span class="chip">11º Profissional P6</span>
+    </div>
+  </div>
+</header>
+<div class="progress"><i id="progressBar"></i></div>
+
+<main class="wrap">
+
+
+<!-- ================= PÁGINA 1 ================= -->
+<section class="page active" id="p1">
+  <div class="card">
+    <div class="meta"><span class="tag time">≈ 8 min</span><span class="tag">Aquecimento</span><span class="tag pair">Em pares</span></div>
+    <h2 class="sec">1. O que é que o gráfico nos diz?</h2>
+    <p class="lead">Este gráfico mostra a <strong>posição</strong> de um carrinho ao longo do <strong>tempo</strong>. Clica em cada troço para o destacar.</p>
+
+    <div class="chart" id="chart1"></div>
+    <div class="readout" id="readout1"></div>
+
+    <div class="hint" id="hint1">Olha para a <strong>altura</strong> da linha: onde é que ela sobe mais depressa? E onde é que fica sempre à mesma altura?</div>
+    <div class="btnrow"><button class="btn small" data-hint="hint1">Mostrar dica</button></div>
+
+    <hr class="sep">
+
+    <div class="quiz" data-answer="b" data-fb="Entre 2 s e 4 s a linha está horizontal: a posição fica sempre em 8 m.">
+      <p class="qtext">1.1 Em que troço é que a posição <em>não</em> muda?</p>
+      <div class="opts">
+        <button class="opt" data-key="a">De 0 s a 2 s</button>
+        <button class="opt" data-key="b">De 2 s a 4 s</button>
+        <button class="opt" data-key="c">De 4 s a 6 s</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="quiz" data-answer="c" data-fb="De 4 s a 6 s a linha sobe 12 m em apenas 2 s — é o troço mais inclinado do gráfico.">
+      <p class="qtext">1.2 Em que troço é que a posição muda <em>mais depressa</em>?</p>
+      <div class="opts">
+        <button class="opt" data-key="a">De 0 s a 2 s</button>
+        <button class="opt" data-key="b">De 2 s a 4 s</button>
+        <button class="opt" data-key="c">De 4 s a 6 s</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="quiz" data-answer="b" data-fb="Se a posição não muda, o carrinho não se desloca: está parado.">
+      <p class="qtext">1.3 O que significa o troço horizontal?</p>
+      <div class="opts">
+        <button class="opt" data-key="a">O carrinho anda devagar</button>
+        <button class="opt" data-key="b">O carrinho está parado</button>
+        <button class="opt" data-key="c">O carrinho anda para trás</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PÁGINA 2 ================= -->
+<section class="page" id="p2">
+  <div class="card">
+    <div class="meta"><span class="tag time">≈ 15 min</span><span class="tag">Descoberta</span><span class="tag pair">Em pares</span></div>
+    <h2 class="sec">2. Descobrir o declive de um segmento</h2>
+    <p class="lead">Este gráfico é um <strong>segmento de reta</strong>: o carrinho anda sempre à mesma velocidade. Arrasta os pontos <strong>A</strong> e <strong>B</strong> ao longo da reta e observa os valores.</p>
+
+    <div class="chart" id="chart2"></div>
+    <div class="readout" id="readout2"></div>
+
+    <div class="note"><strong>Tarefa em pares (3 min):</strong> antes de arrastar, escrevam no caderno quanto vale a variação da posição e a variação do tempo entre os pontos que estão no gráfico. Depois arrastem e confirmem.</div>
+
+    <div class="key">
+      <strong>Declive de um segmento</strong> = variação vertical ÷ variação horizontal =
+      (posição final − posição inicial) ÷ (tempo final − tempo inicial)
+    </div>
+
+    <div class="hint" id="hint2">A variação vertical é a diferença das alturas dos dois pontos. A variação horizontal é a diferença dos tempos. Não interessa <em>quais</em> pontos escolhes: experimenta com outros e vê o que acontece à razão.</div>
+    <div class="btnrow"><button class="btn small" data-hint="hint2">Mostrar dica</button></div>
+
+    <hr class="sep">
+
+    <div class="quiz" data-answer="b" data-fb="(20 − 0) ÷ (4 − 0) = 20 ÷ 4 = 5 m/s.">
+      <p class="qtext">2.1 Se A = (0 s, 0 m) e B = (4 s, 20 m), quanto vale a variação da posição dividida pela variação do tempo?</p>
+      <div class="opts">
+        <button class="opt" data-key="a">4 m/s</button>
+        <button class="opt" data-key="b">5 m/s</button>
+        <button class="opt" data-key="c">20 m/s</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="quiz" data-answer="b" data-fb="Num segmento de reta a inclinação é constante: a razão é sempre a mesma, escolham os pontos que escolherem.">
+      <p class="qtext">2.2 Ao arrastar os pontos ao longo do mesmo segmento, a razão Δy ÷ Δx…</p>
+      <div class="opts">
+        <button class="opt" data-key="a">aumenta</button>
+        <button class="opt" data-key="b">mantém-se igual</button>
+        <button class="opt" data-key="c">diminui</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="quiz" data-answer="a" data-fb="O declive é a velocidade: em cada segundo a posição aumenta 5 m.">
+      <p class="qtext">2.3 O que significa o valor 5 neste gráfico?</p>
+      <div class="opts">
+        <button class="opt" data-key="a">Em cada segundo a posição aumenta 5 m</button>
+        <button class="opt" data-key="b">O carrinho percorre 5 m no total</button>
+        <button class="opt" data-key="c">O carrinho demora 5 s a chegar ao fim</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="psi">
+      <span class="lbl">11PSI — justificação</span>
+      Explica, por palavras tuas, porque é que a razão não muda quando mudamos os pontos, desde que os dois fiquem no mesmo segmento de reta.
+      <textarea data-save="psi2" placeholder="Escreve a tua justificação…"></textarea>
+    </div>
+  </div>
+</section>
+
+
+<!-- ================= PÁGINA 3 ================= -->
+<section class="page" id="p3">
+  <div class="card">
+    <div class="meta"><span class="tag time">≈ 12 min</span><span class="tag">Ligação de ideias</span><span class="tag">Turma toda</span></div>
+    <h2 class="sec">3. Duas fórmulas, a mesma ideia</h2>
+    <p class="lead">Compara as duas expressões. Repara no que se repete em cada uma.</p>
+
+    <div class="formulas">
+      <div class="formula">
+        <span class="fname">Declive do segmento</span>
+        <span class="eq">m =</span>
+        <span class="frac"><span class="num">y₂ − y₁</span><span class="den">x₂ − x₁</span></span>
+      </div>
+      <div class="formula">
+        <span class="fname">Taxa média de variação</span>
+        <span class="eq">tmv =</span>
+        <span class="frac"><span class="num">f(b) − f(a)</span><span class="den">b − a</span></span>
+      </div>
+    </div>
+
+    <div class="note">No gráfico de posição-tempo: <strong>y</strong> é a posição e <strong>x</strong> é o tempo. Na taxa média, <strong>f</strong> é a função (a quantidade que estamos a medir) e <strong>a</strong>, <strong>b</strong> são os dois instantes.</div>
+
+    <div class="hint" id="hint3">Nas duas expressões fazemos sempre a mesma coisa: <strong>variação vertical ÷ variação horizontal</strong>. Só mudam os nomes das letras.</div>
+    <div class="btnrow"><button class="btn small" data-hint="hint3">Mostrar dica</button></div>
+
+    <hr class="sep">
+
+    <div class="quiz" data-answer="a" data-fb="f(b) − f(a) é a variação da quantidade (a variação vertical). b − a é a variação do tempo (a horizontal).">
+      <p class="qtext">3.1 Na taxa média de variação, o que corresponde a <em>y₂ − y₁</em> do declive?</p>
+      <div class="opts">
+        <button class="opt" data-key="a">f(b) − f(a)</button>
+        <button class="opt" data-key="b">b − a</button>
+        <button class="opt" data-key="c">f(a) + f(b)</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="quiz" data-answer="b" data-fb="Num segmento de reta, o declive do segmento e a taxa média de variação nesse intervalo dão exatamente o mesmo valor.">
+      <p class="qtext">3.2 Num segmento de reta, o declive do segmento e a taxa média de variação nesse intervalo…</p>
+      <div class="opts">
+        <button class="opt" data-key="a">são parecidos mas nunca iguais</button>
+        <button class="opt" data-key="b">coincidem: dão o mesmo valor</button>
+        <button class="opt" data-key="c">não têm relação nenhuma</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="quiz" data-answer="c" data-fb="Coincidem porque usam a mesma razão: a variação vertical dividida pela variação horizontal.">
+      <p class="qtext">3.3 Porque é que as duas coincidem num segmento?</p>
+      <div class="opts">
+        <button class="opt" data-key="a">Porque os números são pequenos</button>
+        <button class="opt" data-key="b">Porque o tempo é sempre 1 segundo</button>
+        <button class="opt" data-key="c">Porque usam a mesma razão: variação vertical ÷ variação horizontal</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="key">
+      <strong>Ideia-chave:</strong> num gráfico que é um segmento de reta entre dois pontos, o declive do segmento e a taxa média de variação nesse intervalo <strong>coincidem</strong>. Não são apenas parecidos — usam a mesma razão e dão o mesmo valor.
+    </div>
+  </div>
+</section>
+
+<!-- ================= PÁGINA 4 ================= -->
+<section class="page" id="p4">
+  <div class="card">
+    <div class="meta"><span class="tag time">≈ 8 min</span><span class="tag">Exploração</span><span class="tag pair">Em pares</span></div>
+    <h2 class="sec">4. E se a inclinação for zero?</h2>
+    <p class="lead">Move o cursor para mudar a inclinação do segmento. Repara no que acontece ao carrinho quando a inclinação chega a zero.</p>
+
+    <div class="chart" id="chart4"></div>
+    <div class="readout" id="readout4"></div>
+
+    <div class="btnrow" style="align-items:center">
+      <label for="slider4" style="font-weight:700">Inclinação (velocidade):</label>
+      <input type="range" id="slider4" min="0" max="6" step="0.5" value="4" style="flex:1 1 260px;max-width:420px">
+    </div>
+
+    <div class="hint" id="hint4">Se a linha fica horizontal, a posição não muda. Se a posição não muda, o carrinho não se desloca.</div>
+    <div class="btnrow"><button class="btn small" data-hint="hint4">Mostrar dica</button></div>
+
+    <hr class="sep">
+
+    <div class="quiz" data-answer="b" data-fb="Numa linha horizontal, a posição inicial e a final são iguais: a variação da posição é zero.">
+      <p class="qtext">4.1 Num troço horizontal, a variação da posição é…</p>
+      <div class="opts">
+        <button class="opt" data-key="a">igual à variação do tempo</button>
+        <button class="opt" data-key="b">zero</button>
+        <button class="opt" data-key="c">máxima</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="quiz" data-answer="a" data-fb="Zero dividido por qualquer tempo diferente de zero dá zero. A taxa de variação nesse troço é nula.">
+      <p class="qtext">4.2 Então a taxa de variação nesse troço é…</p>
+      <div class="opts">
+        <button class="opt" data-key="a">zero</button>
+        <button class="opt" data-key="b">igual ao tempo</button>
+        <button class="opt" data-key="c">não se pode calcular</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="quiz" data-answer="c" data-fb="Velocidade nula significa que o carrinho está parado: a posição mantém-se.">
+      <p class="qtext">4.3 Com o cursor no valor 0, o que acontece ao carrinho?</p>
+      <div class="opts">
+        <button class="opt" data-key="a">Anda muito devagar</button>
+        <button class="opt" data-key="b">Anda para trás</button>
+        <button class="opt" data-key="c">Fica parado</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="pause">PAUSA — 10 minutos</div>
+  </div>
+</section>
+
+<!-- ================= PÁGINA 5 ================= -->
+<section class="page" id="p5">
+  <div class="card">
+    <div class="meta"><span class="tag time">≈ 20 min</span><span class="tag">Ideia central</span><span class="tag pair">Em pares</span></div>
+    <h2 class="sec">5. Do segmento à curva: a reta secante</h2>
+    <p class="lead">Agora o gráfico é <strong>curvo</strong>: mostra a quantidade de dados descarregados (em MB) ao longo do tempo. Arrasta os pontos <strong>A</strong> e <strong>B</strong> ou usa os botões para escolher o intervalo.</p>
+
+    <div class="chart" id="chart5"></div>
+    <div class="readout" id="readout5"></div>
+
+    <div class="btnrow">
+      <button class="btn small" data-preset="0,6">0 s → 6 s</button>
+      <button class="btn small" data-preset="0,1">0 s → 1 s</button>
+      <button class="btn small" data-preset="1,4">1 s → 4 s</button>
+      <button class="btn small" data-preset="4,6">4 s → 6 s</button>
+    </div>
+
+    <div class="note">A reta que une os dois pontos da curva chama-se <strong>reta secante</strong>. Não acompanha a curva — só liga os dois pontos escolhidos.</div>
+
+    <div class="hint" id="hint5">A taxa média é sempre a <strong>variação total da quantidade</strong> dividida pelo <strong>tempo total</strong> do intervalo. É a inclinação da reta secante que estás a ver.</div>
+    <div class="btnrow"><button class="btn small" data-hint="hint5">Mostrar dica</button></div>
+
+    <hr class="sep">
+
+    <div class="quiz" data-answer="c" data-fb="No fim do intervalo a curva está em 21 MB e no início em 0 MB: a variação é 21 MB.">
+      <p class="qtext">5.1 De 0 s a 6 s, quanto variou a quantidade descarregada?</p>
+      <div class="opts">
+        <button class="opt" data-key="a">6 MB</button>
+        <button class="opt" data-key="b">17 MB</button>
+        <button class="opt" data-key="c">21 MB</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="quiz" data-answer="b" data-fb="21 MB ÷ 6 s = 3,5 MB/s. É a inclinação da reta secante que une (0 s, 0 MB) a (6 s, 21 MB).">
+      <p class="qtext">5.2 Qual é a taxa média de variação nesse intervalo?</p>
+      <div class="opts">
+        <button class="opt" data-key="a">2 MB/s</button>
+        <button class="opt" data-key="b">3,5 MB/s</button>
+        <button class="opt" data-key="c">5 MB/s</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="quiz" data-answer="a" data-fb="Secante: a reta que corta a curva em dois pontos. (A reta que toca num só ponto chama-se tangente — vamos vê-la na Semana 3.)">
+      <p class="qtext">5.3 Como se chama a reta que une os dois pontos da curva?</p>
+      <div class="opts">
+        <button class="opt" data-key="a">Secante</button>
+        <button class="opt" data-key="b">Tangente</button>
+        <button class="opt" data-key="c">Vertical</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="quiz" data-answer="b" data-fb="A taxa média resume o intervalo. Não diz que o ritmo foi constante em cada instante — basta olhar para a curva, que não é uma reta.">
+      <p class="qtext">5.4 A taxa média descreve o ritmo em cada instante?</p>
+      <div class="opts">
+        <button class="opt" data-key="a">Sim, em todos os instantes o ritmo foi esse</button>
+        <button class="opt" data-key="b">Não, resume o intervalo todo</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="psi">
+      <span class="lbl">11PSI — justificação</span>
+      Compara a taxa média de 0 s a 1 s com a de 4 s a 6 s. Explica porque é que a curva ser mais inclinada no início faz com que essas duas taxas sejam tão diferentes.
+      <textarea data-save="psi5" placeholder="Escreve a tua justificação…"></textarea>
+    </div>
+  </div>
+</section>
+
+
+<!-- ================= PÁGINA 6 ================= -->
+<section class="page" id="p6">
+  <div class="card">
+    <div class="meta"><span class="tag time">≈ 13 min</span><span class="tag">Significado</span><span class="tag">Turma toda</span></div>
+    <h2 class="sec">6. O que significa a taxa média?</h2>
+    <p class="lead">A taxa média de 0 s a 6 s é <strong>3,5 MB/s</strong>. Carrega no botão para ver o que aconteceria se a descarga fosse sempre a esse ritmo.</p>
+
+    <div class="chart" id="chart6"></div>
+    <div class="readout" id="readout6"></div>
+
+    <div class="btnrow">
+      <button class="btn primary" id="btnRitmo">Mostrar o ritmo constante</button>
+    </div>
+
+    <div class="key">
+      <strong>Sentido da taxa média:</strong> se a quantidade tivesse aumentado sempre ao mesmo ritmo — à taxa média — chegaria à <strong>mesma quantidade final</strong> no <strong>mesmo tempo</strong>.
+    </div>
+
+    <div class="key">
+      <strong>A taxa média é uma média mesmo:</strong> ou o ritmo foi sempre esse (a reta verde), ou houve alturas mais rápidas e alturas mais devagar do que a média — e os dois lados compensam-se. Olha para a curva: a inclinação aumenta e depois diminui. <strong>A reta da taxa média é uma inclinação intermédia.</strong>
+    </div>
+
+    <div class="hint" id="hint6">Repara que a reta do ritmo constante e a reta secante são a mesma reta. Só que uma descreve «o que aconteceu em média» e a outra descreve «um ritmo que nunca mudou».</div>
+    <div class="btnrow"><button class="btn small" data-hint="hint6">Mostrar dica</button></div>
+
+    <hr class="sep">
+
+    <div class="quiz" data-answer="b" data-fb="3,5 MB/s × 6 s = 21 MB. É exatamente a quantidade que foi realmente descarregada.">
+      <p class="qtext">6.1 Se descarregasse sempre a 3,5 MB/s durante 6 s, quanto teria no fim?</p>
+      <div class="opts">
+        <button class="opt" data-key="a">17 MB</button>
+        <button class="opt" data-key="b">21 MB</button>
+        <button class="opt" data-key="c">3,5 MB</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="quiz" data-answer="c" data-fb="Não. A taxa média é um resumo do intervalo. O ritmo real mudou ao longo do tempo — a curva mostra isso.">
+      <p class="qtext">6.2 A taxa média diz que o ritmo foi constante em todos os instantes?</p>
+      <div class="opts">
+        <button class="opt" data-key="a">Sim, sempre</button>
+        <button class="opt" data-key="b">Sim, se a curva for suave</button>
+        <button class="opt" data-key="c">Não, é apenas um resumo do intervalo</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="quiz" data-answer="a" data-fb="A quantidade total e o tempo total são os mesmos: por isso a taxa constante equivalente dá o mesmo resultado final.">
+      <p class="qtext">6.3 O que é que garante que a taxa média representa bem o intervalo todo?</p>
+      <div class="opts">
+        <button class="opt" data-key="a">A quantidade total e o tempo total serem os mesmos</button>
+        <button class="opt" data-key="b">A curva ser sempre crescente</button>
+        <button class="opt" data-key="c">O intervalo começar em zero</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="quiz" data-answer="b" data-fb="Não. A média fica sempre entre o mais devagar e o mais rápido: com média de 140 km/h houve alturas a 140 km/h ou mais — logo, a passar dos 120 km/h.">
+      <p class="qtext">6.4 «Fui ao Algarve a uma média de 140 km/h, mas nunca passei o limite de velocidade (120 km/h).» É possível?</p>
+      <div class="opts">
+        <button class="opt" data-key="a">Sim, a média é só uma conta — pode dar 140 mesmo nunca passando os 120</button>
+        <button class="opt" data-key="b">Não, a média é um valor intermédio: com média de 140 km/h houve alturas a 140 km/h ou mais</button>
+        <button class="opt" data-key="c">Sim, se andar sempre exatamente a 140 km/h</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="psi">
+      <span class="lbl">11PSI — justificação</span>
+      A taxa média de 0 s a 6 s é 3,5 MB/s, mas a curva não tem inclinação 3,5 em todos os pontos. Explica como é possível que os dois valores (o real e o da taxa constante) acabem no mesmo sítio.
+      <textarea data-save="psi6" placeholder="Escreve a tua justificação…"></textarea>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PÁGINA 7 ================= -->
+<section class="page" id="p7">
+  <div class="card">
+    <div class="meta"><span class="tag time">≈ 15 min</span><span class="tag">Cuidado com a média</span><span class="tag pair">Em pares</span></div>
+    <h2 class="sec">7. A armadilha da média simples</h2>
+    <p class="lead">Vamos dividir a mesma descarga em três troços. Calcula o ritmo de cada troço e depois compara com a taxa média global.</p>
+
+    <table class="data">
+      <thead>
+        <tr><th>Troço</th><th>Tempo (s)</th><th>Dados descarregados (MB)</th><th>Ritmo do troço (MB/s)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1.º troço</td><td>0 a 1</td><td>0 a 5</td><td>5</td></tr>
+        <tr><td>2.º troço</td><td>1 a 4</td><td>5 a 17</td><td>4</td></tr>
+        <tr><td>3.º troço</td><td>4 a 6</td><td>17 a 21</td><td>2</td></tr>
+        <tr><td><strong>Total</strong></td><td><strong>0 a 6</strong></td><td><strong>0 a 21</strong></td><td><strong>?</strong></td></tr>
+      </tbody>
+    </table>
+
+    <div class="btnrow">
+      <button class="btn" id="btnSimples">Calcular a média simples dos três ritmos</button>
+      <button class="btn primary" id="btnGlobal">Calcular a taxa média global</button>
+    </div>
+    <div class="readout" id="readout7"></div>
+
+    <div class="hint" id="hint7">A média simples trata os três troços como se durassem o mesmo tempo. Mas o 2.º troço dura 3 s e o 3.º dura 2 s. Quem dura mais tempo pesa mais.</div>
+    <div class="btnrow"><button class="btn small" data-hint="hint7">Mostrar dica</button></div>
+
+    <hr class="sep">
+
+    <div class="quiz" data-answer="c" data-fb="(5 + 4 + 2) ÷ 3 = 11 ÷ 3 ≈ 3,67 MB/s.">
+      <p class="qtext">7.1 A média simples dos três ritmos (5, 4 e 2) é…</p>
+      <div class="opts">
+        <button class="opt" data-key="a">3,5 MB/s</button>
+        <button class="opt" data-key="b">11 MB/s</button>
+        <button class="opt" data-key="c">≈ 3,67 MB/s</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="quiz" data-answer="a" data-fb="21 MB ÷ 6 s = 3,5 MB/s. É a taxa média de variação de 0 s a 6 s.">
+      <p class="qtext">7.2 A taxa média global, de 0 s a 6 s, é…</p>
+      <div class="opts">
+        <button class="opt" data-key="a">3,5 MB/s</button>
+        <button class="opt" data-key="b">≈ 3,67 MB/s</button>
+        <button class="opt" data-key="c">4 MB/s</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="quiz" data-answer="b" data-fb="Os troços têm durações diferentes. A taxa média global é a variação total dividida pelo tempo total — não é a média simples dos ritmos.">
+      <p class="qtext">7.3 Porque é que os dois valores são diferentes?</p>
+      <div class="opts">
+        <button class="opt" data-key="a">Porque houve um erro de cálculo</button>
+        <button class="opt" data-key="b">Porque os troços têm durações diferentes</button>
+        <button class="opt" data-key="c">Porque a descarga começou em zero</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="psi">
+      <span class="lbl">11PSI — justificação</span>
+      O 2.º troço dura 3 s e o 3.º dura 2 s. Explica porque é que o ritmo do 2.º troço tem mais peso na taxa média global do que o ritmo do 3.º troço.
+      <textarea data-save="psi7" placeholder="Escreve a tua justificação…"></textarea>
+    </div>
+
+    <div class="key">
+      <strong>Atenção:</strong> a taxa média de variação <strong>não</strong> é, em geral, a média aritmética simples das taxas de cada troço. É sempre a <strong>variação total ÷ tempo total</strong>.
+    </div>
+  </div>
+</section>
+
+<!-- ================= PÁGINA 8 ================= -->
+<section class="page" id="p8">
+  <div class="card">
+    <div class="meta"><span class="tag time">≈ 18 min</span><span class="tag">Aplicação</span><span class="tag pair">Em pares</span></div>
+    <h2 class="sec">8. Mega Sprint: velocidades médias</h2>
+    <p class="lead">Os dados abaixo são <strong>fictícios</strong> (servem para treinar). Cada participante está identificado por um código — não há rankings nem nomes.</p>
+
+    <h3 class="sub">Prova de 40 m</h3>
+    <table class="data">
+      <thead><tr><th>Código</th><th>Tempo (s)</th><th>Velocidade média (m/s)</th></tr></thead>
+      <tbody>
+        <tr><td>P1</td><td>6,2</td><td><input class="num" data-check="6.45" data-tol="0.06" inputmode="decimal" placeholder="?"></td></tr>
+        <tr><td>P2</td><td>7,0</td><td><input class="num" data-check="5.71" data-tol="0.06" inputmode="decimal" placeholder="?"></td></tr>
+        <tr><td>P3</td><td>5,8</td><td><input class="num" data-check="6.90" data-tol="0.06" inputmode="decimal" placeholder="?"></td></tr>
+        <tr><td>P4</td><td>8,1</td><td><input class="num" data-check="4.94" data-tol="0.06" inputmode="decimal" placeholder="?"></td></tr>
+      </tbody>
+    </table>
+    <div class="btnrow"><button class="btn small" data-checkbtn="1">Verificar esta tabela</button></div>
+
+    <h3 class="sub">Prova de 1000 m</h3>
+    <table class="data">
+      <thead><tr><th>Código</th><th>Tempo</th><th>Velocidade média (m/s)</th></tr></thead>
+      <tbody>
+        <tr><td>P1</td><td>4 min 10 s</td><td><input class="num" data-check="4.00" data-tol="0.06" inputmode="decimal" placeholder="?"></td></tr>
+        <tr><td>P2</td><td>3 min 55 s</td><td><input class="num" data-check="4.26" data-tol="0.06" inputmode="decimal" placeholder="?"></td></tr>
+        <tr><td>P3</td><td>5 min 20 s</td><td><input class="num" data-check="3.13" data-tol="0.06" inputmode="decimal" placeholder="?"></td></tr>
+        <tr><td>P4</td><td>4 min 40 s</td><td><input class="num" data-check="3.57" data-tol="0.06" inputmode="decimal" placeholder="?"></td></tr>
+      </tbody>
+    </table>
+    <div class="btnrow"><button class="btn small" data-checkbtn="2">Verificar esta tabela</button></div>
+
+    <div class="note">Lembra-te: velocidade média = <strong>distância total ÷ tempo total</strong>. Nos 1000 m, converte primeiro os minutos em segundos (4 min 10 s = 250 s).</div>
+
+    <div class="hint" id="hint8">Usa a mesma ideia do gráfico: a velocidade média é a inclinação da reta que ligaria o início ao fim. Escreve os números com vírgula ou com ponto — o programa aceita os dois.</div>
+    <div class="btnrow"><button class="btn small" data-hint="hint8">Mostrar dica</button></div>
+
+    <hr class="sep">
+
+    <div class="quiz" data-answer="a" data-fb="40 m ÷ 6,2 s ≈ 6,45 m/s.">
+      <p class="qtext">8.1 Nos 40 m, qual é a velocidade média de P1 (6,2 s)?</p>
+      <div class="opts">
+        <button class="opt" data-key="a">≈ 6,45 m/s</button>
+        <button class="opt" data-key="b">≈ 5,71 m/s</button>
+        <button class="opt" data-key="c">≈ 6,90 m/s</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="quiz" data-answer="b" data-fb="1000 m ÷ 250 s = 4 m/s. (4 min 10 s = 250 s.)">
+      <p class="qtext">8.2 Nos 1000 m, qual é a velocidade média de P1 (4 min 10 s)?</p>
+      <div class="opts">
+        <button class="opt" data-key="a">≈ 4,26 m/s</button>
+        <button class="opt" data-key="b">4 m/s</button>
+        <button class="opt" data-key="c">≈ 3,57 m/s</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="quiz" data-answer="c" data-fb="Nos 40 m é um esforço curto (sprint); nos 1000 m é um esforço longo, em que a velocidade média é menor.">
+      <p class="qtext">8.3 Porque é que a velocidade média nos 40 m é maior do que nos 1000 m?</p>
+      <div class="opts">
+        <button class="opt" data-key="a">Porque a pista dos 40 m é mais curta</button>
+        <button class="opt" data-key="b">Porque os tempos foram medidos de forma diferente</button>
+        <button class="opt" data-key="c">Porque nos 40 m é um esforço curto e nos 1000 m é um esforço longo</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="quiz" data-answer="a" data-fb="A 4 m/s, em 1 segundo percorre 4 m. É isso que a velocidade média significa.">
+      <p class="qtext">8.4 Um atleta faz 1000 m em 4 min 10 s. Que distância percorreria em 1 s, à velocidade média?</p>
+      <div class="opts">
+        <button class="opt" data-key="a">4 m</button>
+        <button class="opt" data-key="b">10 m</button>
+        <button class="opt" data-key="c">250 m</button>
+      </div>
+      <div class="fb"></div>
+    </div>
+
+    <div class="psi">
+      <span class="lbl">11PSI — ligação ao curso</span>
+      Converte a velocidade média de P1 nos 40 m para km/h (multiplica por 3,6) e explica, em duas linhas, porque é que a mesma velocidade média pode corresponder a ritmos muito diferentes ao longo da prova.
+      <textarea data-save="psi8" placeholder="Escreve aqui…"></textarea>
+    </div>
+  </div>
+</section>
+
+
+<!-- ================= PÁGINA 9 ================= -->
+<section class="page" id="p9">
+  <div class="card">
+    <div class="meta"><span class="tag time">≈ 8 min</span><span class="tag">Fecho</span><span class="tag solo">Individual</span></div>
+    <h2 class="sec">9. Bilhete de saída</h2>
+    <p class="lead">Responde individualmente. As tuas respostas ficam guardadas <strong>só neste dispositivo</strong> — não são enviadas para lado nenhum.</p>
+
+    <div class="item">
+      <p class="qtext">9.1 Num segmento de reta, o declive do segmento e a taxa média de variação…</p>
+      <select data-save="b1">
+        <option value="">— escolhe uma opção —</option>
+        <option>coincidem: dão o mesmo valor</option>
+        <option>são sempre diferentes</option>
+        <option>não se podem comparar</option>
+      </select>
+    </div>
+
+    <div class="item">
+      <p class="qtext">9.2 Num gráfico curvo, a taxa média entre dois pontos é a inclinação da reta que…</p>
+      <select data-save="b2">
+        <option value="">— escolhe uma opção —</option>
+        <option>une esses dois pontos</option>
+        <option>é vertical</option>
+        <option>passa só por um ponto</option>
+      </select>
+    </div>
+
+    <div class="item">
+      <p class="qtext">9.3 A taxa média representa o ritmo que, se fosse constante, produziria a mesma ______ no mesmo intervalo de tempo.</p>
+      <select data-save="b3">
+        <option value="">— escolhe uma opção —</option>
+        <option>variação total</option>
+        <option>velocidade máxima</option>
+        <option>distância percorrida em cada segundo</option>
+      </select>
+    </div>
+
+    <div class="item">
+      <p class="qtext">9.4 Escreve uma frase a explicar a diferença entre a <strong>taxa média</strong> de um intervalo e o <strong>ritmo num instante</strong>.</p>
+      <textarea data-save="b4" placeholder="Escreve a tua resposta…"></textarea>
+    </div>
+
+    <div class="btnrow">
+      <button class="btn" id="btnCopiar">Copiar respostas</button>
+      <button class="btn" id="btnDescarregar">Descarregar ficheiro .txt</button>
+      <button class="btn" id="btnLimpar">Apagar respostas</button>
+    </div>
+    <div class="readout" id="readout9"></div>
+
+    <div class="key">
+      <strong>Para levar para casa:</strong> a taxa média de variação entre dois pontos é a <strong>variação total ÷ intervalo</strong>. No gráfico, é a inclinação da <strong>reta secante</strong> que une esses dois pontos. Num segmento de reta, coincide com o declive do segmento.
+    </div>
+  </div>
+</section>
+
+</main>
+
+<nav class="navbar">
+  <div class="inner">
+    <button class="btn" id="btnPrev" type="button">◀ Anterior</button>
+    <div class="dots" id="dots"></div>
+    <span class="pagenum" id="pagenum">Página 1 de 9</span>
+    <span class="score" id="score">Certas: 0 · Respondidas: 0</span>
+    <button class="btn primary" id="btnNext" type="button">Seguinte ▶</button>
+  </div>
+</nav>
+
+<script>
+(function(){
+'use strict';
+
+/* ============ utilitários ============ */
+var NS='http://www.w3.org/2000/svg';
+function $(s,r){ return (r||document).querySelector(s); }
+function $$(s,r){ return Array.prototype.slice.call((r||document).querySelectorAll(s)); }
+function svgEl(tag,attrs,parent){
+  var e=document.createElementNS(NS,tag);
+  if(attrs){ for(var k in attrs){ e.setAttribute(k,attrs[k]); } }
+  if(parent){ parent.appendChild(e); }
+  return e;
+}
+function clear(g){ while(g.firstChild){ g.removeChild(g.firstChild); } }
+function fmt(v,d){
+  if(d===undefined){ d=2; }
+  var p=Math.pow(10,d);
+  var s=(Math.round(v*p)/p).toFixed(d);
+  s=s.replace(/\.?0+$/,'');
+  if(s===''||s==='-'){ s='0'; }
+  return s.replace('.',',');
+}
+function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+
+/* ============ construção de gráficos ============ */
+function mkChart(host,opt){
+  var w=opt.w||760, h=opt.h||440;
+  var m={l:78,r:36,t:26,b:64};
+  host.innerHTML='';
+  var svg=svgEl('svg',{viewBox:'0 0 '+w+' '+h,preserveAspectRatio:'xMidYMid meet'},host);
+  var X=function(v){ return m.l+(v/opt.xmax)*(w-m.l-m.r); };
+  var Y=function(v){ return h-m.b-(v/opt.ymax)*(h-m.t-m.b); };
+  var invX=function(px){ return (px-m.l)/(w-m.l-m.r)*opt.xmax; };
+  var invY=function(py){ return (h-m.b-py)/(h-m.t-m.b)*opt.ymax; };
+  var g=svgEl('g',{},svg);
+  (opt.xticks||[]).forEach(function(t){
+    svgEl('line',{x1:X(t),y1:Y(0),x2:X(t),y2:Y(opt.ymax),stroke:'#eef2f7','stroke-width':1},g);
+    svgEl('text',{x:X(t),y:h-m.b+26,'text-anchor':'middle','font-size':16,fill:'#64748b'},g).textContent=t;
+  });
+  (opt.yticks||[]).forEach(function(t){
+    svgEl('line',{x1:X(0),y1:Y(t),x2:X(opt.xmax),y2:Y(t),stroke:'#eef2f7','stroke-width':1},g);
+    svgEl('text',{x:X(0)-12,y:Y(t)+6,'text-anchor':'end','font-size':16,fill:'#64748b'},g).textContent=t;
+  });
+  svgEl('line',{x1:X(0),y1:Y(0),x2:X(opt.xmax),y2:Y(0),stroke:'#334155','stroke-width':2.5},svg);
+  svgEl('line',{x1:X(0),y1:Y(0),x2:X(0),y2:Y(opt.ymax),stroke:'#334155','stroke-width':2.5},svg);
+  svgEl('text',{x:(X(0)+X(opt.xmax))/2,y:h-16,'text-anchor':'middle','font-size':17,fill:'#334155','font-weight':700},svg).textContent=opt.xlabel;
+  var cy=(Y(0)+Y(opt.ymax))/2;
+  svgEl('text',{x:22,y:cy,'text-anchor':'middle','font-size':17,fill:'#334155','font-weight':700,transform:'rotate(-90 22 '+cy+')'},svg).textContent=opt.ylabel;
+  return {svg:svg,X:X,Y:Y,invX:invX,invY:invY,w:w,h:h,m:m};
+}
+function svgPoint(svg,evt){
+  var pt=svg.createSVGPoint();
+  pt.x=evt.clientX; pt.y=evt.clientY;
+  var ctm=svg.getScreenCTM();
+  if(!ctm){ return {x:0,y:0}; }
+  return pt.matrixTransform(ctm.inverse());
+}
+function rd(box,label,value,green){
+  var d=document.createElement('div');
+  d.className='rd'+(green?' g':'');
+  d.innerHTML=label+'<b>'+value+'</b>';
+  box.appendChild(d);
+}
+
+/* ============ interpolação monótona (curva dos dados) ============ */
+function monotoneCubic(xs,ys){
+  var n=xs.length, d=[], mm=[], i;
+  for(i=0;i<n-1;i++){ d[i]=(ys[i+1]-ys[i])/(xs[i+1]-xs[i]); }
+  mm[0]=d[0]; mm[n-1]=d[n-2];
+  for(i=1;i<n-1;i++){ mm[i]=(d[i-1]*d[i]<=0)?0:(d[i-1]+d[i])/2; }
+  for(i=0;i<n-1;i++){
+    if(d[i]===0){ mm[i]=0; mm[i+1]=0; continue; }
+    var a=mm[i]/d[i], b=mm[i+1]/d[i], s=a*a+b*b;
+    if(s>9){ var tau=3/Math.sqrt(s); mm[i]=tau*a*d[i]; mm[i+1]=tau*b*d[i]; }
+  }
+  return function(x){
+    if(x<=xs[0]){ return ys[0]; }
+    if(x>=xs[n-1]){ return ys[n-1]; }
+    var k=0;
+    while(k<n-2 && x>xs[k+1]){ k++; }
+    var hh=xs[k+1]-xs[k], t=(x-xs[k])/hh, t2=t*t, t3=t2*t;
+    var h00=2*t3-3*t2+1, h10=t3-2*t2+t, h01=-2*t3+3*t2, h11=t3-t2;
+    return h00*ys[k]+h10*hh*mm[k]+h01*ys[k+1]+h11*hh*mm[k+1];
+  };
+}
+var QKX=[0,1,4,6], QKY=[0,5,17,21];
+var Q=monotoneCubic(QKX,QKY);
+
+/* ============ PÁGINA 1 ============ */
+(function(){
+  var c=mkChart($('#chart1'),{xmax:6.4,ymax:24,xlabel:'Tempo (s)',ylabel:'Posição (m)',xticks:[0,1,2,3,4,5,6],yticks:[0,4,8,12,16,20,24]});
+  var segs=[
+    {a:[0,0],b:[2,8],nome:'Troço 1 — de 0 s a 2 s'},
+    {a:[2,8],b:[4,8],nome:'Troço 2 — de 2 s a 4 s'},
+    {a:[4,8],b:[6,20],nome:'Troço 3 — de 4 s a 6 s'}
+  ];
+  var gDyn=svgEl('g',{},c.svg);
+  var lines=[];
+  segs.forEach(function(s,i){
+    var hit=svgEl('line',{x1:c.X(s.a[0]),y1:c.Y(s.a[1]),x2:c.X(s.b[0]),y2:c.Y(s.b[1]),stroke:'rgba(0,0,0,0)','stroke-width':34,'stroke-linecap':'round',cursor:'pointer','pointer-events':'stroke'},gDyn);
+    var ln=svgEl('line',{x1:c.X(s.a[0]),y1:c.Y(s.a[1]),x2:c.X(s.b[0]),y2:c.Y(s.b[1]),stroke:'#1d4ed8','stroke-width':6,'stroke-linecap':'round','pointer-events':'none'},gDyn);
+    lines.push(ln);
+    hit.addEventListener('click',function(){ sel(i); });
+  });
+  var box=$('#readout1');
+  function sel(i){
+    lines.forEach(function(l,k){
+      l.setAttribute('stroke', k===i?'#b45309':'#1d4ed8');
+      l.setAttribute('stroke-width', k===i?9:6);
+    });
+    var s=segs[i], dx=s.b[0]-s.a[0], dy=s.b[1]-s.a[1];
+    box.innerHTML='';
+    rd(box,'Troço escolhido',s.nome);
+    rd(box,'Variação do tempo',fmt(dx,0)+' s');
+    rd(box,'Variação da posição',fmt(dy,0)+' m');
+    rd(box,'Variação ÷ tempo', dx===0?'—':fmt(dy/dx,2)+' m/s', true);
+  }
+  sel(0);
+})();
+
+/* ============ PÁGINA 2 ============ */
+(function(){
+  var c=mkChart($('#chart2'),{xmax:4.6,ymax:22,xlabel:'Tempo (s)',ylabel:'Posição (m)',xticks:[0,1,2,3,4],yticks:[0,5,10,15,20]});
+  var gDyn=svgEl('g',{},c.svg);
+  svgEl('line',{x1:c.X(0),y1:c.Y(0),x2:c.X(4),y2:c.Y(20),stroke:'#1d4ed8','stroke-width':6,'stroke-linecap':'round'},gDyn);
+  var gTri=svgEl('g',{},gDyn);
+  var gPt=svgEl('g',{},gDyn);
+  var cA=svgEl('circle',{r:12,fill:'#f59e0b',stroke:'#b45309','stroke-width':3,cursor:'grab'},gPt);
+  var cB=svgEl('circle',{r:12,fill:'#f59e0b',stroke:'#b45309','stroke-width':3,cursor:'grab'},gPt);
+  var tA=svgEl('text',{'font-size':19,'font-weight':800,fill:'#b45309'},gPt);
+  var tB=svgEl('text',{'font-size':19,'font-weight':800,fill:'#b45309'},gPt);
+  var box=$('#readout2');
+  var sA=0.8, sB=3.2, drag=null;
+  function pos(t){ return [t, 5*t]; }
+  function draw(){
+    var A=pos(sA), B=pos(sB);
+    cA.setAttribute('cx',c.X(A[0])); cA.setAttribute('cy',c.Y(A[1]));
+    cB.setAttribute('cx',c.X(B[0])); cB.setAttribute('cy',c.Y(B[1]));
+    tA.setAttribute('x',c.X(A[0])-30); tA.setAttribute('y',c.Y(A[1])-18); tA.textContent='A';
+    tB.setAttribute('x',c.X(B[0])+16); tB.setAttribute('y',c.Y(B[1])-18); tB.textContent='B';
+    clear(gTri);
+    svgEl('line',{x1:c.X(A[0]),y1:c.Y(A[1]),x2:c.X(B[0]),y2:c.Y(A[1]),stroke:'#94a3b8','stroke-width':2.5,'stroke-dasharray':'8 6'},gTri);
+    svgEl('line',{x1:c.X(B[0]),y1:c.Y(A[1]),x2:c.X(B[0]),y2:c.Y(B[1]),stroke:'#94a3b8','stroke-width':2.5,'stroke-dasharray':'8 6'},gTri);
+    svgEl('text',{x:(c.X(A[0])+c.X(B[0]))/2,y:c.Y(A[1])+26,'text-anchor':'middle','font-size':16,fill:'#475569','font-weight':700},gTri).textContent='Δx = '+fmt(sB-sA,1)+' s';
+    svgEl('text',{x:c.X(B[0])+12,y:(c.Y(A[1])+c.Y(B[1]))/2,'font-size':16,fill:'#475569','font-weight':700},gTri).textContent='Δy = '+fmt(5*(sB-sA),1)+' m';
+    box.innerHTML='';
+    rd(box,'Variação do tempo (Δx)',fmt(sB-sA,1)+' s');
+    rd(box,'Variação da posição (Δy)',fmt(5*(sB-sA),1)+' m');
+    rd(box,'Δy ÷ Δx',fmt(5,2)+' m/s', true);
+  }
+  function move(evt){
+    if(!drag){ return; }
+    var p=svgPoint(c.svg,evt);
+    var t=clamp(c.invX(p.x),0,4);
+    if(drag==='A'){ sA=Math.min(t,sB-0.25); }
+    else { sB=Math.max(t,sA+0.25); }
+    sA=clamp(sA,0,4); sB=clamp(sB,0,4);
+    draw();
+  }
+  cA.addEventListener('pointerdown',function(e){ drag='A'; e.preventDefault(); });
+  cB.addEventListener('pointerdown',function(e){ drag='B'; e.preventDefault(); });
+  window.addEventListener('pointermove',move);
+  window.addEventListener('pointerup',function(){ drag=null; });
+  draw();
+})();
+
+/* ============ PÁGINA 4 ============ */
+(function(){
+  var c=mkChart($('#chart4'),{xmax:4.6,ymax:26,xlabel:'Tempo (s)',ylabel:'Posição (m)',xticks:[0,1,2,3,4],yticks:[0,5,10,15,20,25]});
+  var gDyn=svgEl('g',{},c.svg);
+  var ln=svgEl('line',{stroke:'#1d4ed8','stroke-width':6,'stroke-linecap':'round'},gDyn);
+  var box=$('#readout4');
+  var sl=$('#slider4');
+  function draw(){
+    var v=parseFloat(sl.value);
+    var y0=2, y1=2+v*4;
+    ln.setAttribute('x1',c.X(0)); ln.setAttribute('y1',c.Y(y0));
+    ln.setAttribute('x2',c.X(4)); ln.setAttribute('y2',c.Y(y1));
+    ln.setAttribute('stroke', v===0?'#b45309':'#1d4ed8');
+    box.innerHTML='';
+    rd(box,'Inclinação (velocidade)',fmt(v,1)+' m/s', true);
+    rd(box,'Variação da posição',fmt(v*4,1)+' m');
+    rd(box,'Posição ao fim de 4 s',fmt(y1,1)+' m');
+    rd(box,'O carrinho', v===0?'está parado':'está a andar');
+  }
+  sl.addEventListener('input',draw);
+  draw();
+})();
+
+/* ============ PÁGINA 5 ============ */
+(function(){
+  var c=mkChart($('#chart5'),{xmax:6.4,ymax:24,xlabel:'Tempo (s)',ylabel:'Dados descarregados (MB)',xticks:[0,1,2,3,4,5,6],yticks:[0,5,10,15,20]});
+  var gDyn=svgEl('g',{},c.svg);
+  var d='M';
+  for(var i=0;i<=240;i++){
+    var t=i/240*6;
+    d+=(i===0?'':' L')+c.X(t).toFixed(2)+' '+c.Y(Q(t)).toFixed(2);
+  }
+  svgEl('path',{d:d,fill:'none',stroke:'#1d4ed8','stroke-width':5,'stroke-linecap':'round'},gDyn);
+  var gTri=svgEl('g',{},gDyn);
+  var gSec=svgEl('g',{},gDyn);
+  var gPt=svgEl('g',{},gDyn);
+  var cA=svgEl('circle',{r:12,fill:'#f59e0b',stroke:'#b45309','stroke-width':3,cursor:'grab'},gPt);
+  var cB=svgEl('circle',{r:12,fill:'#f59e0b',stroke:'#b45309','stroke-width':3,cursor:'grab'},gPt);
+  var tA=svgEl('text',{'font-size':19,'font-weight':800,fill:'#b45309'},gPt);
+  var tB=svgEl('text',{'font-size':19,'font-weight':800,fill:'#b45309'},gPt);
+  var box=$('#readout5');
+  var sA=0, sB=6, drag=null;
+  function draw(){
+    var ya=Q(sA), yb=Q(sB);
+    cA.setAttribute('cx',c.X(sA)); cA.setAttribute('cy',c.Y(ya));
+    cB.setAttribute('cx',c.X(sB)); cB.setAttribute('cy',c.Y(yb));
+    tA.setAttribute('x',c.X(sA)-30); tA.setAttribute('y',c.Y(ya)-18); tA.textContent='A';
+    tB.setAttribute('x',c.X(sB)+16); tB.setAttribute('y',c.Y(yb)-18); tB.textContent='B';
+    clear(gSec); clear(gTri);
+    svgEl('line',{x1:c.X(sA),y1:c.Y(ya),x2:c.X(sB),y2:c.Y(yb),stroke:'#15803d','stroke-width':5,'stroke-linecap':'round'},gSec);
+    svgEl('line',{x1:c.X(sA),y1:c.Y(ya),x2:c.X(sB),y2:c.Y(ya),stroke:'#94a3b8','stroke-width':2.5,'stroke-dasharray':'8 6'},gTri);
+    svgEl('line',{x1:c.X(sB),y1:c.Y(ya),x2:c.X(sB),y2:c.Y(yb),stroke:'#94a3b8','stroke-width':2.5,'stroke-dasharray':'8 6'},gTri);
+    var dt=sB-sA, dq=yb-ya;
+    box.innerHTML='';
+    rd(box,'Intervalo de tempo',fmt(dt,1)+' s');
+    rd(box,'Variação da quantidade',fmt(dq,1)+' MB');
+    rd(box,'Taxa média (Δy ÷ Δx)', dt<=0.05?'—':fmt(dq/dt,2)+' MB/s', true);
+  }
+  function move(evt){
+    if(!drag){ return; }
+    var p=svgPoint(c.svg,evt);
+    var t=clamp(c.invX(p.x),0,6);
+    if(drag==='A'){ sA=Math.min(t,sB-0.2); }
+    else { sB=Math.max(t,sA+0.2); }
+    sA=clamp(sA,0,6); sB=clamp(sB,0,6);
+    draw();
+  }
+  cA.addEventListener('pointerdown',function(e){ drag='A'; e.preventDefault(); });
+  cB.addEventListener('pointerdown',function(e){ drag='B'; e.preventDefault(); });
+  window.addEventListener('pointermove',move);
+  window.addEventListener('pointerup',function(){ drag=null; });
+  $$('[data-preset]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var p=b.getAttribute('data-preset').split(',');
+      sA=parseFloat(p[0]); sB=parseFloat(p[1]); draw();
+    });
+  });
+  draw();
+})();
+
+/* ============ PÁGINA 6 ============ */
+(function(){
+  var c=mkChart($('#chart6'),{xmax:6.4,ymax:24,xlabel:'Tempo (s)',ylabel:'Dados descarregados (MB)',xticks:[0,1,2,3,4,5,6],yticks:[0,5,10,15,20]});
+  var gDyn=svgEl('g',{},c.svg);
+  var d='M';
+  for(var i=0;i<=240;i++){
+    var t=i/240*6;
+    d+=(i===0?'':' L')+c.X(t).toFixed(2)+' '+c.Y(Q(t)).toFixed(2);
+  }
+  svgEl('path',{d:d,fill:'none',stroke:'#1d4ed8','stroke-width':5,'stroke-linecap':'round'},gDyn);
+  var gRit=svgEl('g',{},gDyn);
+  var box=$('#readout6');
+  var on=false;
+  function draw(){
+    clear(gRit);
+    if(on){
+      svgEl('line',{x1:c.X(0),y1:c.Y(0),x2:c.X(6),y2:c.Y(21),stroke:'#15803d','stroke-width':6,'stroke-linecap':'round'},gRit);
+      svgEl('circle',{cx:c.X(6),cy:c.Y(21),r:11,fill:'#15803d'},gRit);
+      svgEl('text',{x:c.X(3.1),y:c.Y(8.2),'font-size':18,'font-weight':800,fill:'#15803d'},gRit).textContent='ritmo constante: 3,5 MB/s';
+    }
+    box.innerHTML='';
+    rd(box,'Taxa média (0 s a 6 s)','3,5 MB/s');
+    if(on){
+      rd(box,'Ritmo constante 3,5 MB/s × 6 s','21 MB', true);
+      rd(box,'Quantidade real ao fim de 6 s','21 MB', true);
+    }
+  }
+  $('#btnRitmo').addEventListener('click',function(){
+    on=!on;
+    this.textContent=on?'Esconder o ritmo constante':'Mostrar o ritmo constante';
+    draw();
+  });
+  draw();
+})();
+
+/* ============ PÁGINA 7 ============ */
+(function(){
+  var box=$('#readout7');
+  var simples=false, global=false;
+  function draw(){
+    box.innerHTML='';
+    if(simples){ rd(box,'Média simples dos três ritmos','(5 + 4 + 2) ÷ 3 ≈ 3,67 MB/s'); }
+    if(global){ rd(box,'Taxa média global (0 s a 6 s)','21 ÷ 6 = 3,5 MB/s', true); }
+    if(simples && global){
+      var d=document.createElement('div');
+      d.className='rd';
+      d.style.background='#fef2f2';
+      d.style.borderColor='#fca5a5';
+      d.innerHTML='São diferentes!<b style="color:#b91c1c">3,67 ≠ 3,5</b>';
+      box.appendChild(d);
+    }
+  }
+  $('#btnSimples').addEventListener('click',function(){ simples=true; draw(); });
+  $('#btnGlobal').addEventListener('click',function(){ global=true; draw(); });
+})();
+
+/* ============ PÁGINA 8 — verificação das tabelas ============ */
+$$('[data-checkbtn]').forEach(function(b){
+  b.addEventListener('click',function(){
+    var tables=$$('#p8 table.data');
+    var table=tables[parseInt(b.getAttribute('data-checkbtn'),10)-1];
+    if(!table){ return; }
+    var ok=0, total=0;
+    $$('input.num',table).forEach(function(inp){
+      total++;
+      var raw=(inp.value||'').trim().replace(/\s/g,'').replace(',','.');
+      var val=parseFloat(raw);
+      var target=parseFloat(inp.getAttribute('data-check'));
+      var tol=parseFloat(inp.getAttribute('data-tol')||'0.05');
+      inp.classList.remove('ok','bad');
+      if(!isNaN(val) && Math.abs(val-target)<=tol){ inp.classList.add('ok'); ok++; }
+      else { inp.classList.add('bad'); }
+    });
+    b.textContent = (ok===total) ? 'Tudo certo! ('+ok+'/'+total+')' : 'Verificar esta tabela — certas: '+ok+'/'+total;
+  });
+});
+$$('input.num').forEach(function(inp){
+  inp.addEventListener('input',function(){ inp.classList.remove('ok','bad'); });
+});
+
+/* ============ quizzes com resposta bloqueada ============ */
+var answered=0, correct=0;
+function updateScore(){
+  $('#score').textContent='Certas: '+correct+' · Respondidas: '+answered;
+}
+$$('.quiz').forEach(function(q){
+  var ans=q.getAttribute('data-answer');
+  var fbTxt=q.getAttribute('data-fb')||'';
+  $$('.opt',q).forEach(function(btn){
+    btn.addEventListener('click',function(){
+      if(q.getAttribute('data-done')==='1'){ return; }
+      q.setAttribute('data-done','1');
+      var chosen=btn.getAttribute('data-key');
+      var ok=(chosen===ans);
+      $$('.opt',q).forEach(function(o){
+        o.disabled=true;
+        if(o.getAttribute('data-key')===chosen){ o.classList.add(ok?'correct':'wrong'); }
+        else if(o.getAttribute('data-key')===ans){ o.classList.add('correct'); }
+        else { o.classList.add('dim'); }
+      });
+      var fb=$('.fb',q);
+      fb.classList.add('show');
+      fb.classList.add(ok?'ok':'no');
+      fb.innerHTML=(ok?'<strong>Correto.</strong> ':'<strong>Não é essa.</strong> A resposta certa está assinalada a verde. ')+fbTxt;
+      answered++; if(ok){ correct++; }
+      updateScore();
+    });
+  });
+});
+updateScore();
+
+/* ============ dicas ============ */
+$$('[data-hint]').forEach(function(b){
+  b.addEventListener('click',function(){
+    var t=document.getElementById(b.getAttribute('data-hint'));
+    if(!t){ return; }
+    t.classList.toggle('show');
+    b.textContent=t.classList.contains('show')?'Esconder dica':'Mostrar dica';
+  });
+});
+
+/* ============ navegação ============ */
+var pages=$$('.page');
+var cur=0;
+var dotsBox=$('#dots');
+pages.forEach(function(p,k){
+  var d=document.createElement('button');
+  d.type='button';
+  d.className='dot';
+  d.title='Página '+(k+1);
+  d.addEventListener('click',function(){ show(k); });
+  dotsBox.appendChild(d);
+});
+var dots=$$('.dot',dotsBox);
+function show(i){
+  cur=clamp(i,0,pages.length-1);
+  pages.forEach(function(p,k){ p.classList.toggle('active',k===cur); });
+  dots.forEach(function(d,k){ d.classList.toggle('active',k===cur); });
+  $('#pagenum').textContent='Página '+(cur+1)+' de '+pages.length;
+  $('#progressBar').style.width=((cur+1)/pages.length*100)+'%';
+  $('#btnPrev').disabled=(cur===0);
+  $('#btnNext').disabled=(cur===pages.length-1);
+  window.scrollTo(0,0);
+}
+$('#btnPrev').addEventListener('click',function(){ show(cur-1); });
+$('#btnNext').addEventListener('click',function(){ show(cur+1); });
+document.addEventListener('keydown',function(e){
+  var t=(e.target&&e.target.tagName)||'';
+  if(t==='INPUT'||t==='TEXTAREA'||t==='SELECT'){ return; }
+  if(e.key==='ArrowRight'){ show(cur+1); }
+  if(e.key==='ArrowLeft'){ show(cur-1); }
+});
+show(0);
+
+/* ============ guardar respostas (só neste dispositivo) ============ */
+var LABELS={
+  psi2:'2 — Justificação: porque é que a razão não muda no mesmo segmento',
+  psi5:'5 — Justificação: comparação das taxas médias 0–1 s e 4–6 s',
+  psi6:'6 — Justificação: taxa média vs ritmo constante',
+  psi7:'7 — Justificação: peso dos troços na taxa média global',
+  psi8:'8 — Conversão para km/h e ritmo ao longo da prova',
+  b1:'Bilhete 9.1 — Declive e taxa média num segmento',
+  b2:'Bilhete 9.2 — Taxa média num gráfico curvo',
+  b3:'Bilhete 9.3 — O que a taxa média representa',
+  b4:'Bilhete 9.4 — Taxa média vs ritmo num instante'
+};
+var STORE='aula4_respostas';
+var mem={};
+function loadStore(){
+  try{
+    var raw=localStorage.getItem(STORE);
+    if(raw){ mem=JSON.parse(raw)||{}; }
+  }catch(e){ mem={}; }
+}
+function saveStore(){
+  try{ localStorage.setItem(STORE,JSON.stringify(mem)); }catch(e){}
+}
+loadStore();
+$$('[data-save]').forEach(function(el){
+  var key=el.getAttribute('data-save');
+  if(mem[key]!==undefined){ el.value=mem[key]; }
+  el.addEventListener('input',function(){ mem[key]=el.value; saveStore(); });
+  el.addEventListener('change',function(){ mem[key]=el.value; saveStore(); });
+});
+function bilheteTexto(){
+  var out=['Bilhete de saída — Aula 4: Do declive à taxa média de variação',''];
+  $$('[data-save]').forEach(function(el){
+    var key=el.getAttribute('data-save');
+    var v=(el.value||'').trim();
+    if(!v){ return; }
+    out.push((LABELS[key]||key)+':');
+    out.push('   '+v);
+    out.push('');
+  });
+  if(out.length<=2){ out.push('(sem respostas registadas)'); }
+  return out.join('\n');
+}
+$('#btnCopiar').addEventListener('click',function(){
+  var txt=bilheteTexto();
+  var done=function(){
+    var box=$('#readout9');
+    box.innerHTML='';
+    rd(box,'Estado','Respostas copiadas para a área de transferência', true);
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done,function(){ fallbackCopy(txt,done); });
+  } else { fallbackCopy(txt,done); }
+});
+function fallbackCopy(txt,cb){
+  var ta=document.createElement('textarea');
+  ta.value=txt;
+  ta.style.position='fixed';
+  ta.style.left='-9999px';
+  document.body.appendChild(ta);
+  ta.select();
+  var ok=false;
+  try{ ok=document.execCommand('copy'); }catch(e){ ok=false; }
+  document.body.removeChild(ta);
+  var box=$('#readout9');
+  box.innerHTML='';
+  rd(box,'Estado', ok?'Respostas copiadas':'Não foi possível copiar automaticamente — usa o ficheiro .txt');
+  if(ok && cb){ cb(); }
+}
+$('#btnDescarregar').addEventListener('click',function(){
+  var txt=bilheteTexto();
+  var blob=new Blob([txt],{type:'text/plain;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;
+  a.download='bilhete_saida_aula4.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); },2000);
+  var box=$('#readout9');
+  box.innerHTML='';
+  rd(box,'Estado','Ficheiro bilhete_saida_aula4.txt descarregado', true);
+});
+$('#btnLimpar').addEventListener('click',function(){
+  mem={};
+  saveStore();
+  $$('[data-save]').forEach(function(el){ el.value=''; });
+  var box=$('#readout9');
+  box.innerHTML='';
+  rd(box,'Estado','Respostas apagadas deste dispositivo');
+});
+
+})();
+</script>
+</body>
+</html>

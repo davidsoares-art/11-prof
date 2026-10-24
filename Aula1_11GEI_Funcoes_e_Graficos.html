@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aula 1 — Funções, gráficos e ritmo de mudança (11.º GEI)</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    background:#eef2f7;color:#0f172a;line-height:1.55;
+  }
+  header.top{
+    position:sticky;top:0;z-index:80;
+    background:linear-gradient(100deg,#1e3a8a,#4338ca 55%,#6d28d9);
+    color:#fff;padding:11px 18px 10px;box-shadow:0 6px 22px rgba(15,23,42,.22);
+  }
+  .top-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:space-between;max-width:1200px;margin:0 auto}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand .ico{width:38px;height:38px;border-radius:11px;background:rgba(255,255,255,.16);display:grid;place-items:center;font-size:20px}
+  .brand h1{margin:0;font-size:18px;font-weight:800;letter-spacing:-.2px}
+  .brand p{margin:1px 0 0;font-size:12.5px;color:#c7d2fe}
+  nav.pages{display:flex;gap:6px;flex-wrap:wrap}
+  nav.pages button{
+    border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.10);color:#e0e7ff;
+    padding:6px 10px;border-radius:9px;font-size:12.5px;font-weight:600;cursor:pointer;transition:.15s;
+    font-family:inherit;
+  }
+  nav.pages button:hover{background:rgba(255,255,255,.24)}
+  nav.pages button.active{background:#fff;color:#3730a3;border-color:#fff}
+  main{max-width:1200px;margin:0 auto;padding:22px 18px 100px}
+  .page{display:none}
+  .page.active{display:block;animation:fade .25s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .page-head{margin-bottom:16px}
+  .chip{display:inline-block;background:#e0e7ff;color:#3730a3;font-size:11.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;padding:4px 10px;border-radius:999px}
+  .page-head h2{margin:9px 0 5px;font-size:29px;font-weight:800;letter-spacing:-.5px;line-height:1.2}
+  .lead{margin:0;color:#475569;font-size:16px;max-width:920px}
+  .card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:20px;box-shadow:0 2px 10px rgba(15,23,42,.05);margin-bottom:18px}
+  .card h3{margin:0 0 10px;font-size:19px;font-weight:800}
+  .card h4{margin:18px 0 8px;font-size:16px;font-weight:800;color:#334155}
+  .muted{color:#64748b;font-size:14px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:900px){.grid2{grid-template-columns:1fr}}
+  .btn{
+    border:1px solid #cbd5e1;background:#fff;color:#334155;padding:8px 14px;border-radius:10px;
+    font-size:14px;font-weight:700;cursor:pointer;transition:.15s;font-family:inherit;
+  }
+  .btn:hover{background:#f1f5f9}
+  .btn.primary{background:#4338ca;border-color:#4338ca;color:#fff}
+  .btn.primary:hover{background:#3730a3}
+  .btn.ghost{background:transparent}
+  .seg{display:inline-flex;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:12px;padding:4px;gap:4px;margin-bottom:14px;flex-wrap:wrap}
+  .seg button{
+    border:0;background:transparent;padding:8px 16px;border-radius:9px;font-size:14px;font-weight:700;
+    color:#64748b;cursor:pointer;font-family:inherit;transition:.15s;
+  }
+  .seg button.active{background:#fff;color:#3730a3;box-shadow:0 1px 4px rgba(15,23,42,.12)}
+  .checkrow{display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin:10px 0 12px}
+  .checkrow label{display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:700;color:#334155;cursor:pointer;user-select:none}
+  .checkrow input[type=checkbox]{width:18px;height:18px;accent-color:#4338ca;cursor:pointer}
+  .diagram{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:70px;padding:10px 4px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:14px}
+  .diagram svg.arrows{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:5;overflow:visible}
+  .col{position:relative;z-index:10;display:flex;flex-direction:column;gap:6px}
+  .col-head{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#475569;text-align:center;padding-bottom:6px;border-bottom:2px solid #e2e8f0;margin-bottom:6px}
+  .node{
+    background:#fff;border:1.5px solid #cbd5e1;border-radius:9px;padding:6px 10px;font-size:14px;
+    font-weight:700;text-align:center;color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .node.num{border-color:#93c5fd;color:#1d4ed8;background:#eff6ff}
+  .node.name{border-color:#6ee7b7;color:#047857;background:#ecfdf5}
+  .node.bad{border-color:#fda4af;background:#fff1f2;color:#be123c}
+  .verdict{margin-top:14px;border-radius:12px;padding:14px 16px;font-size:15.5px;font-weight:600;border:1.5px solid}
+  .verdict.ok{background:#ecfdf5;border-color:#6ee7b7;color:#065f46}
+  .verdict.bad{background:#fff1f2;border-color:#fda4af;color:#9f1239}
+  .verdict b{font-weight:800}
+  .qlist{counter-reset:q;list-style:none;padding:0;margin:0}
+  .qlist li{
+    counter-increment:q;position:relative;padding:11px 14px 11px 48px;margin-bottom:9px;
+    background:#f8fafc;border:1px solid #e2e8f0;border-radius:11px;font-size:15.5px;
+  }
+  .qlist li::before{
+    content:counter(q);position:absolute;left:12px;top:11px;width:26px;height:26px;border-radius:50%;
+    background:#4338ca;color:#fff;font-size:13px;font-weight:800;display:grid;place-items:center;
+  }
+  .note{background:#fffbeb;border:1px solid #fde68a;border-left:5px solid #f59e0b;border-radius:11px;padding:13px 16px;font-size:14.5px;color:#78350f;margin-top:14px}
+  .note b{color:#92400e}
+  .keybox{background:#eef2ff;border:1px solid #c7d2fe;border-left:5px solid #4338ca;border-radius:11px;padding:13px 16px;font-size:15px;color:#312e81;margin-top:14px}
+  .keybox b{color:#312e81}
+  .chart{width:100%;height:auto;display:block}
+  .chartwrap{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:8px}
+  .exgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+  .ex{border:1.5px solid #e2e8f0;border-radius:14px;padding:14px;background:#fff;display:flex;flex-direction:column;gap:10px}
+  .ex .pair{font-size:16px;font-weight:700;color:#1e293b;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .ex .pair .arw{color:#94a3b8;font-weight:800}
+  .ex .tag{font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#64748b}
+  .ex .opts{display:flex;gap:8px}
+  .ex .opts button{flex:1;border:1.5px solid #cbd5e1;background:#fff;border-radius:9px;padding:8px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit;color:#475569;transition:.15s}
+  .ex .opts button:hover{background:#f1f5f9}
+  .ex .opts button.sel-ok{background:#dcfce7;border-color:#22c55e;color:#15803d}
+  .ex .opts button.sel-no{background:#fee2e2;border-color:#ef4444;color:#b91c1c}
+  .ex .fb{font-size:13.5px;border-radius:9px;padding:9px 11px;display:none}
+  .ex .fb.show{display:block}
+  .ex .fb.ok{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}
+  .ex .fb.no{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+  .minitable{border-collapse:collapse;font-size:14px;margin-top:6px}
+  .minitable td,.minitable th{border:1px solid #e2e8f0;padding:5px 12px;text-align:left}
+  .minitable th{background:#f8fafc;font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:#64748b}
+  .matchgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  @media(max-width:900px){.matchgrid{grid-template-columns:repeat(2,1fr)}}
+  .mcard{border:2px solid #e2e8f0;border-radius:13px;padding:8px;background:#fff;cursor:pointer;transition:.15s;position:relative}
+  .mcard:hover{border-color:#a5b4fc}
+  .mcard.sel{border-color:#4338ca;box-shadow:0 0 0 3px #e0e7ff}
+  .mcard .lbl{position:absolute;top:6px;left:8px;font-size:12px;font-weight:800;color:#4338ca;background:#e0e7ff;border-radius:6px;padding:1px 7px}
+  .mcard .badge{position:absolute;top:6px;right:8px;font-size:12px;font-weight:800;color:#fff;background:#4338ca;border-radius:6px;padding:1px 8px;display:none}
+  .mcard.linked .badge{display:block}
+  .mcard.right{border-color:#22c55e;box-shadow:0 0 0 3px #dcfce7}
+  .mcard.wrong{border-color:#ef4444;box-shadow:0 0 0 3px #fee2e2}
+  .dgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
+  @media(max-width:900px){.dgrid{grid-template-columns:1fr 1fr}}
+  .dcard{border:2px solid #e2e8f0;border-radius:13px;padding:12px;background:#fff;cursor:pointer;font-size:14.5px;font-weight:600;color:#334155;transition:.15s;position:relative}
+  .dcard:hover{border-color:#a5b4fc}
+  .dcard.sel{border-color:#4338ca;box-shadow:0 0 0 3px #e0e7ff}
+  .dcard .badge{position:absolute;top:-9px;right:-9px;font-size:12px;font-weight:800;color:#fff;background:#4338ca;border-radius:50%;width:24px;height:24px;display:none;place-items:center}
+  .dcard.linked .badge{display:grid}
+  .dcard.right{border-color:#22c55e;background:#f0fdf4}
+  .dcard.wrong{border-color:#ef4444;background:#fef2f2}
+  .track{position:relative;height:64px;background:linear-gradient(180deg,#f8fafc,#eef2f7);border:1px solid #e2e8f0;border-radius:12px;margin-top:12px;overflow:hidden}
+  .track .rail{position:absolute;left:24px;right:24px;top:50%;height:4px;background:#cbd5e1;border-radius:3px;transform:translateY(-50%)}
+  .track .obj{position:absolute;top:50%;left:24px;width:34px;height:34px;border-radius:9px;background:#4338ca;color:#fff;display:grid;place-items:center;font-size:17px;transform:translate(-50%,-50%);box-shadow:0 3px 10px rgba(67,56,202,.35)}
+  .track .marks{position:absolute;left:24px;right:24px;top:0;bottom:0}
+  .track .mk{position:absolute;top:0;bottom:0;width:1px;background:#e2e8f0}
+  .track .mk span{position:absolute;bottom:2px;left:50%;transform:translateX(-50%);font-size:10.5px;color:#94a3b8;font-weight:700}
+  .formula{
+    background:linear-gradient(120deg,#312e81,#4338ca);color:#fff;border-radius:18px;
+    padding:30px 26px;text-align:center;font-size:34px;font-weight:800;letter-spacing:.5px;line-height:1.25;
+  }
+  .formula .frac{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 10px}
+  .formula .frac .num{font-size:28px;padding:0 16px 6px;border-bottom:3px solid rgba(255,255,255,.8)}
+  .formula .frac .den{font-size:28px;padding:6px 16px 0;color:#c7d2fe}
+  .formula .small{display:block;font-size:15px;font-weight:600;color:#c7d2fe;margin-top:16px;letter-spacing:0}
+  .quizcard{border:1.5px solid #e2e8f0;border-radius:14px;padding:16px;background:#fff;margin-bottom:12px}
+  .quizcard .qq{font-size:16px;font-weight:800;margin:0 0 10px;color:#1e293b}
+  .quizcard .oo{display:flex;gap:8px;flex-wrap:wrap}
+  .quizcard .oo button{border:1.5px solid #cbd5e1;background:#fff;border-radius:10px;padding:9px 14px;font-size:14.5px;font-weight:700;cursor:pointer;font-family:inherit;color:#334155;transition:.15s}
+  .quizcard .oo button:hover{background:#f1f5f9}
+  .quizcard .oo button.sel-ok{background:#dcfce7;border-color:#22c55e;color:#15803d}
+  .quizcard .oo button.sel-no{background:#fee2e2;border-color:#ef4444;color:#b91c1c}
+  .quizcard .fb{font-size:14px;border-radius:9px;padding:9px 11px;display:none;margin-top:10px}
+  .quizcard .fb.show{display:block}
+  .quizcard .fb.ok{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}
+  .quizcard .fb.no{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+  table.vel{border-collapse:collapse;width:100%;font-size:15px;margin-top:8px}
+  table.vel th,table.vel td{border:1px solid #e2e8f0;padding:9px 12px;text-align:center}
+  table.vel th{background:#eef2ff;color:#3730a3;font-size:13px;text-transform:uppercase;letter-spacing:.4px}
+  table.vel td.hl{background:#fef3c7;font-weight:800}
+  table.vel .sol{font-weight:800;color:#4338ca;display:none}
+  table.vel.show .sol{display:inline}
+  table.vel .hide{display:none}
+  table.vel.show .hide{display:inline}
+  .ticket textarea{width:100%;min-height:78px;border:1.5px solid #cbd5e1;border-radius:11px;padding:11px;font-family:inherit;font-size:15px;resize:vertical;background:#fff}
+  .ticket textarea:focus{outline:none;border-color:#4338ca;box-shadow:0 0 0 3px #e0e7ff}
+  .ticket .q{margin-bottom:16px}
+  .ticket .q p{margin:0 0 7px;font-weight:700;font-size:15.5px}
+  footer.nav{
+    position:static;margin:18px auto 0;max-width:1200px;width:auto;background:#fff;
+    border:1px solid #e2e8f0;border-radius:12px;padding:9px 18px;
+    display:flex;justify-content:space-between;align-items:center;gap:12px;
+  }
+  footer.nav .pgnum{font-size:13px;font-weight:700;color:#64748b}
+  @media print{
+    header.top,footer.nav{display:none!important}
+    .page{display:block!important;page-break-after:always}
+    body{background:#fff}
+  }
+</style>
+</head>
+<body>
+<div style="background:#4338ca;color:#ffffff;text-align:center;font-weight:600;font-size:13px;line-height:1.35;padding:7px 10px;letter-spacing:.1px">Aula 1 · 11.º GEI · Módulo Taxa de Variação · v2.3 (18/10/2026)</div>
+
+<header class="top">
+  <div class="top-row">
+    <div class="brand">
+      <div class="ico">📈</div>
+      <div>
+        <h1>Aula 1 — Funções, gráficos e ritmo de mudança</h1>
+        <p>Matemática · 11.º GEI · Módulo: Taxa de variação e otimização</p>
+      </div>
+    </div>
+    <nav class="pages" id="nav"></nav>
+  </div>
+</header>
+
+<main>
+
+<!-- ================= PÁGINA 1 ================= -->
+<section class="page" id="p1">
+  <div class="page-head">
+    <span class="chip">Atividade 1</span>
+    <h2>Quem é quem? Números e nomes</h2>
+    <p class="lead">Na tua turma, cada aluno aparece na lista por ordem alfabética com um número. Porque é que achas que se usa um número, se já temos nomes?</p>
+  </div>
+
+  <div class="card">
+    <div class="seg" id="dirToggle">
+      <button class="active" data-dir="num2nome">Número → Nome</button>
+      <button data-dir="nome2num">Nome → Número</button>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px">
+      <span class="muted" id="p1info">Turma 11.º GEI — alguns alunos</span>
+      <button class="btn ghost" id="p1all">Mostrar os 25 alunos</button>
+    </div>
+
+    <div class="diagram" id="diagram1">
+      <svg class="arrows" id="arrows1"></svg>
+      <div class="col">
+        <div class="col-head" id="headL1">Números de turma</div>
+        <div id="nodesL1" style="display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+      <div class="col">
+        <div class="col-head" id="headR1">Primeiros nomes</div>
+        <div id="nodesR1" style="display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+    </div>
+
+    <div class="verdict" id="verdict1"></div>
+  </div>
+
+  <div class="card">
+    <h3>Vamos pensar</h3>
+    <ol class="qlist">
+      <li>Se eu chamar <b>«número 7»</b>, fico com alguma dúvida sobre quem estou a chamar? Quantos alunos podem ter o número 7?</li>
+      <li>E se eu chamar <b>«Gonçalo, vem ao quadro»</b>? Fico à espera de quantos alunos?</li>
+      <li>Na associação <b>Número → Nome</b>, cada número aponta para quantos nomes? E na associação <b>Nome → Número</b>?</li>
+      <li>Qual das duas associações funciona sempre sem confusão? Porquê?</li>
+    </ol>
+    <div class="keybox">
+      <b>Ideia-chave:</b> uma <b>função</b> associa a cada entrada <b>um único resultado</b>.<br>
+      O número de aluno existe precisamente para isso: elimina a ambiguidade dos nomes repetidos. Por isso <b>Número → Aluno é uma função</b>. Já <b>Nome → Número não é uma função</b>, porque «Gonçalo» pode apontar para dois números diferentes (o 7 e o 8).
+    </div>
+  </div>
+</section>
+
+<!-- ================= PÁGINA 2 ================= -->
+<section class="page" id="p2">
+  <div class="page-head">
+    <span class="chip">Atividade 2</span>
+    <h2>Isto é uma função?</h2>
+    <p class="lead">Em cada cartão tens uma associação. Decide se é uma <b>função</b> (cada entrada dá um único resultado) ou <b>não é</b>. Clica e vê a explicação.</p>
+  </div>
+
+  <div class="card">
+    <div class="exgrid" id="exgrid"></div>
+  </div>
+
+  <div class="card">
+    <h3>O caso dos ténis</h3>
+    <p class="muted" style="margin-top:0">Repara neste exemplo com nomes da turma:</p>
+    <table class="minitable">
+      <tr><th>Pessoa</th><th>Marca que calça hoje</th></tr>
+      <tr><td>Gonçalo</td><td>Nike</td></tr>
+      <tr><td>Pedro</td><td>Adidas</td></tr>
+      <tr><td>Rodrigo</td><td>Nike</td></tr>
+      <tr><td>Xavier</td><td>Puma</td></tr>
+    </table>
+    <ol class="qlist" style="margin-top:14px">
+      <li><b>Pessoa → Marca</b>: cada pessoa aponta para quantas marcas? É função?</li>
+      <li><b>Marca → Pessoa</b>: a marca «Nike» aponta para quantas pessoas? É função?</li>
+    </ol>
+    <div class="keybox">
+      <b>Repara:</b> muitas entradas diferentes podem dar <b>o mesmo</b> resultado (Gonçalo e Rodrigo usam Nike) — isso <b>não</b> impede que seja função. O que não pode acontecer é <b>uma</b> entrada dar <b>dois</b> resultados diferentes.
+    </div>
+  </div>
+</section>
+
+<!-- ================= PÁGINA 3 ================= -->
+<section class="page" id="p3">
+  <div class="page-head">
+    <span class="chip">Atividade 3</span>
+    <h2>Idade e altura: dos pontos ao gráfico</h2>
+    <p class="lead">Arrasta o cursor e vê o que acontece quando medimos a altura com mais frequência ao longo do tempo.</p>
+  </div>
+
+  <div class="card">
+    <div class="grid2">
+      <div>
+        <h3 style="margin-bottom:6px">Medições efetuadas</h3>
+        <p class="muted" style="margin-top:0">Quantas vezes medimos a altura da pessoa?</p>
+        <input type="range" id="slider3" min="2" max="60" value="5" step="1" oninput="renderP3()" style="width:100%;accent-color:#4338ca">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:#94a3b8;font-weight:700;margin-top:2px">
+          <span>2 medições</span><span>30</span><span>60 medições</span>
+        </div>
+        <div style="margin-top:14px;font-size:15px;font-weight:700;color:#4338ca" id="lbl3">5 medições</div>
+
+        <h4 style="margin-top:16px">O que desenhar no gráfico</h4>
+        <div class="checkrow">
+          <label><input type="checkbox" id="ckConn" checked onchange="renderP3()"> Ligar as medições com uma linha</label>
+          <label><input type="checkbox" id="ckRef" checked onchange="renderP3()"> Mostrar a curva de referência (tracejada)</label>
+        </div>
+        <p class="muted" style="margin-top:0">Desliga tudo e ficam <b>só os pontos</b> — são apenas as alturas que <b>medimos mesmo</b>.</p>
+
+        <h4>Diagrama de setas (algumas medições)</h4>
+        <div class="diagram" id="diagram3" style="gap:60px">
+          <svg class="arrows" id="arrows3"></svg>
+          <div class="col">
+            <div class="col-head">Idade (anos)</div>
+            <div id="nodesL3" style="display:flex;flex-direction:column;gap:6px"></div>
+          </div>
+          <div class="col">
+            <div class="col-head">Altura (cm)</div>
+            <div id="nodesR3" style="display:flex;flex-direction:column;gap:6px"></div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 style="margin-bottom:6px">Gráfico Idade → Altura</h3>
+        <div class="chartwrap" id="chart3box"></div>
+        <div class="note" id="note3" style="margin-top:12px"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Perguntas</h3>
+    <ol class="qlist">
+      <li>Com poucas medições, o que vês no gráfico: pontos isolados ou uma linha?</li>
+      <li>O que acontece ao gráfico quando medimos com mais frequência?</li>
+      <li>O que representa <b>cada ponto</b> no gráfico? E o que representa a linha que os liga?</li>
+      <li>A curva tracejada é o quê? É algo que medimos ou uma <b>suposição</b> sobre o que acontece entre medições?</li>
+      <li>Uma pessoa não cresce «aos saltos» — o tempo passa continuamente. Como é que isso se reflete no gráfico?</li>
+      <li>Cada idade corresponde a <b>uma única</b> altura? Então <b>Idade → Altura</b> é uma função?</li>
+      <li>Duas pessoas diferentes, com a mesma idade, podem ter alturas diferentes? Isso contradiz a ideia de função?</li>
+      <li>É possível <b>uma</b> pessoa ter duas alturas diferentes na mesma idade?</li>
+    </ol>
+    <div class="note">
+      <b>Atenção ao rigor:</b> este gráfico é um <b>modelo</b> do crescimento de <b>uma</b> pessoa (ou de um «aluno típico»). Não é uma associação válida para todas as pessoas da mesma idade — a altura varia de pessoa para pessoa. E aumentar o número de medições <b>não prova</b> que os dados se transformam numa função contínua: é uma <b>idealização</b> útil, porque o tempo e o crescimento são contínuos.
+    </div>
+  </div>
+</section>
+
+<!-- ================= PÁGINA 4 ================= -->
+<section class="page" id="p4">
+  <div class="page-head">
+    <span class="chip">Atividade 4</span>
+    <h2>Dados descarregados ao longo do tempo</h2>
+    <p class="lead">Este gráfico mostra a quantidade de dados que já foram descarregados (acumulada) ao longo do tempo. Clica em cada intervalo e compara.</p>
+  </div>
+
+  <div class="card">
+    <div class="seg" id="bandToggle">
+      <button class="active" data-b="all">Ver tudo</button>
+      <button data-b="A">Intervalo A</button>
+      <button data-b="B">Intervalo B</button>
+      <button data-b="C">Intervalo C</button>
+      <button data-b="D">Intervalo D</button>
+    </div>
+    <div class="chartwrap" id="chart4box"></div>
+    <div class="keybox" id="bandInfo" style="margin-top:12px">Cada intervalo tem um ritmo diferente. Compara a inclinação dos vários trechos.</div>
+  </div>
+
+  <div class="card">
+    <h3>Perguntas</h3>
+    <ol class="qlist">
+      <li>Em que intervalo a quantidade acumulada <b>cresce mais depressa</b>? O que te faz pensar isso?</li>
+      <li>Em que intervalo a quantidade <b>não cresce</b>? O que vês no gráfico?</li>
+      <li>Em que intervalo cresce <b>mais devagar</b>?</li>
+      <li>O gráfico mostra que a quantidade acumulada é grande. Isso é o mesmo que dizer que está a aumentar depressa? Explica.</li>
+      <li>Se o gráfico ficar horizontal, o que está a acontecer à quantidade acumulada?</li>
+    </ol>
+    <div class="keybox">
+      <b>Ideia-chave:</b> num gráfico de quantidade acumulada ao longo do tempo, um trecho <b>mais inclinado</b> indica, visualmente, um <b>ritmo de aumento maior</b>. Um trecho <b>horizontal</b> indica que, nesse intervalo, a quantidade <b>não está a mudar</b>.
+    </div>
+  </div>
+</section>
+
+<!-- ================= PÁGINA 5 — VELOCIDADE ================= -->
+<section class="page" id="p5vel">
+  <div class="page-head">
+    <span class="chip">Atividade 5 · O conceito</span>
+    <h2>Velocidade: a mudança por unidade de tempo</h2>
+    <p class="lead">Até agora comparámos ritmos «a olho». Agora vamos dar um número a essa ideia.</p>
+  </div>
+
+  <div class="card">
+    <div class="formula">
+      velocidade =
+      <span class="frac">
+        <span class="num">mudança da quantidade</span>
+        <span class="den">intervalo de tempo</span>
+      </span>
+      <span class="small">a quantidade que muda ÷ o tempo que demorou a mudar</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Exemplo 1 — um download</h3>
+    <p style="font-size:15.5px;margin-top:0">Volta à página anterior: no intervalo B, a quantidade descarregada passou de <b>2 MB</b> para <b>20 MB</b> em <b>3 segundos</b>. Então:</p>
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;font-size:18px;font-weight:800;color:#4338ca;text-align:center">
+      velocidade = (20 − 2) MB ÷ 3 s = 18 MB ÷ 3 s = <span style="background:#dcfce7;border-radius:8px;padding:2px 10px;color:#15803d">6 MB por segundo</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Exemplo 2 — um movimento</h3>
+    <p style="font-size:15.5px;margin-top:0">Se um objeto passa da posição <b>0 m</b> para <b>4 m</b> em <b>2 segundos</b>:</p>
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;font-size:18px;font-weight:800;color:#4338ca;text-align:center">
+      velocidade = (4 − 0) m ÷ 2 s = 4 m ÷ 2 s = <span style="background:#dcfce7;border-radius:8px;padding:2px 10px;color:#15803d">2 m por segundo</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Confirma que percebeste</h3>
+    <p class="muted" style="margin-top:0">Responde e vê imediatamente se acertaste.</p>
+
+    <div class="quizcard">
+      <p class="qq">1. Um download descarrega 12 MB em 4 segundos. Qual é a velocidade?</p>
+      <div class="oo">
+        <button data-v="1">3 MB por segundo</button>
+        <button data-v="0">4 MB por segundo</button>
+        <button data-v="0">48 MB por segundo</button>
+      </div>
+      <div class="fb">A velocidade é 12 MB ÷ 4 s = 3 MB por segundo.</div>
+    </div>
+
+    <div class="quizcard">
+      <p class="qq">2. Um objeto percorre 10 metros em 5 segundos. Qual é a velocidade?</p>
+      <div class="oo">
+        <button data-v="0">5 m por segundo</button>
+        <button data-v="1">2 m por segundo</button>
+        <button data-v="0">50 m por segundo</button>
+      </div>
+      <div class="fb">A velocidade é 10 m ÷ 5 s = 2 m por segundo.</div>
+    </div>
+
+    <div class="quizcard">
+      <p class="qq">3. Se a velocidade for <b>0</b>, o que é que acontece à quantidade ao longo do tempo?</p>
+      <div class="oo">
+        <button data-v="0">A quantidade aumenta cada vez mais depressa</button>
+        <button data-v="1">A quantidade não muda (o gráfico fica horizontal)</button>
+        <button data-v="0">A quantidade diminui</button>
+      </div>
+      <div class="fb">Velocidade 0 = mudança 0: a quantidade mantém-se, por isso o gráfico fica horizontal.</div>
+    </div>
+
+    <div class="keybox">
+      <b>Em resumo:</b> a velocidade mede <b>quanto muda a quantidade por cada unidade de tempo</b>. Vais ver, na próxima semana, que isto é exatamente o <b>declive</b> do gráfico.
+    </div>
+  </div>
+</section>
+
+<!-- ================= PÁGINA 6 ================= -->
+<section class="page" id="p5">
+  <div class="page-head">
+    <span class="chip">Atividade 5 · Trabalho de pares</span>
+    <h2>Que história conta cada gráfico?</h2>
+    <p class="lead">Em pares: cliquem num <b>gráfico</b> e depois na <b>descrição</b> que lhe corresponde. No fim, carreguem em «Verificar».</p>
+  </div>
+
+  <div class="card">
+    <div class="matchgrid" id="matchGraphs"></div>
+    <div class="dgrid" id="matchDescs"></div>
+    <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
+      <button class="btn primary" id="mCheck">Verificar</button>
+      <button class="btn" id="mReset">Limpar</button>
+      <span id="mScore" style="align-self:center;font-weight:800;font-size:15px;color:#4338ca"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Depois de verificar</h3>
+    <ol class="qlist">
+      <li>Qual é a diferença entre dizer que a quantidade é <b>grande</b> e dizer que está a <b>aumentar depressa</b>?</li>
+      <li>No gráfico em que a quantidade «aumenta cada vez mais devagar», a quantidade está a aumentar ou a diminuir? Como justificas?</li>
+      <li>Os eixos e as escalas mudam a resposta? Porquê?</li>
+    </ol>
+    <div class="keybox">
+      <b>Justifica sempre com o gráfico:</b> «Pensamos que aqui aumenta mais depressa porque o gráfico sobe mais por cada unidade de tempo.»
+    </div>
+  </div>
+</section>
+
+<!-- ================= PÁGINA 6 ================= -->
+<section class="page" id="p6">
+  <div class="page-head">
+    <span class="chip">Atividade 6</span>
+    <h2>Posição e tempo: mover, parar, acelerar</h2>
+    <p class="lead">Carrega em «Reproduzir» e observa o objeto a mover-se. Repara como o gráfico descreve o movimento.</p>
+  </div>
+
+  <div class="card">
+    <div class="chartwrap" id="chart6box"></div>
+    <div class="track">
+      <div class="rail"></div>
+      <div class="marks" id="marks6"></div>
+      <div class="obj" id="p6obj">📦</div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:14px;align-items:center;flex-wrap:wrap">
+      <button class="btn primary" id="p6play">▶ Reproduzir</button>
+      <button class="btn" id="p6reset">↺ Reiniciar</button>
+      <span style="font-weight:800;color:#4338ca;font-size:15px" id="p6time">0,0 s</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Faz as contas</h3>
+    <p class="muted" style="margin-top:0">Em cada troço, a mudança de posição ÷ o intervalo de tempo dá a velocidade. Primeiro tenta adivinhar mentalmente a última coluna; depois carrega em «Mostrar» para conferir.</p>
+    <table class="vel" id="velTable">
+      <tr>
+        <th>Troço</th>
+        <th>Mudança de posição (m)</th>
+        <th>Intervalo de tempo (s)</th>
+        <th>Velocidade = Δposição ÷ Δtempo (m/s)</th>
+      </tr>
+      <tr>
+        <td>1 (0–2 s)</td>
+        <td>4 − 0 = 4</td>
+        <td>2 − 0 = 2</td>
+        <td class="hl">4 ÷ 2 = <span class="sol">2</span><span class="hide">?</span></td>
+      </tr>
+      <tr>
+        <td>2 (2–4 s)</td>
+        <td>4 − 4 = 0</td>
+        <td>4 − 2 = 2</td>
+        <td class="hl">0 ÷ 2 = <span class="sol">0</span><span class="hide">?</span></td>
+      </tr>
+      <tr>
+        <td>3 (4–6 s)</td>
+        <td>10 − 4 = 6</td>
+        <td>6 − 4 = 2</td>
+        <td class="hl">6 ÷ 2 = <span class="sol">3</span><span class="hide">?</span></td>
+      </tr>
+      <tr>
+        <td>4 (6–8 s)</td>
+        <td>10 − 10 = 0</td>
+        <td>8 − 6 = 2</td>
+        <td class="hl">0 ÷ 2 = <span class="sol">0</span><span class="hide">?</span></td>
+      </tr>
+    </table>
+    <div style="display:flex;gap:10px;margin-top:14px">
+      <button class="btn primary" id="velShow">Mostrar velocidades</button>
+      <button class="btn" id="velHide">Ocultar</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Perguntas</h3>
+    <ol class="qlist">
+      <li>Em que trecho do gráfico o objeto se está a <b>mover</b>? Em que trecho está <b>parado</b>?</li>
+      <li>O que representa uma linha <b>horizontal</b> num gráfico de posição-tempo?</li>
+      <li>Qual é o troço <b>mais inclinado</b>? Confirma com as contas da tabela.</li>
+      <li>Em cada troço, a velocidade é <b>constante</b>: no troço 1, 4 m ÷ 2 s = 2 m/s, e 2 m ÷ 1 s também dá 2 m/s. Como é que o gráfico mostra isso?</li>
+      <li>Neste gráfico, a velocidade pode passar de «muito rápida» para «zero» de repente? O que é que isso nos diz sobre o movimento real?</li>
+    </ol>
+    <div class="keybox">
+      <b>Ideia-chave:</b> num gráfico de posição-tempo, uma linha <b>horizontal</b> significa posição constante (o objeto está parado, velocidade 0) e uma linha <b>inclinada</b> significa mudança de posição. A velocidade em cada troço é a <b>mudança de posição ÷ tempo</b> — e é igual ao <b>declive</b> do troço. Na próxima semana vamos estudar o declive a sério.
+    </div>
+  </div>
+</section>
+
+<!-- ================= PÁGINA 7 ================= -->
+<section class="page" id="p7">
+  <div class="page-head">
+    <span class="chip">Atividade 7 · Bilhete de saída</span>
+    <h2>Bilhete de saída</h2>
+    <p class="lead">Responde individualmente. Podes escrever aqui e depois imprimir ou guardar em PDF.</p>
+  </div>
+
+  <div class="card ticket">
+    <div class="q">
+      <p>1. Num gráfico de quantidade acumulada ao longo do tempo, o que significa um trecho horizontal?</p>
+      <textarea id="t1"></textarea>
+    </div>
+    <div class="q">
+      <p>2. Escreve <b>um</b> exemplo de uma associação que <b>seja</b> função e <b>outro</b> que <b>não seja</b>. Explica porquê em cada caso.</p>
+      <textarea id="t2"></textarea>
+    </div>
+    <div class="q">
+      <p>3. O que ainda não percebeste bem, ou que dúvida ficaste com?</p>
+      <textarea id="t3"></textarea>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn primary" onclick="window.print()">🖨 Imprimir / Guardar em PDF</button>
+      <button class="btn" id="tClear">Limpar respostas</button>
+    </div>
+    <p class="muted" style="margin-top:12px">Nota: as respostas ficam apenas neste dispositivo. Se quiseres entregar, imprime ou guarda em PDF antes de fechar.</p>
+  </div>
+</section>
+
+</main>
+
+<footer class="nav">
+  <button class="btn" id="prevBtn">← Anterior</button>
+  <span class="pgnum" id="pgnum"></span>
+  <button class="btn primary" id="nextBtn">Seguinte →</button>
+</footer>
+
+<script>
+/* =========================================================
+   DADOS DA TURMA — 11.º GEI (Técnico de Gestão de Equipamentos
+   Informáticos), 25 alunos. Primeiros nomes.
+   ========================================================= */
+var TURMA_GEI = [
+  {num:1,  nome:"Bruno"},
+  {num:2,  nome:"Darsman"},
+  {num:3,  nome:"Diogo"},
+  {num:4,  nome:"Fábio"},
+  {num:5,  nome:"Filipe"},
+  {num:6,  nome:"Gabriel"},
+  {num:7,  nome:"Gonçalo"},
+  {num:8,  nome:"Gonçalo"},
+  {num:9,  nome:"Hugo"},
+  {num:10, nome:"Ivo"},
+  {num:11, nome:"Jailson"},
+  {num:12, nome:"João"},
+  {num:13, nome:"Leandro"},
+  {num:14, nome:"Leonardo"},
+  {num:15, nome:"Martim"},
+  {num:16, nome:"Mauro"},
+  {num:17, nome:"Pedro"},
+  {num:18, nome:"Pedro"},
+  {num:19, nome:"Rafael"},
+  {num:20, nome:"Rodrigo"},
+  {num:21, nome:"Rodrigo"},
+  {num:22, nome:"Rostyslav"},
+  {num:23, nome:"Telmo"},
+  {num:24, nome:"Tiago"},
+  {num:25, nome:"Xavier"}
+];
+
+/* Subconjunto usado no diagrama (inclui os 3 nomes repetidos) */
+var SUBSET1 = [1,3,6,7,8,9,17,18,20,21,22,25];
+
+/* =========================================================
+   NAVEGAÇÃO ENTRE PÁGINAS
+   ========================================================= */
+var PAGES = [
+  {id:"p1", short:"1 · Números e nomes"},
+  {id:"p2", short:"2 · É função?"},
+  {id:"p3", short:"3 · Idade e altura"},
+  {id:"p4", short:"4 · Dados descarregados"},
+  {id:"p5vel", short:"5 · Velocidade"},
+  {id:"p5", short:"6 · Trabalho de pares"},
+  {id:"p6", short:"7 · Posição e tempo"},
+  {id:"p7", short:"8 · Bilhete de saída"}
+];
+var cur = 0;
+
+function buildNav(){
+  var nav = document.getElementById("nav");
+  var html = "";
+  for(var i=0;i<PAGES.length;i++){
+    html += '<button data-i="'+i+'">'+PAGES[i].short+'</button>';
+  }
+  nav.innerHTML = html;
+  nav.addEventListener("click", function(e){
+    var b = e.target.closest("button");
+    if(b) go(parseInt(b.getAttribute("data-i"),10));
+  });
+}
+
+function go(i){
+  if(i<0) i=0;
+  if(i>PAGES.length-1) i=PAGES.length-1;
+  cur = i;
+  var secs = document.querySelectorAll(".page");
+  for(var k=0;k<secs.length;k++) secs[k].classList.remove("active");
+  document.getElementById(PAGES[i].id).classList.add("active");
+  var btns = document.querySelectorAll("#nav button");
+  for(var j=0;j<btns.length;j++) btns[j].classList.toggle("active", j===i);
+  document.getElementById("pgnum").textContent = "Página "+(i+1)+" de "+PAGES.length;
+  document.getElementById("prevBtn").disabled = (i===0);
+  document.getElementById("nextBtn").disabled = (i===PAGES.length-1);
+  window.scrollTo({top:0,behavior:"smooth"});
+  setTimeout(function(){
+    if(PAGES[i].id==="p1") drawArrows1();
+    if(PAGES[i].id==="p3") drawArrows3();
+  }, 60);
+}
+
+/* =========================================================
+   UTILITÁRIO: desenhar setas entre duas colunas
+   ========================================================= */
+function drawArrowSet(containerEl, svgEl, pairs, leftSel, rightSel){
+  if(!containerEl || !svgEl) return;
+  var box = containerEl.getBoundingClientRect();
+  if(box.width===0) return;
+  svgEl.setAttribute("viewBox", "0 0 "+box.width+" "+box.height);
+  var counts = {};
+  pairs.forEach(function(p){ counts[p[0]] = (counts[p[0]]||0)+1; });
+  var inner = '<defs>'+
+    '<marker id="ah_'+svgEl.id+'" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#93c5fd"/></marker>'+
+    '<marker id="ahb_'+svgEl.id+'" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e11d48"/></marker>'+
+  '</defs>';
+  pairs.forEach(function(p){
+    var le = containerEl.querySelector(leftSel+' [data-key="'+p[0]+'"]');
+    var re = containerEl.querySelector(rightSel+' [data-key="'+p[1]+'"]');
+    if(!le || !re) return;
+    var lr = le.getBoundingClientRect(), rr = re.getBoundingClientRect();
+    var x1 = lr.right - box.left, y1 = lr.top + lr.height/2 - box.top;
+    var x2 = rr.left - box.left,  y2 = rr.top + rr.height/2 - box.top;
+    var bad = counts[p[0]] > 1;
+    var cx = (x1+x2)/2;
+    inner += '<path d="M'+x1+','+y1+' C'+cx+','+y1+' '+cx+','+y2+' '+x2+','+y2+'" fill="none" stroke="'+(bad?"#e11d48":"#93c5fd")+'" stroke-width="'+(bad?3:2)+'" marker-end="url(#'+(bad?"ahb_":"ah_")+svgEl.id+')"/>';
+  });
+  svgEl.innerHTML = inner;
+}
+
+/* =========================================================
+   PÁGINA 1 — Números e nomes
+   ========================================================= */
+var dir1 = "num2nome";
+var all1 = false;
+var p1pairs = [];
+
+function studs1(){
+  if(all1) return TURMA_GEI.slice();
+  return TURMA_GEI.filter(function(s){ return SUBSET1.indexOf(s.num) >= 0; });
+}
+
+function renderP1(){
+  var studs = studs1();
+  var names = [];
+  studs.forEach(function(s){ if(names.indexOf(s.nome) < 0) names.push(s.nome); });
+
+  var left = [], right = [];
+  p1pairs = [];
+
+  if(dir1 === "num2nome"){
+    studs.forEach(function(s){ left.push({key:"n"+s.num, label:String(s.num), kind:"num"}); });
+    names.forEach(function(n){ right.push({key:"m"+n, label:n, kind:"name"}); });
+    studs.forEach(function(s){ p1pairs.push(["n"+s.num, "m"+s.nome]); });
+    document.getElementById("headL1").textContent = "Números de turma";
+    document.getElementById("headR1").textContent = "Primeiros nomes";
+  } else {
+    names.forEach(function(n){ left.push({key:"m"+n, label:n, kind:"name"}); });
+    studs.forEach(function(s){ right.push({key:"n"+s.num, label:String(s.num), kind:"num"}); });
+    studs.forEach(function(s){ p1pairs.push(["m"+s.nome, "n"+s.num]); });
+    document.getElementById("headL1").textContent = "Primeiros nomes";
+    document.getElementById("headR1").textContent = "Números de turma";
+  }
+
+  var counts = {};
+  p1pairs.forEach(function(p){ counts[p[0]] = (counts[p[0]]||0)+1; });
+
+  document.getElementById("nodesL1").innerHTML = left.map(function(n){
+    return '<div class="node '+n.kind+(counts[n.key]>1?" bad":"")+'" data-key="'+n.key+'">'+n.label+'</div>';
+  }).join("");
+  document.getElementById("nodesR1").innerHTML = right.map(function(n){
+    return '<div class="node '+n.kind+'" data-key="'+n.key+'">'+n.label+'</div>';
+  }).join("");
+
+  var multi = left.filter(function(n){ return counts[n.key] > 1; });
+  var v = document.getElementById("verdict1");
+  if(multi.length === 0){
+    v.className = "verdict ok";
+    v.innerHTML = "✔ <b>É uma função.</b> Cada número tem <b>exatamente uma</b> seta: se eu chamar um número, sei perfeitamente qual é o aluno. Não há dúvida possível.";
+  } else {
+    var nomes = multi.map(function(m){ return "«"+m.label+"»"; }).join(", ");
+    v.className = "verdict bad";
+    v.innerHTML = "✘ <b>Não é uma função.</b> " + nomes + " " + (multi.length>1?"têm":"tem") + " <b>mais do que uma</b> seta: se eu chamar esse nome, fico à espera de mais do que um aluno. Há confusão.";
+  }
+
+  setTimeout(drawArrows1, 40);
+}
+
+function drawArrows1(){
+  drawArrowSet(
+    document.getElementById("diagram1"),
+    document.getElementById("arrows1"),
+    p1pairs,
+    "#nodesL1",
+    "#nodesR1"
+  );
+}
+
+/* =========================================================
+   PÁGINA 2 — É função?
+   ========================================================= */
+var EXEMPLOS = [
+  {a:"Ficheiro", b:"Tamanho (em MB)", ok:true,
+   why:"Cada ficheiro tem um tamanho bem definido. Uma entrada → um único resultado."},
+  {a:"Tamanho (em MB)", b:"Ficheiro", ok:false,
+   why:"Vários ficheiros podem ter exatamente o mesmo tamanho. Uma entrada → vários resultados."},
+  {a:"Número de telemóvel", b:"Pessoa", ok:true,
+   why:"Cada número pertence a uma pessoa. Uma entrada → um único resultado."},
+  {a:"Pessoa", b:"Número de telemóvel", ok:false,
+   why:"Alguém pode ter dois números. Uma entrada → vários resultados."},
+  {a:"Aluno", b:"Nota do teste de matemática", ok:true,
+   why:"Cada aluno tem uma nota nesse teste. Uma entrada → um único resultado."},
+  {a:"Data de nascimento", b:"Aluno", ok:false,
+   why:"Muitos alunos partilham a mesma data de nascimento. Uma entrada → vários resultados."},
+  {a:"Extensão do ficheiro", b:"Tipo de ficheiro", ok:true,
+   why:".png dá sempre imagem, .mp4 dá sempre vídeo. Uma entrada → um único resultado."},
+  {a:"Tipo de ficheiro", b:"Extensão do ficheiro", ok:false,
+   why:"«Imagem» pode ser .png, .jpg, .gif… Uma entrada → vários resultados."},
+  {a:"Processador", b:"Número de núcleos", ok:true,
+   why:"Cada processador tem um número de núcleos bem definido. Uma entrada → um único resultado."},
+  {a:"Código postal", b:"Localidade", ok:true,
+   why:"Em Portugal, cada código postal corresponde a uma zona bem definida. Uma entrada → um único resultado."},
+  {a:"Pessoa", b:"Marca dos ténis que calça hoje", ok:true,
+   why:"Num dado momento, cada pessoa calça uma marca. Uma entrada → um único resultado."},
+  {a:"Marca dos ténis", b:"Pessoa", ok:false,
+   why:"Muitas pessoas calçam a mesma marca. Uma entrada → vários resultados."}
+];
+
+function renderExemplos(){
+  var g = document.getElementById("exgrid");
+  g.innerHTML = EXEMPLOS.map(function(e, i){
+    return '<div class="ex" data-i="'+i+'">'+
+      '<div class="tag">Associação '+(i+1)+'</div>'+
+      '<div class="pair">'+e.a+' <span class="arw">→</span> '+e.b+'</div>'+
+      '<div class="opts">'+
+        '<button data-v="1">É função</button>'+
+        '<button data-v="0">Não é função</button>'+
+      '</div>'+
+      '<div class="fb"></div>'+
+    '</div>';
+  }).join("");
+
+  g.addEventListener("click", function(ev){
+    var btn = ev.target.closest(".opts button");
+    if(!btn) return;
+    var card = btn.closest(".ex");
+    var i = parseInt(card.getAttribute("data-i"), 10);
+    var e = EXEMPLOS[i];
+    var escolha = btn.getAttribute("data-v") === "1";
+    var ok = (escolha === e.ok);
+
+    var btns = card.querySelectorAll(".opts button");
+    btns[0].className = "";
+    btns[1].className = "";
+    btn.className = ok ? "sel-ok" : "sel-no";
+
+    var fb = card.querySelector(".fb");
+    fb.className = "fb show " + (ok ? "ok" : "no");
+    fb.innerHTML = (ok ? "✔ Correto. " : "✘ Não é bem. ") + e.why;
+  });
+}
+
+/* =========================================================
+   GRÁFICO SVG GENÉRICO
+   ========================================================= */
+function makeScale(o){
+  var w = o.w || 660, h = o.h || 400;
+  var pad = Object.assign({l:70,r:26,t:26,b:58}, o.pad || {});
+  var iw = w - pad.l - pad.r, ih = h - pad.t - pad.b;
+  return {
+    w:w, h:h, pad:pad, iw:iw, ih:ih,
+    X: function(v){ return pad.l + (v - o.xMin)/(o.xMax - o.xMin)*iw; },
+    Y: function(v){ return pad.t + ih - (v - o.yMin)/(o.yMax - o.yMin)*ih; }
+  };
+}
+
+function chartSVG(o){
+  var sc = makeScale(o);
+  var pad = sc.pad, iw = sc.iw, ih = sc.ih, X = sc.X, Y = sc.Y;
+  var s = "";
+
+  (o.bands || []).forEach(function(b){
+    var x0 = X(b.x0), x1 = X(b.x1);
+    s += '<rect x="'+x0+'" y="'+pad.t+'" width="'+(x1-x0)+'" height="'+ih+'" fill="'+(b.color||"#e0e7ff")+'" opacity="'+(b.opacity||0.6)+'"/>';
+    if(b.label){
+      s += '<text x="'+((x0+x1)/2)+'" y="'+(pad.t+18)+'" text-anchor="middle" font-size="14" font-weight="800" fill="'+(b.labelColor||"#4338ca")+'">'+b.label+'</text>';
+    }
+  });
+
+  (o.yTicks || []).forEach(function(t){
+    var y = Y(t);
+    s += '<line x1="'+pad.l+'" y1="'+y+'" x2="'+(pad.l+iw)+'" y2="'+y+'" stroke="#e2e8f0" stroke-width="1"/>';
+    s += '<text x="'+(pad.l-10)+'" y="'+(y+4)+'" text-anchor="end" font-size="12" fill="#64748b">'+t+'</text>';
+  });
+  (o.xTicks || []).forEach(function(t){
+    var x = X(t);
+    s += '<line x1="'+x+'" y1="'+pad.t+'" x2="'+x+'" y2="'+(pad.t+ih)+'" stroke="#eef2f7" stroke-width="1"/>';
+    s += '<text x="'+x+'" y="'+(pad.t+ih+20)+'" text-anchor="middle" font-size="12" fill="#64748b">'+t+'</text>';
+  });
+
+  s += '<line x1="'+pad.l+'" y1="'+pad.t+'" x2="'+pad.l+'" y2="'+(pad.t+ih)+'" stroke="#94a3b8" stroke-width="1.5"/>';
+  s += '<line x1="'+pad.l+'" y1="'+(pad.t+ih)+'" x2="'+(pad.l+iw)+'" y2="'+(pad.t+ih)+'" stroke="#94a3b8" stroke-width="1.5"/>';
+
+  if(o.xLabel) s += '<text x="'+(pad.l+iw/2)+'" y="'+(sc.h-14)+'" text-anchor="middle" font-size="14" font-weight="700" fill="#334155">'+o.xLabel+'</text>';
+  if(o.yLabel) s += '<text x="18" y="'+(pad.t+ih/2)+'" text-anchor="middle" font-size="14" font-weight="700" fill="#334155" transform="rotate(-90 18 '+(pad.t+ih/2)+')">'+o.yLabel+'</text>';
+
+  (o.series || []).forEach(function(se){
+    var d = se.pts.map(function(p, i){ return (i?"L":"M")+X(p[0])+","+Y(p[1]); }).join(" ");
+    var dash = se.dash ? ' stroke-dasharray="'+se.dash+'"' : "";
+    s += '<path d="'+d+'" fill="none" stroke="'+se.color+'" stroke-width="'+(se.width||3)+'"'+dash+' stroke-linejoin="round" stroke-linecap="round"/>';
+    if(se.dots){
+      se.pts.forEach(function(p){
+        s += '<circle cx="'+X(p[0])+'" cy="'+Y(p[1])+'" r="'+(se.dotR||5)+'" fill="'+(se.dotColor||se.color)+'" stroke="#fff" stroke-width="2"/>';
+      });
+    }
+  });
+
+  return '<svg viewBox="0 0 '+sc.w+' '+sc.h+'" class="chart" preserveAspectRatio="xMidYMid meet">'+s+'</svg>';
+}
+
+/* =========================================================
+   PÁGINA 3 — Idade e altura
+   ========================================================= */
+function altura(idade){
+  if(idade < 0) return 0;
+  if(idade > 20) idade = 20;
+  var h = 50 + (125 / (1 + Math.exp(-0.35 * (idade - 8))));
+  return Math.round(h * 10) / 10;
+}
+
+var p3pairs = [];
+
+function renderP3(){
+  var n = parseInt(document.getElementById("slider3").value, 10);
+  var showConn = document.getElementById("ckConn").checked;
+  var showRef  = document.getElementById("ckRef").checked;
+  document.getElementById("lbl3").textContent = n + (n===1?" medição":" medições");
+
+  var pts = [];
+  var step = 20 / (n - 1);
+  for(var i=0;i<n;i++){
+    var idade = Math.round(i*step*10)/10;
+    pts.push([idade, altura(idade)]);
+  }
+
+  var ref = [];
+  for(var a=0;a<=20.001;a+=0.25){ ref.push([Math.round(a*100)/100, altura(a)]); }
+
+  var series = [];
+  if(showRef){ series.push({pts:ref, color:"#a5b4fc", width:2.5, dash:"6 6"}); }
+  if(showConn){ series.push({pts:pts, color:"#94a3b8", width:2}); }
+  series.push({pts:pts, color:"#4338ca", width:2, dots:true, dotR:5, dotColor:"#4338ca"});
+
+  var o = {
+    w:640, h:400,
+    xMin:0, xMax:20, yMin:40, yMax:190,
+    xTicks:[0,2,4,6,8,10,12,14,16,18,20],
+    yTicks:[40,70,100,130,160,190],
+    xLabel:"Idade (anos)", yLabel:"Altura (cm)",
+    series:series
+  };
+  document.getElementById("chart3box").innerHTML = chartSVG(o);
+
+  var note = document.getElementById("note3");
+  var partes = [];
+  if(!showConn && !showRef){
+    partes.push("<b>Só os pontos:</b> cada ponto é <b>uma medição que fizemos mesmo</b> — a altura numa idade concreta. Sem as linhas, vemos que só conhecemos a altura nos instantes em que medimos. Tudo o resto é suposição.");
+  } else if(showConn && !showRef){
+    partes.push("<b>Linhas a ligar as medições:</b> unem os pontos consecutivos. Servem para ver a ordem, mas a linha não é medida — é uma ligação entre medições.");
+  } else if(!showConn && showRef){
+    partes.push("<b>Curva de referência (tracejada):</b> é o <b>modelo</b> — a nossa suposição de como a altura varia entre medições. Não é algo que tenhamos medido.");
+  }
+  if(n <= 6){
+    partes.unshift("<b>Poucas medições:</b> vemos <b>pontos isolados</b> — cada um é uma altura medida. A pessoa não cresce «aos saltos», por isso ligamos os pontos ou usamos o modelo contínuo.");
+  } else if(n < 30){
+    partes.unshift("<b>Medições mais frequentes:</b> os pontos ficam juntos e já se adivinha uma <b>linha</b>. Estamos a aproximar-nos do comportamento real.");
+  } else {
+    partes.unshift("<b>Muitas medições:</b> os pontos quase formam uma <b>linha contínua</b>. É esta a idealização que usamos: o crescimento é contínuo no tempo.");
+  }
+  note.innerHTML = partes.join(" ");
+
+  var shown = pts;
+  if(pts.length > 6){
+    shown = [];
+    var k = (pts.length - 1) / 5;
+    for(var j=0;j<6;j++){ shown.push(pts[Math.round(j*k)]); }
+  }
+  p3pairs = [];
+  var leftHtml = "", rightHtml = "";
+  shown.forEach(function(p, idx){
+    var lk = "i"+idx, rk = "h"+idx;
+    p3pairs.push([lk, rk]);
+    leftHtml += '<div class="node num" data-key="'+lk+'">'+p[0]+' anos</div>';
+    rightHtml += '<div class="node name" data-key="'+rk+'">'+p[1]+' cm</div>';
+  });
+  document.getElementById("nodesL3").innerHTML = leftHtml;
+  document.getElementById("nodesR3").innerHTML = rightHtml;
+  setTimeout(drawArrows3, 40);
+}
+
+function drawArrows3(){
+  drawArrowSet(
+    document.getElementById("diagram3"),
+    document.getElementById("arrows3"),
+    p3pairs,
+    "#nodesL3",
+    "#nodesR3"
+  );
+}
+
+/* =========================================================
+   PÁGINA 4 — Dados descarregados
+   ========================================================= */
+var P4PTS = [[0,0],[2,2],[5,20],[7,20],[10,29]];
+var P4BANDS = [
+  {id:"A", x0:0, x1:2,  color:"#dbeafe", labelColor:"#1d4ed8", txt:"Intervalo A (0–2 s): a quantidade acumulada cresce <b>devagar</b> — cerca de 1 MB por segundo."},
+  {id:"B", x0:2, x1:5,  color:"#dcfce7", labelColor:"#15803d", txt:"Intervalo B (2–5 s): a quantidade acumulada cresce <b>muito depressa</b> — cerca de 6 MB por segundo. É o trecho mais inclinado."},
+  {id:"C", x0:5, x1:7,  color:"#fee2e2", labelColor:"#b91c1c", txt:"Intervalo C (5–7 s): o gráfico está <b>horizontal</b> — a quantidade acumulada <b>não aumenta</b>. O download está parado."},
+  {id:"D", x0:7, x1:10, color:"#fef3c7", labelColor:"#b45309", txt:"Intervalo D (7–10 s): a quantidade volta a crescer, a um ritmo <b>intermédio</b> — cerca de 3 MB por segundo."}
+];
+var bandSel = "all";
+
+function renderP4(){
+  var bands = P4BANDS.map(function(b){
+    return {
+      x0:b.x0, x1:b.x1, label:b.id,
+      color: (bandSel==="all" || bandSel===b.id) ? b.color : "#f1f5f9",
+      opacity: (bandSel==="all" || bandSel===b.id) ? 0.75 : 0.35,
+      labelColor: (bandSel==="all" || bandSel===b.id) ? b.labelColor : "#cbd5e1"
+    };
+  });
+
+  var o = {
+    w:760, h:400,
+    xMin:0, xMax:10, yMin:0, yMax:32,
+    xTicks:[0,1,2,3,4,5,6,7,8,9,10],
+    yTicks:[0,5,10,15,20,25,30],
+    xLabel:"Tempo (s)", yLabel:"Dados acumulados (MB)",
+    bands:bands,
+    series:[{pts:P4PTS, color:"#4338ca", width:4, dots:true, dotR:6, dotColor:"#4338ca"}]
+  };
+  document.getElementById("chart4box").innerHTML = chartSVG(o);
+
+  var info = document.getElementById("bandInfo");
+  if(bandSel === "all"){
+    info.innerHTML = "Cada intervalo tem um ritmo diferente. Compara a inclinação dos vários trechos.";
+  } else {
+    var b = P4BANDS.filter(function(x){ return x.id===bandSel; })[0];
+    info.innerHTML = b.txt;
+  }
+}
+
+/* =========================================================
+   PÁGINA 5 — Trabalho de pares
+   ========================================================= */
+var M_GRAPHS = [
+  {id:"A", pts:[[0,0],[1,0.5],[2,1.5],[3,3],[4,5],[5,7.5]]},
+  {id:"B", pts:[[0,0],[1,2],[2,4],[3,4],[4,4],[5,4]]},
+  {id:"C", pts:[[0,0],[1,3],[2,5],[3,6.2],[4,7],[5,7.5]]},
+  {id:"D", pts:[[0,0],[1,3],[2,5],[3,4],[4,2],[5,0.5]]}
+];
+var M_DESCS = [
+  {id:"1", text:"A quantidade aumenta, mas cada vez mais devagar."},
+  {id:"2", text:"A quantidade aumenta e, a seguir, diminui."},
+  {id:"3", text:"A quantidade aumenta sempre, e cada vez mais depressa."},
+  {id:"4", text:"A quantidade aumenta e, depois, fica estável durante algum tempo."}
+];
+var M_CORRECT = {A:"3", B:"4", C:"1", D:"2"};
+
+/* =========================================================
+   PÁGINA 5 — Quiz de velocidade
+   ========================================================= */
+function buildQuiz5(){
+  var cards = document.querySelectorAll(".quizcard");
+  for(var c=0;c<cards.length;c++){
+    (function(card){
+      card.querySelector(".oo").addEventListener("click", function(ev){
+        var btn = ev.target.closest("button");
+        if(!btn) return;
+        var ok = btn.getAttribute("data-v") === "1";
+        var btns = card.querySelectorAll(".oo button");
+        for(var i=0;i<btns.length;i++) btns[i].className = "";
+        btn.className = ok ? "sel-ok" : "sel-no";
+        var fb = card.querySelector(".fb");
+        fb.className = "fb show " + (ok ? "ok" : "no");
+        fb.innerHTML = (ok ? "✔ Correto. " : "✘ Não é bem. ") + fb.textContent.trim();
+      });
+    })(cards[c]);
+  }
+}
+var mSel = null;
+var mLinks = {};
+
+function renderP5(){
+  document.getElementById("matchGraphs").innerHTML = M_GRAPHS.map(function(g){
+    var o = {
+      w:260, h:190, pad:{l:34,r:14,t:14,b:30},
+      xMin:0, xMax:5, yMin:0, yMax:8,
+      xTicks:[0,5], yTicks:[0,8],
+      series:[{pts:g.pts, color:"#4338ca", width:3}]
+    };
+    return '<div class="mcard" data-g="'+g.id+'">'+
+      '<span class="lbl">Gráfico '+g.id+'</span>'+
+      '<span class="badge"></span>'+
+      '<div style="margin-top:22px">'+chartSVG(o)+'</div>'+
+    '</div>';
+  }).join("");
+
+  document.getElementById("matchDescs").innerHTML = M_DESCS.map(function(d){
+    return '<div class="dcard" data-d="'+d.id+'"><span class="badge"></span>'+d.text+'</div>';
+  }).join("");
+
+  document.getElementById("matchGraphs").addEventListener("click", function(ev){
+    var c = ev.target.closest(".mcard");
+    if(!c) return;
+    var g = c.getAttribute("data-g");
+    if(mLinks[g]){ delete mLinks[g]; mSel = null; }
+    else { mSel = (mSel === g) ? null : g; }
+    paintP5();
+  });
+  document.getElementById("matchDescs").addEventListener("click", function(ev){
+    var c = ev.target.closest(".dcard");
+    if(!c) return;
+    var d = c.getAttribute("data-d");
+    if(mSel){
+      Object.keys(mLinks).forEach(function(k){ if(mLinks[k]===d) delete mLinks[k]; });
+      mLinks[mSel] = d;
+      mSel = null;
+    } else {
+      Object.keys(mLinks).forEach(function(k){ if(mLinks[k]===d) delete mLinks[k]; });
+    }
+    paintP5();
+  });
+}
+
+function paintP5(){
+  var gs = document.querySelectorAll("#matchGraphs .mcard");
+  for(var i=0;i<gs.length;i++){
+    var g = gs[i].getAttribute("data-g");
+    gs[i].className = "mcard" + (mSel===g?" sel":"") + (mLinks[g]?" linked":"");
+    gs[i].querySelector(".badge").textContent = mLinks[g] ? mLinks[g] : "";
+  }
+  var ds = document.querySelectorAll("#matchDescs .dcard");
+  for(var j=0;j<ds.length;j++){
+    var d = ds[j].getAttribute("data-d");
+    var linkedG = null;
+    Object.keys(mLinks).forEach(function(k){ if(mLinks[k]===d) linkedG = k; });
+    ds[j].className = "dcard" + (linkedG?" linked":"");
+    ds[j].querySelector(".badge").textContent = linkedG ? linkedG : "";
+  }
+  document.getElementById("mScore").textContent = "";
+}
+
+function checkP5(){
+  var total = 0, ok = 0;
+  var gs = document.querySelectorAll("#matchGraphs .mcard");
+  for(var i=0;i<gs.length;i++){
+    var g = gs[i].getAttribute("data-g");
+    total++;
+    var right = (mLinks[g] === M_CORRECT[g]);
+    if(right) ok++;
+    gs[i].classList.remove("right","wrong");
+    gs[i].classList.add(right ? "right" : "wrong");
+  }
+  document.getElementById("mScore").textContent = ok + " de " + total + " corretos";
+}
+
+/* =========================================================
+   PÁGINA 6 — Posição e tempo
+   ========================================================= */
+var P6PTS = [[0,0],[2,4],[4,4],[6,10],[8,10]];
+var P6O = {
+  w:760, h:400,
+  xMin:0, xMax:8, yMin:0, yMax:12,
+  xTicks:[0,1,2,3,4,5,6,7,8],
+  yTicks:[0,2,4,6,8,10,12],
+  xLabel:"Tempo (s)", yLabel:"Posição (m)",
+  series:[{pts:P6PTS, color:"#4338ca", width:4, dots:true, dotR:6, dotColor:"#4338ca"}]
+};
+var p6t = 0, p6playing = false, p6last = 0;
+
+function p6pos(t){
+  if(t <= 2) return 2*t;
+  if(t <= 4) return 4;
+  if(t <= 6) return 4 + 3*(t-4);
+  return 10;
+}
+
+function buildP6(){
+  var box = document.getElementById("chart6box");
+  box.innerHTML = chartSVG(P6O);
+  var svg = box.querySelector("svg");
+  var sc = makeScale(P6O);
+  svg.insertAdjacentHTML("beforeend",
+    '<line id="p6line" x1="0" y1="'+sc.pad.t+'" x2="0" y2="'+(sc.pad.t+sc.ih)+'" stroke="#f59e0b" stroke-width="2" stroke-dasharray="5 4"/>'+
+    '<circle id="p6dot" cx="0" cy="0" r="8" fill="#f59e0b" stroke="#fff" stroke-width="3"/>'
+  );
+
+  var marks = document.getElementById("marks6");
+  var mh = "";
+  for(var m=0;m<=10;m++){
+    mh += '<div class="mk" style="left:'+(m*10)+'%"><span>'+m+' m</span></div>';
+  }
+  marks.innerHTML = mh;
+
+  p6update();
+}
+
+function p6update(){
+  var sc = makeScale(P6O);
+  var x = sc.X(p6t), y = sc.Y(p6pos(p6t));
+  var line = document.getElementById("p6line");
+  var dot = document.getElementById("p6dot");
+  if(line){ line.setAttribute("x1", x); line.setAttribute("x2", x); }
+  if(dot){ dot.setAttribute("cx", x); dot.setAttribute("cy", y); }
+  var obj = document.getElementById("p6obj");
+  if(obj){ obj.style.left = "calc(24px + " + (p6pos(p6t)/10) + " * (100% - 48px))"; }
+  document.getElementById("p6time").textContent = p6t.toFixed(1).replace(".", ",") + " s";
+}
+
+function p6loop(ts){
+  if(!p6playing) return;
+  if(!p6last) p6last = ts;
+  var dt = (ts - p6last) / 1000;
+  p6last = ts;
+  p6t += dt * 1.6;
+  if(p6t >= 8){ p6t = 8; p6playing = false; document.getElementById("p6play").textContent = "▶ Reproduzir"; }
+  p6update();
+  if(p6playing) requestAnimationFrame(p6loop);
+}
+
+/* =========================================================
+   ARRANQUE
+   ========================================================= */
+document.addEventListener("DOMContentLoaded", function(){
+  // 1) Primeiro, ligar os controlos interativos: mesmo que um passo abaixo falhe,
+  //    os seletores da página 3 e o slider continuam a funcionar.
+  document.getElementById("slider3").addEventListener("input", renderP3);
+  document.getElementById("ckConn").addEventListener("change", renderP3);
+  document.getElementById("ckRef").addEventListener("change", renderP3);
+
+  // 2) Inicializar as páginas — cada passo protegido para não derrubar os restantes.
+  function initStep(nome, fn){
+    try { fn(); }
+    catch(e){ if(window.console && console.error) console.error("init " + nome + ":", e); }
+  }
+  initStep("nav", buildNav);
+  initStep("p1", renderP1);
+  initStep("exemplos", renderExemplos);
+  initStep("p3", renderP3);
+  initStep("p4", renderP4);
+  initStep("quiz5", buildQuiz5);
+  initStep("p5", renderP5);
+  initStep("p6", buildP6);
+  initStep("go0", function(){ go(0); });
+
+  document.getElementById("dirToggle").addEventListener("click", function(e){
+    var b = e.target.closest("button");
+    if(!b) return;
+    dir1 = b.getAttribute("data-dir");
+    var bs = this.querySelectorAll("button");
+    for(var i=0;i<bs.length;i++) bs[i].classList.toggle("active", bs[i]===b);
+    renderP1();
+  });
+  document.getElementById("p1all").addEventListener("click", function(){
+    all1 = !all1;
+    this.textContent = all1 ? "Mostrar só alguns alunos" : "Mostrar os 25 alunos";
+    document.getElementById("p1info").textContent = all1 ? "Turma 11.º GEI — 25 alunos" : "Turma 11.º GEI — alguns alunos";
+    renderP1();
+  });
+
+  document.getElementById("slider3").addEventListener("input", renderP3);
+  document.getElementById("ckConn").addEventListener("change", renderP3);
+  document.getElementById("ckRef").addEventListener("change", renderP3);
+
+  document.getElementById("bandToggle").addEventListener("click", function(e){
+    var b = e.target.closest("button");
+    if(!b) return;
+    bandSel = b.getAttribute("data-b");
+    var bs = this.querySelectorAll("button");
+    for(var i=0;i<bs.length;i++) bs[i].classList.toggle("active", bs[i]===b);
+    renderP4();
+  });
+
+  var velTable = document.getElementById("velTable");
+  document.getElementById("velShow").addEventListener("click", function(){ velTable.classList.add("show"); });
+  document.getElementById("velHide").addEventListener("click", function(){ velTable.classList.remove("show"); });
+
+  document.getElementById("mCheck").addEventListener("click", checkP5);
+  document.getElementById("mReset").addEventListener("click", function(){
+    mLinks = {}; mSel = null; paintP5();
+    var gs = document.querySelectorAll("#matchGraphs .mcard");
+    for(var i=0;i<gs.length;i++) gs[i].classList.remove("right","wrong");
+  });
+
+  document.getElementById("p6play").addEventListener("click", function(){
+    if(p6playing){ p6playing = false; this.textContent = "▶ Reproduzir"; }
+    else {
+      if(p6t >= 8) p6t = 0;
+      p6playing = true; p6last = 0; this.textContent = "⏸ Pausar";
+      requestAnimationFrame(p6loop);
+    }
+  });
+  document.getElementById("p6reset").addEventListener("click", function(){
+    p6playing = false; p6t = 0; p6last = 0;
+    document.getElementById("p6play").textContent = "▶ Reproduzir";
+    p6update();
+  });
+
+  document.getElementById("tClear").addEventListener("click", function(){
+    ["t1","t2","t3"].forEach(function(id){ document.getElementById(id).value = ""; });
+  });
+
+  document.getElementById("prevBtn").addEventListener("click", function(){ go(cur-1); });
+  document.getElementById("nextBtn").addEventListener("click", function(){ go(cur+1); });
+  document.addEventListener("keydown", function(e){
+    var tag = (e.target.tagName || "").toLowerCase();
+    if(tag === "textarea" || tag === "input") return;
+    if(e.key === "ArrowRight") go(cur+1);
+    if(e.key === "ArrowLeft") go(cur-1);
+  });
+
+  var rt = null;
+  window.addEventListener("resize", function(){
+    clearTimeout(rt);
+    rt = setTimeout(function(){
+      if(PAGES[cur].id === "p1") drawArrows1();
+      if(PAGES[cur].id === "p3") drawArrows3();
+    }, 150);
+  });
+});
+</script>
+<div class="muted" style="text-align:center;font-size:11.5px;padding:14px 10px;margin-top:18px">Aula 1 · 11.º GEI · Módulo Taxa de Variação · <b>v2.3</b> (18/10/2026) — se não vês este rodapé, o ficheiro é antigo.</div>
+</body>
+</html>

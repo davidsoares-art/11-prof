@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conceito Intuitivo de Função: Idade vs Altura</title>
+    
+    <!-- Tailwind CSS para design responsivo e apelativo -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js para renderização precisa do gráfico -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        
+        .arrow-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        /* Estilo suave de scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <header class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white py-6 px-4 shadow-lg">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight flex items-center gap-3">
+                    <i class="fa-solid fa-chart-line text-amber-400"></i>
+                    O Conceito de Função: Idade vs Altura
+                </h1>
+                <p class="text-blue-200 text-sm md:text-base mt-1">
+                    Exploração intuitiva: Do Diagrama de Setas ao Gráfico Contínuo
+                </p>
+            </div>
+            <div class="bg-white/10 backdrop-blur-md px-4 py-2 rounded-xl border border-white/20 text-xs md:text-sm text-blue-100">
+                <i class="fa-solid fa-lightbulb text-amber-300 mr-2"></i>
+                Uma <strong>função</strong> associa a cada elemento do Domínio (Idade) exatamente um elemento do Contradomínio (Altura).
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto w-full p-4 md:p-6 flex-grow grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- LADO ESQUERDO: CONTROLO E DIAGRAMA DE SETAS (lg:col-span-5) -->
+        <section class="lg:col-span-5 flex flex-col gap-6">
+            
+            <!-- Painel de Controlo da Granularidade -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                <h2 class="text-lg font-bold text-slate-800 mb-3 flex items-center justify-between">
+                    <span><i class="fa-solid fa-sliders text-blue-600 mr-2"></i>Medição do Tempo (Idade)</span>
+                    <span id="modeBadge" class="text-xs px-2.5 py-1 bg-blue-100 text-blue-700 font-semibold rounded-full">Discreto (Pontos)</span>
+                </h2>
+                
+                <p class="text-xs text-slate-600 mb-4">
+                    Arrasta o cursor para aumentar o número de medições efetuadas ao longo do tempo. O que acontece quando medimos continuamente?
+                </p>
+
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between text-sm font-semibold mb-1">
+                            <span class="text-slate-600">Frequência de Medição:</span>
+                            <span id="densityLabel" class="text-blue-600 font-bold">5 pontos (Anual)</span>
+                        </div>
+                        <input type="range" id="densitySlider" min="2" max="100" value="5" step="1"
+                            class="w-full h-2.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                        <div class="flex justify-between text-[10px] text-slate-400 mt-1 font-mono">
+                            <span>2 medições (Início/Fim)</span>
+                            <span>50 medições</span>
+                            <span>∞ (Contínuo)</span>
+                        </div>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="continuousToggle" class="sr-only peer">
+                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 relative"></div>
+                            <span class="ml-3 text-xs font-semibold text-slate-700">Forçar Medição Contínua (Infinitos Pontos)</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visualizador do Diagrama de Setas -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex-grow flex flex-col relative overflow-hidden min-h-[380px]">
+                <div class="flex justify-between items-center mb-2 z-10">
+                    <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-diagram-project text-indigo-600"></i>
+                        Diagrama de Venn / Setas
+                    </h3>
+                    <span class="text-[11px] text-slate-400 italic">Relação: $f(\text{Idade}) = \text{Altura}$</span>
+                </div>
+
+                <!-- Contentor dos Conjuntos (Venn) -->
+                <div id="diagramContainer" class="relative flex-grow grid grid-cols-2 gap-4 items-stretch mt-2 border border-slate-100 rounded-xl bg-slate-50/50 p-2">
+                    
+                    <!-- Canvas transparente para desenhar as setas -->
+                    <canvas id="arrowCanvas" class="arrow-canvas z-20"></canvas>
+
+                    <!-- Conjunto X (Domínio - Idade) -->
+                    <div class="bg-blue-50/60 rounded-lg border border-blue-200 p-2 flex flex-col z-10">
+                        <div class="text-center pb-1 mb-2 border-b border-blue-200/60">
+                            <span class="font-bold text-xs text-blue-800 uppercase tracking-wider block">Domínio ($X$)</span>
+                            <span class="text-[10px] text-blue-600">Idade (Anos)</span>
+                        </div>
+                        <div id="domainList" class="flex-grow flex flex-col justify-around items-center overflow-y-auto max-h-[280px] space-y-1">
+                            <!-- Inserido dinamicamente via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Conjunto Y (Contradomínio - Altura) -->
+                    <div class="bg-emerald-50/60 rounded-lg border border-emerald-200 p-2 flex flex-col z-10">
+                        <div class="text-center pb-1 mb-2 border-b border-emerald-200/60">
+                            <span class="font-bold text-xs text-emerald-800 uppercase tracking-wider block">Contradomínio ($Y$)</span>
+                            <span class="text-[10px] text-emerald-600">Altura (cm)</span>
+                        </div>
+                        <div id="codomainList" class="flex-grow flex flex-col justify-around items-center overflow-y-auto max-h-[280px] space-y-1">
+                            <!-- Inserido dinamicamente via JS -->
+                        </div>
+                    </div>
+
+                </div>
+
+                <div id="diagramNote" class="text-[11px] text-slate-500 mt-2 text-center italic">
+                    Passa o cursor sobre uma idade para destacar a associação correspondente.
+                </div>
+            </div>
+
+        </section>
+
+        <!-- LADO DIREITO: O GRÁFICO DA FUNÇÃO (lg:col-span-7) -->
+        <section class="lg:col-span-7 flex flex-col gap-6">
+            
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex-grow flex flex-col min-h-[450px]">
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-area text-blue-600"></i>
+                            Representação Gráfica no Plano Cartesiano
+                        </h2>
+                        <p class="text-xs text-slate-500">
+                            Eixo X: Idade | Eixo Y: Altura
+                        </p>
+                    </div>
+
+                    <!-- Indicador de transição para linha contínua -->
+                    <div id="graphTypeBadge" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                        <i class="fa-solid fa-circle-dot text-[10px]"></i>
+                        <span>Pontos Discretos</span>
+                    </div>
+                </div>
+
+                <!-- Contentor do Chart.js -->
+                <div class="relative flex-grow w-full h-[320px] sm:h-[380px]">
+                    <canvas id="functionChart"></canvas>
+                </div>
+
+                <!-- Explicador da transição intuitiva -->
+                <div class="mt-4 p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 leading-relaxed flex items-start gap-3">
+                    <i class="fa-solid fa-circle-info text-blue-500 text-base mt-0.5 shrink-0"></i>
+                    <div>
+                        <strong class="text-slate-800 block mb-0.5">O Salto para a Derivada e Continuidade:</strong>
+                        <span id="explanationText">
+                            Quando fazemos poucas medições (ex: 1 vez por ano), temos apenas <strong>pontos isolados</strong>. Mas a pessoa não cresce aos "saltos"! O tempo passa continuamente. Ao aumentar as medições para intervalos infinitamente pequenos, os pontos ficam tão juntos que formam uma <strong>linha contínua (curva/reta)</strong>.
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pergunta para reflexão do aluno -->
+            <div class="bg-indigo-900 text-white p-5 rounded-2xl shadow-md border border-indigo-700 relative overflow-hidden">
+                <div class="relative z-10">
+                    <h3 class="text-sm font-bold text-indigo-200 uppercase tracking-wider mb-1 flex items-center gap-2">
+                        <i class="fa-solid fa-brain text-amber-400"></i>
+                        Reflexão de Aprendizagem
+                    </h3>
+                    <p class="text-xs md:text-sm text-indigo-100 leading-relaxed">
+                        É possível uma pessoa ter duas alturas diferentes na mesma idade? E duas pessoas diferentes terem a mesma altura na mesma idade? Como é que isso se reflete no conceito de <strong>função</strong>?
+                    </p>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <script>
+        
+        // Modelo biológico simplificado de crescimento (Idade vs Altura)
+        // Idade: 0 a 20 anos
+        function getBiologicalHeight(age) {
+            // Curva logística/sigmoide adaptada para altura humana típica (cm)
+            // Recém-nascido ~50cm, Adulto ~175cm com surto na adolescência
+            if (age < 0) return 0;
+            if (age > 20) age = 20;
+            
+            // Função de crescimento empírica
+            const height = 50 + (125 / (1 + Math.exp(-0.35 * (age - 8))));
+            return Math.round(height * 10) / 10;
+        }
+
+        // Estado da aplicação
+        let currentPointsCount = 5;
+        let isContinuousMode = false;
+        let hoveredIndex = null;
+        let myChart = null;
+
+        // Elementos DOM
+        const densitySlider = document.getElementById('densitySlider');
+        const densityLabel = document.getElementById('densityLabel');
+        const continuousToggle = document.getElementById('continuousToggle');
+        const modeBadge = document.getElementById('modeBadge');
+        const graphTypeBadge = document.getElementById('graphTypeBadge');
+        const domainList = document.getElementById('domainList');
+        const codomainList = document.getElementById('codomainList');
+        const arrowCanvas = document.getElementById('arrowCanvas');
+        const ctxArrow = arrowCanvas.getContext('2d');
+        const explanationText = document.getElementById('explanationText');
+
+        function initChart() {
+            const ctxChart = document.getElementById('functionChart').getContext('2d');
+            
+            myChart = new Chart(ctxChart, {
+                type: 'line',
+                data: {
+                    datasets: [
+                        {
+                            label: 'Crescimento Contínuo (Infinitas Medições)',
+                            data: [],
+                            borderColor: 'rgba(99, 102, 241, 0.4)',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            fill: false,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Medições Efetuadas',
+                            data: [],
+                            borderColor: '#2563eb',
+                            backgroundColor: '#3b82f6',
+                            borderWidth: 2,
+                            pointRadius: 6,
+                            pointHoverRadius: 9,
+                            pointBackgroundColor: '#2563eb',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            showLine: false,
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 300
+                    },
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            title: {
+                                display: true,
+                                text: 'Idade (Anos)',
+                                font: { weight: 'bold', size: 12 }
+                            },
+                            min: 0,
+                            max: 20,
+                            ticks: { stepSize: 2 }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Altura (cm)',
+                                font: { weight: 'bold', size: 12 }
+                            },
+                            min: 40,
+                            max: 190
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Idade: ${context.parsed.x} anos | Altura: ${context.parsed.y} cm`;
+                                }
+                            }
+                        },
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                boxWidth: 12,
+                                font: { size: 11 }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateData() {
+            const numPoints = parseInt(densitySlider.value);
+            currentPointsCount = numPoints;
+            isContinuousMode = continuousToggle.checked || numPoints >= 70;
+
+            // Atualizar Rótulos do UI
+            if (isContinuousMode) {
+                densityLabel.textContent = "Infinitas Medições (Contínuo)";
+                modeBadge.textContent = "Contínuo (Linha/Reta)";
+                modeBadge.className = "text-xs px-2.5 py-1 bg-indigo-100 text-indigo-700 font-semibold rounded-full";
+                
+                graphTypeBadge.innerHTML = `<i class="fa-solid fa-wave-square text-[10px]"></i><span>Linha Contínua (Função Real)</span>`;
+                graphTypeBadge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200";
+
+                explanationText.innerHTML = `Com <strong>infinitas medições contínuas</strong>, os pontos preenchem todo o intervalo do domínio. O gráfico deixa de ser um conjunto de pontos isolados e transforma-se numa <strong>linha contínua</strong>. Este é o fundamento para estudar variações instantâneas (derivadas)!`;
+            } else {
+                densityLabel.textContent = `${numPoints} pontos ${numPoints <= 6 ? '(Medição Espaçada)' : '(Medição Frequente)'}`;
+                modeBadge.textContent = "Discreto (Pontos)";
+                modeBadge.className = "text-xs px-2.5 py-1 bg-blue-100 text-blue-700 font-semibold rounded-full";
+
+                graphTypeBadge.innerHTML = `<i class="fa-solid fa-circle-dot text-[10px]"></i><span>Pontos Discretos</span>`;
+                graphTypeBadge.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200";
+
+                explanationText.innerHTML = `Quando fazemos poucas medições (ex: 1 vez por ano), temos apenas <strong>pontos isolados</strong>. Mas a pessoa não cresce aos "saltos"! O tempo passa continuamente. Ao aumentar as medições para intervalos infinitamente pequenos, os pontos ficam tão juntos que formam uma <strong>linha contínua</strong>.`;
+            }
+
+            // Gerar pontos para o gráfico e para o diagrama
+            const discretePoints = [];
+            const step = 20 / (numPoints - 1);
+
+            for (let i = 0; i < numPoints; i++) {
+                const age = Math.round((i * step) * 10) / 10;
+                const height = getBiologicalHeight(age);
+                discretePoints.push({ x: age, y: height });
+            }
+
+            // Gerar curva de fundo contínua de referência
+            const continuousRef = [];
+            for (let a = 0; a <= 20; a += 0.2) {
+                continuousRef.push({ x: Math.round(a * 10) / 10, y: getBiologicalHeight(a) });
+            }
+
+            // Atualizar Chart.js
+            myChart.data.datasets[0].data = continuousRef;
+            myChart.data.datasets[1].data = discretePoints;
+            myChart.data.datasets[1].showLine = isContinuousMode;
+            myChart.data.datasets[1].pointRadius = isContinuousMode ? (numPoints > 40 ? 0 : 2) : (numPoints > 20 ? 3 : 6);
+            
+            myChart.update();
+
+            // Renderizar o Diagrama de Setas (Limitado visualmente a no máximo 10 itens para não sobrecarregar o DOM)
+            renderArrowDiagram(discretePoints);
+        }
+
+        function renderArrowDiagram(points) {
+            domainList.innerHTML = '';
+            codomainList.innerHTML = '';
+
+            // Se forem muitos pontos, mostramos uma amostragem simplificada no diagrama visual
+            let displayPoints = points;
+            const maxVisualNodes = 8;
+
+            if (points.length > maxVisualNodes && !isContinuousMode) {
+                displayPoints = [];
+                const step = Math.floor(points.length / maxVisualNodes);
+                for (let i = 0; i < points.length; i += step) {
+                    displayPoints.push(points[i]);
+                }
+                if (displayPoints[displayPoints.length - 1] !== points[points.length - 1]) {
+                    displayPoints.push(points[points.length - 1]);
+                }
+            }
+
+            if (isContinuousMode) {
+                domainList.innerHTML = `
+                    <div class="my-auto text-center p-3 text-blue-800 font-semibold text-xs bg-blue-100/70 rounded-lg border border-blue-200">
+                        <i class="fa-solid fa-infinity text-lg mb-1 block text-blue-600"></i>
+                        Intervalo Real<br>[0, 20] Anos
+                    </div>
+                `;
+                codomainList.innerHTML = `
+                    <div class="my-auto text-center p-3 text-emerald-800 font-semibold text-xs bg-emerald-100/70 rounded-lg border border-emerald-200">
+                        <i class="fa-solid fa-infinity text-lg mb-1 block text-emerald-600"></i>
+                        Intervalo Real<br>[50, 175] cm
+                    </div>
+                `;
+                drawContinuousArrow();
+                return;
+            }
+
+            displayPoints.forEach((pt, idx) => {
+                // Elemento do Domínio (Idade)
+                const dEl = document.createElement('div');
+                dEl.className = `domain-node px-2.5 py-1 bg-white border border-blue-300 rounded-md text-xs font-bold text-blue-900 shadow-sm transition-all duration-150 cursor-pointer hover:bg-blue-600 hover:text-white w-full text-center`;
+                dEl.dataset.index = idx;
+                dEl.innerHTML = `<i class="fa-solid fa-cake-candles text-[10px] mr-1 opacity-70"></i>${pt.x} <span class="text-[9px] font-normal">anos</span>`;
+                
+                dEl.addEventListener('mouseenter', () => {
+                    hoveredIndex = idx;
+                    highlightElements(idx);
+                    drawArrows(displayPoints);
+                });
+                dEl.addEventListener('mouseleave', () => {
+                    hoveredIndex = null;
+                    highlightElements(null);
+                    drawArrows(displayPoints);
+                });
+
+                domainList.appendChild(dEl);
+
+                // Elemento do Contradomínio (Altura)
+                const cdEl = document.createElement('div');
+                cdEl.className = `codomain-node px-2.5 py-1 bg-white border border-emerald-300 rounded-md text-xs font-bold text-emerald-900 shadow-sm transition-all duration-150 w-full text-center`;
+                cdEl.dataset.index = idx;
+                cdEl.innerHTML = `<i class="fa-solid fa-ruler-vertical text-[10px] mr-1 opacity-70"></i>${pt.y} <span class="text-[9px] font-normal">cm</span>`;
+
+                codomainList.appendChild(cdEl);
+            });
+
+            setTimeout(() => drawArrows(displayPoints), 50);
+        }
+
+        function resizeCanvas() {
+            const container = document.getElementById('diagramContainer');
+            if (container) {
+                arrowCanvas.width = container.clientWidth;
+                arrowCanvas.height = container.clientHeight;
+            }
+        }
+
+        function drawArrows(points) {
+            resizeCanvas();
+            ctxArrow.clearRect(0, 0, arrowCanvas.width, arrowCanvas.height);
+
+            if (isContinuousMode) return;
+
+            const domainNodes = document.querySelectorAll('.domain-node');
+            const codomainNodes = document.querySelectorAll('.codomain-node');
+
+            if (domainNodes.length === 0 || codomainNodes.length === 0) return;
+
+            const containerRect = document.getElementById('diagramContainer').getBoundingClientRect();
+
+            domainNodes.forEach((dNode, i) => {
+                const cNode = codomainNodes[i];
+                if (!cNode) return;
+
+                const dRect = dNode.getBoundingClientRect();
+                const cRect = cNode.getBoundingClientRect();
+
+                // Ponto inicial da seta (direita do nó do domínio)
+                const startX = dRect.right - containerRect.left;
+                const startY = dRect.top + dRect.height / 2 - containerRect.top;
+
+                // Ponto final da seta (esquerda do nó do contradomínio)
+                const endX = cRect.left - containerRect.left;
+                const endY = cRect.top + cRect.height / 2 - containerRect.top;
+
+                const isHovered = (hoveredIndex === i);
+
+                // Desenhar Reta/Curva da Seta
+                ctxArrow.beginPath();
+                ctxArrow.moveTo(startX, startY);
+                
+                // Curvatura ligeira
+                const controlX = startX + (endX - startX) / 2;
+                ctxArrow.bezierCurveTo(controlX, startY, controlX, endY, endX, endY);
+
+                ctxArrow.strokeStyle = isHovered ? '#2563eb' : '#93c5fd';
+                ctxArrow.lineWidth = isHovered ? 3 : 1.5;
+                ctxArrow.stroke();
+
+                // Desenhar Ponta da Seta
+                const headLen = 6;
+                ctxArrow.beginPath();
+                ctxArrow.fillStyle = isHovered ? '#2563eb' : '#93c5fd';
+                ctxArrow.arc(endX, endY, isHovered ? 4 : 3, 0, 2 * Math.PI);
+                ctxArrow.fill();
+            });
+        }
+
+        function drawContinuousArrow() {
+            resizeCanvas();
+            ctxArrow.clearRect(0, 0, arrowCanvas.width, arrowCanvas.height);
+
+            const w = arrowCanvas.width;
+            const h = arrowCanvas.height;
+
+            // Desenhar um gradiente contínuo de setas ligando os dois blocos
+            const gradient = ctxArrow.createLinearGradient(w * 0.3, 0, w * 0.7, 0);
+            gradient.addColorStop(0, 'rgba(99, 102, 241, 0.2)');
+            gradient.addColorStop(0.5, 'rgba(99, 102, 241, 0.6)');
+            gradient.addColorStop(1, 'rgba(16, 185, 129, 0.2)');
+
+            ctxArrow.fillStyle = gradient;
+            ctxArrow.beginPath();
+            ctxArrow.moveTo(w * 0.35, h * 0.2);
+            ctxArrow.lineTo(w * 0.65, h * 0.2);
+            ctxArrow.lineTo(w * 0.65, h * 0.8);
+            ctxArrow.lineTo(w * 0.35, h * 0.8);
+            ctxArrow.closePath();
+            ctxArrow.fill();
+
+            // Texto indicativo no meio
+            ctxArrow.fillStyle = '#4338ca';
+            ctxArrow.font = 'bold 11px Inter, sans-serif';
+            ctxArrow.textAlign = 'center';
+            ctxArrow.fillText('Mapeamento Contínuo ∞', w / 2, h / 2);
+        }
+
+        function highlightElements(index) {
+            const domainNodes = document.querySelectorAll('.domain-node');
+            const codomainNodes = document.querySelectorAll('.codomain-node');
+
+            domainNodes.forEach((node, idx) => {
+                if (index === null) {
+                    node.className = node.className.replace(' bg-blue-600 text-white', '');
+                } else if (idx === index) {
+                    node.classList.add('bg-blue-600', 'text-white');
+                } else {
+                    node.className = node.className.replace(' bg-blue-600 text-white', '');
+                }
+            });
+
+            codomainNodes.forEach((node, idx) => {
+                if (index === null) {
+                    node.className = node.className.replace(' bg-emerald-600 text-white', '');
+                } else if (idx === index) {
+                    node.classList.add('bg-emerald-600', 'text-white');
+                } else {
+                    node.className = node.className.replace(' bg-emerald-600 text-white', '');
+                }
+            });
+        }
+
+        densitySlider.addEventListener('input', updateData);
+        continuousToggle.addEventListener('change', updateData);
+
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            updateData();
+        });
+
+        // Inicializar no carregamento da página
+        window.onload = function() {
+            initChart();
+            updateData();
+        };
+    </script>
+</body>
+</html>
