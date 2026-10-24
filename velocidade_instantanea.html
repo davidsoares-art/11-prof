@@ -1,0 +1,1523 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taxa de Variação Instantânea</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .reveal-box { max-height: 0; overflow: hidden; transition: max-height 0.5s ease, padding 0.3s ease, opacity 0.4s ease; opacity: 0; padding-top: 0; padding-bottom: 0; }
+        .reveal-box.open { max-height: 1200px; opacity: 1; padding-top: 0.85rem; padding-bottom: 0.85rem; }
+        .alert-tangent { animation: pulseAlert 1.5s ease-in-out infinite; }
+        @keyframes pulseAlert {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+        }
+        input[type=range] { -webkit-appearance: none; height: 8px; border-radius: 4px; background: #e2e8f0; outline: none; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: #2563eb; cursor: pointer; border: 3px solid #fff; box-shadow: 0 1px 5px rgba(0,0,0,0.25); }
+        input[type=range]::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: #2563eb; cursor: pointer; border: 3px solid #fff; box-shadow: 0 1px 5px rgba(0,0,0,0.25); }
+        .footer-bar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 50; }
+        .anchor { scroll-margin-top: 90px; }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col pb-16">
+
+    <!-- HEADER CURTO -->
+    <header class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white py-4 px-4 shadow-lg sticky top-0 z-40">
+        <div class="max-w-4xl mx-auto">
+            <p class="text-[11px] md:text-xs font-semibold text-blue-200 uppercase tracking-widest">Taxa de Variação Instantânea</p>
+            <h1 id="pageTitle" class="text-xl md:text-2xl font-extrabold tracking-tight flex items-center gap-2">
+                <i class="fa-solid fa-gauge-high text-amber-400"></i>
+                1. Velocidade Instantânea
+            </h1>
+        </div>
+    </header>
+
+    <main id="page1" class="max-w-4xl mx-auto w-full p-4 md:p-6 flex flex-col gap-6">
+
+        <!-- INTRODUÇÃO -->
+        <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex items-start gap-3">
+                <i class="fa-solid fa-circle-info text-blue-500 text-lg mt-0.5 shrink-0"></i>
+                <p class="text-sm md:text-[15px] text-slate-700 leading-relaxed">
+                    Quando vamos de carro, o <strong>velocímetro</strong> indica, a cada momento, a velocidade a que seguimos
+                    nesse <strong>preciso instante</strong>. A essa velocidade chamamos <strong>velocidade instantânea</strong>.
+                    Vamos descobrir, a partir do gráfico da posição ao longo do tempo, o que ela realmente significa.
+                </p>
+            </div>
+        </section>
+
+        <!-- GRÁFICO INTERATIVO ÚNICO -->
+        <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 anchor" id="grafico">
+            <h2 class="text-base font-bold text-slate-800 mb-1 flex items-center gap-2">
+                <i class="fa-solid fa-chart-line text-blue-600"></i>
+                Posição do carro ao longo do tempo
+            </h2>
+            <p class="text-xs text-slate-500 mb-3">Eixo horizontal: tempo (h) &nbsp;|&nbsp; Eixo vertical: posição (km). O carro arranca depressa e vai abrandando.</p>
+
+            <div class="relative w-full" style="padding-bottom: 60%; min-height: 300px;">
+                <canvas id="canvasMain" class="absolute inset-0 w-full h-full" style="border-radius:0.75rem;"></canvas>
+            </div>
+
+            <!-- Slider -->
+            <div class="mt-4">
+                <div class="flex justify-between items-center mb-1">
+                    <span class="text-xs font-semibold text-slate-600">Ponto <strong class="text-blue-600">B</strong> (instante variável): <span id="sliderVal" class="text-blue-600 font-bold">t = 6,00 h</span></span>
+                    <span class="text-xs text-slate-400">Arrasta B para junto de A (t = 3 h)</span>
+                </div>
+                <input type="range" id="slider" min="0.4" max="7.6" step="0.05" value="6" class="w-full">
+            </div>
+
+            <!-- Info inclinação -->
+            <div class="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm text-slate-700 flex items-center gap-3">
+                <i class="fa-solid fa-ruler-combined text-amber-500 text-base shrink-0"></i>
+                <div>
+                    <span id="lineName" class="font-bold text-red-600">Reta secante</span> &mdash; inclinação (velocidade média):
+                    <span id="slope" class="text-blue-700 font-bold">&mdash;</span> km/h
+                </div>
+            </div>
+
+            <!-- Alerta tangente -->
+            <div id="alertBox" class="mt-3 p-4 rounded-xl text-sm hidden border">
+                <p class="font-semibold flex items-start gap-2">
+                    <i id="alertIcon" class="fa-solid fa-triangle-exclamation mt-0.5"></i>
+                    <span id="alertText"></span>
+                </p>
+            </div>
+        </section>
+
+        <!-- QUESTÃO 1 -->
+        <section class="bg-indigo-900 text-white p-5 rounded-2xl shadow-md">
+            <h3 class="text-sm font-bold text-indigo-200 uppercase tracking-wider mb-2 flex items-center gap-2">
+                <i class="fa-solid fa-brain text-amber-400"></i> Questão 1
+            </h3>
+            <p class="text-sm text-indigo-100 leading-relaxed mb-3">
+                Observa o gráfico. O que acontece à reta que liga A e B quando moves o ponto B para <strong>mais perto</strong> do ponto A?
+            </p>
+            <textarea id="q1" rows="3" class="w-full rounded-lg border-0 bg-white/10 text-white placeholder-indigo-300 text-sm p-3 focus:ring-2 focus:ring-amber-400 focus:outline-none resize-none" placeholder="Escreve aqui a tua observação..."></textarea>
+            <button onclick="toggleReveal('sug1')" class="mt-3 px-3 py-1.5 bg-amber-400 text-indigo-900 rounded-lg text-xs font-bold hover:bg-amber-300 transition">
+                <i class="fa-solid fa-lightbulb mr-1"></i> Ver sugestão de resposta
+            </button>
+            <div id="sug1" class="reveal-box mt-2 bg-white/10 rounded-lg px-4 text-sm text-indigo-50">
+                À medida que B se aproxima de A, a reta vai <strong>rodando</strong> e aproxima-se cada vez mais da reta que apenas <strong>toca</strong> a curva em A (a tangente). A sua inclinação aproxima-se de <strong>50 km/h</strong>.
+            </div>
+        </section>
+
+        <!-- O QUE SIGNIFICA 50 KM/H -->
+        <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <h2 class="text-base font-bold text-slate-800 mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-gauge-high text-blue-600"></i>
+                O que significa o velocímetro marcar 50 km/h?
+            </h2>
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <p class="text-sm text-amber-900 font-semibold mb-3">
+                    <i class="fa-solid fa-question-circle mr-1 text-amber-500"></i>
+                    Pensa: o que querem dizer, exatamente, os «50 km/h»?
+                </p>
+                <button onclick="toggleReveal('reveal50')" class="px-4 py-2 bg-amber-500 text-white rounded-lg text-xs font-semibold hover:bg-amber-600 transition">
+                    <i class="fa-solid fa-eye mr-1"></i> Ver resposta
+                </button>
+                <div id="reveal50" class="reveal-box mt-3 bg-white rounded-lg border border-amber-100 px-4 text-sm text-slate-700">
+                    <i class="fa-solid fa-check-circle text-emerald-500 mr-1"></i>
+                    Significa que, se o carro andasse durante <strong>uma hora inteira</strong> sempre a essa velocidade,
+                    percorreria <strong>50 km</strong>.
+                </div>
+            </div>
+            <div class="flex items-start gap-3 mt-4">
+                <i class="fa-solid fa-road text-slate-400 text-lg mt-0.5 shrink-0"></i>
+                <p class="text-sm text-slate-700 leading-relaxed">
+                    Mas no dia a dia raramente conseguimos manter a mesma velocidade mais do que uns breves instantes
+                    &mdash; estamos sempre a acelerar, a travar, a contornar curvas...
+                </p>
+            </div>
+        </section>
+
+        <!-- QUESTÃO 2 -->
+        <section class="bg-indigo-900 text-white p-5 rounded-2xl shadow-md">
+            <h3 class="text-sm font-bold text-indigo-200 uppercase tracking-wider mb-2 flex items-center gap-2">
+                <i class="fa-solid fa-brain text-amber-400"></i> Questão 2
+            </h3>
+            <p class="text-sm text-indigo-100 leading-relaxed mb-3">
+                Então como é que o velocímetro «sabe» que, <strong>SE</strong> o carro continuasse assim
+                (embora não vá continuar), percorreria 50 km numa hora?
+            </p>
+            <textarea id="q2" rows="3" class="w-full rounded-lg border-0 bg-white/10 text-white placeholder-indigo-300 text-sm p-3 focus:ring-2 focus:ring-amber-400 focus:outline-none resize-none" placeholder="A minha ideia é..."></textarea>
+            <button onclick="toggleReveal('sug2')" class="mt-3 px-3 py-1.5 bg-amber-400 text-indigo-900 rounded-lg text-xs font-bold hover:bg-amber-300 transition">
+                <i class="fa-solid fa-lightbulb mr-1"></i> Ver sugestão de resposta
+            </button>
+            <div id="sug2" class="reveal-box mt-2 bg-white/10 rounded-lg px-4 text-sm text-indigo-50">
+                O velocímetro mede quanto o carro anda num intervalo de tempo <strong>muito pequeno</strong> e faz uma <strong>regra de três simples</strong>: se mantivesse esse ritmo durante uma hora inteira, quanto percorreria? Esse valor é a velocidade que ele marca.
+            </div>
+        </section>
+
+        <!-- O INFINITAMENTE PEQUENO -->
+        <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <h2 class="text-base font-bold text-slate-800 mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-infinity text-indigo-600"></i>
+                O «infinitamente pequeno» e a reta tangente
+            </h2>
+            <div class="flex items-start gap-3 mb-3">
+                <i class="fa-solid fa-lightbulb text-amber-400 text-lg mt-0.5 shrink-0"></i>
+                <p class="text-sm text-slate-700 leading-relaxed">
+                    O velocímetro mede quanto o carro anda num instante <strong>infinitamente pequeno</strong> e imagina que esse
+                    ritmo se mantém durante uma hora &mdash; como se o carro passasse a andar em <strong>linha reta, a velocidade constante</strong>.
+                    A isto chamamos <strong>linearização</strong>.
+                </p>
+            </div>
+            <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-900 flex items-start gap-2">
+                <i class="fa-solid fa-arrow-up text-blue-500 mt-0.5 shrink-0"></i>
+                <span>
+                    <strong>Volta ao gráfico acima</strong> e arrasta o ponto B até ficar <strong>muito perto</strong> de A.
+                    Repara no aviso que aparece: a reta deixa de ser <strong>secante</strong> (tocava a curva em dois pontos)
+                    e passa a ser <strong>tangente</strong> (toca num único ponto). A inclinação dessa tangente é a velocidade instantânea.
+                </span>
+            </div>
+        </section>
+
+        <!-- QUESTÃO 3 -->
+        <section class="bg-indigo-900 text-white p-5 rounded-2xl shadow-md">
+            <h3 class="text-sm font-bold text-indigo-200 uppercase tracking-wider mb-2 flex items-center gap-2">
+                <i class="fa-solid fa-brain text-amber-400"></i> Questão 3
+            </h3>
+            <p class="text-sm text-indigo-100 leading-relaxed mb-3">
+                Porque é que a reta <strong>tangente</strong> representa melhor a velocidade <strong>num instante</strong> do que a reta secante?
+            </p>
+            <textarea id="q3" rows="3" class="w-full rounded-lg border-0 bg-white/10 text-white placeholder-indigo-300 text-sm p-3 focus:ring-2 focus:ring-amber-400 focus:outline-none resize-none" placeholder="Porque..."></textarea>
+            <button onclick="toggleReveal('sug3')" class="mt-3 px-3 py-1.5 bg-amber-400 text-indigo-900 rounded-lg text-xs font-bold hover:bg-amber-300 transition">
+                <i class="fa-solid fa-lightbulb mr-1"></i> Ver sugestão de resposta
+            </button>
+            <div id="sug3" class="reveal-box mt-2 bg-white/10 rounded-lg px-4 text-sm text-indigo-50">
+                A secante mede a velocidade <strong>média</strong> entre dois instantes diferentes &mdash; mistura acelerações e travagens desse intervalo. A tangente toca a curva num <strong>único instante</strong> e a sua inclinação reflete o ritmo <strong>exato</strong> do carro nesse preciso momento.
+            </div>
+        </section>
+
+        <!-- SÍNTESE -->
+        <section class="bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-6 rounded-2xl shadow-lg">
+            <h2 class="text-lg font-extrabold mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-star text-amber-400"></i> Síntese
+            </h2>
+            <p class="text-sm md:text-base leading-relaxed">
+                O velocímetro está a pensar:
+                <em>«Se eu continuasse a andar neste ritmo exato que tenho neste preciso momento,
+                sempre à mesma velocidade (como se fosse uma reta), quanto ia percorrer numa hora?»</em>
+            </p>
+            <p class="mt-3 text-sm md:text-base leading-relaxed">
+                A resposta é a <strong>inclinação da reta tangente</strong> à curva posição-tempo nesse instante:
+                <span class="inline-block mt-1 px-3 py-1 bg-white/20 rounded-lg font-bold text-lg">50 km/h</span>
+            </p>
+        </section>
+
+        <!-- QUESTÃO 4 -->
+        <section class="bg-indigo-900 text-white p-5 rounded-2xl shadow-md">
+            <h3 class="text-sm font-bold text-indigo-200 uppercase tracking-wider mb-2 flex items-center gap-2">
+                <i class="fa-solid fa-brain text-amber-400"></i> Questão 4
+            </h3>
+            <p class="text-sm text-indigo-100 leading-relaxed mb-3">
+                Com as tuas próprias palavras, explica o que é a <strong>velocidade instantânea</strong>:
+            </p>
+            <textarea id="q4" rows="4" class="w-full rounded-lg border-0 bg-white/10 text-white placeholder-indigo-300 text-sm p-3 focus:ring-2 focus:ring-amber-400 focus:outline-none resize-none" placeholder="A velocidade instantânea é..."></textarea>
+            <button onclick="toggleReveal('sug4')" class="mt-3 px-3 py-1.5 bg-amber-400 text-indigo-900 rounded-lg text-xs font-bold hover:bg-amber-300 transition">
+                <i class="fa-solid fa-lightbulb mr-1"></i> Ver sugestão de resposta
+            </button>
+            <div id="sug4" class="reveal-box mt-2 bg-white/10 rounded-lg px-4 text-sm text-indigo-50">
+                A velocidade instantânea num dado instante é a <strong>inclinação da reta tangente</strong> ao gráfico posição-tempo nesse ponto. Corresponde a imaginar que o carro continuava no mesmo ritmo (em linha reta, a velocidade constante) e calcular quanto percorreria numa hora.
+            </div>
+        </section>
+
+        <div class="text-center text-xs text-slate-400 py-2">
+            <i class="fa-solid fa-flag-checkered"></i> Fim da atividade 1 &mdash; Velocidade Instantânea
+        </div>
+    </main>
+
+    <!-- ==================== PÁGINA 2 — GENERALIZAÇÃO ==================== -->
+    <main id="page2" class="max-w-4xl mx-auto w-full p-4 md:p-6 flex flex-col gap-6 hidden">
+
+        <!-- GENERALIZAÇÃO -->
+        <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <h2 class="text-base font-bold text-slate-800 mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-arrows-to-dot text-indigo-600"></i>
+                A mesma ideia serve para qualquer gráfico
+            </h2>
+            <p class="text-sm md:text-[15px] text-slate-700 leading-relaxed">
+                Na atividade anterior, a inclinação da reta tangente ao gráfico <strong>posição-tempo</strong> deu-nos a
+                <strong>velocidade instantânea</strong>. Mas a ideia não é só de velocidades: serve para
+                <strong>qualquer</strong> gráfico que mostre uma grandeza a variar em função de outra.
+            </p>
+            <div class="grid sm:grid-cols-3 gap-3 mt-4">
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center">
+                    <i class="fa-solid fa-gauge-high text-blue-500 text-xl"></i>
+                    <p class="text-xs font-semibold text-slate-700 mt-2">Posição × tempo</p>
+                    <p class="text-[11px] text-slate-500 mt-1">tangente = <strong>velocidade</strong> naquele instante (km/h)</p>
+                </div>
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center">
+                    <i class="fa-solid fa-child-reaching text-emerald-500 text-xl"></i>
+                    <p class="text-xs font-semibold text-slate-700 mt-2">Altura × idade</p>
+                    <p class="text-[11px] text-slate-500 mt-1">tangente = <strong>ritmo de crescimento</strong> (cm/ano)</p>
+                </div>
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center">
+                    <i class="fa-solid fa-temperature-half text-red-500 text-xl"></i>
+                    <p class="text-xs font-semibold text-slate-700 mt-2">Temperatura × tempo</p>
+                    <p class="text-[11px] text-slate-500 mt-1">tangente = <strong>rapidez do aquecimento</strong> (ºC/min)</p>
+                </div>
+            </div>
+            <p class="text-sm text-slate-700 leading-relaxed mt-4">
+                Em todos os casos, a <strong>taxa de variação instantânea</strong> num ponto é a
+                <strong>inclinação da reta tangente</strong> ao gráfico nesse ponto.
+            </p>
+        </section>
+
+        <!-- NOMENCLATURA -->
+        <section class="bg-gradient-to-br from-indigo-600 to-blue-700 text-white p-6 rounded-2xl shadow-lg">
+            <h2 class="text-base font-extrabold mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-signature text-amber-400"></i> Derivada num ponto &middot; taxa de variação instantânea num ponto
+            </h2>
+            <p class="text-sm leading-relaxed">
+                A taxa de variação instantânea é uma <strong>propriedade da função num ponto</strong> (num
+                instante de tempo). Para uma função <em>f</em>, no ponto <em>x = a</em>, também se chama
+                <strong>derivada de f em a</strong> e escreve-se das formas já indicadas:
+            </p>
+            <div class="flex flex-wrap items-center gap-3 mt-4">
+                <span class="px-5 py-2 bg-white/15 rounded-xl font-bold text-xl">f&#39;(a)</span>
+                <span class="px-5 py-2 bg-white/15 rounded-xl font-bold text-xl inline-flex items-center gap-1">
+                    <span class="inline-flex flex-col items-center leading-none text-base">
+                        <span class="px-1">df</span>
+                        <span class="border-t border-white px-1 pt-0.5">dx</span>
+                    </span>
+                    <span>(a)</span>
+                </span>
+            </div>
+
+            <p class="text-sm mt-5 mb-2">E caracteriza-se de <strong>duas maneiras</strong>:</p>
+
+            <div class="grid md:grid-cols-2 gap-4">
+                <!-- (1) declive da tangente -->
+                <div class="bg-white/10 rounded-xl p-4">
+                    <p class="text-sm font-bold mb-2 flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-full bg-amber-400 text-indigo-900 inline-flex items-center justify-center font-extrabold text-xs">1</span>
+                        É a inclinação (declive) da reta tangente
+                    </p>
+                    <p class="text-xs text-blue-100 mb-3">
+                        É o declive da reta tangente ao gráfico de <em>f</em> no ponto de abcissa <em>a</em>.
+                    </p>
+                    <div class="bg-white rounded-lg p-2 flex justify-center">
+                        <svg viewBox="0 0 220 150" class="w-full max-w-[220px] h-auto" xmlns="http://www.w3.org/2000/svg">
+                            <!-- eixos -->
+                            <line x1="25" y1="125" x2="210" y2="125" stroke="#94a3b8" stroke-width="1.5"/>
+                            <line x1="25" y1="125" x2="25" y2="12" stroke="#94a3b8" stroke-width="1.5"/>
+                            <!-- curva f -->
+                            <path d="M25 125 L42.5 122.4 L60 117 L77.5 109.7 L95 100.8 L112.5 90.4 L130 78.6 L147.5 65.7 L165 51.5 L182.5 36.3 L200 20" fill="none" stroke="#2563eb" stroke-width="3"/>
+                            <!-- reta tangente no ponto a -->
+                            <line x1="70" y1="119" x2="175" y2="49" stroke="#f59e0b" stroke-width="2.5"/>
+                            <!-- ponto de tangência -->
+                            <circle cx="121" cy="85" r="4.5" fill="#4338ca"/>
+                            <!-- marca de a no eixo x -->
+                            <line x1="121" y1="122" x2="121" y2="128" stroke="#475569" stroke-width="1.5"/>
+                            <text x="117" y="142" font-size="12" fill="#475569" font-style="italic">a</text>
+                            <text x="140" y="44" font-size="12" fill="#b45309" font-weight="bold">tangente</text>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- (2) limite -->
+                <div class="bg-white/10 rounded-xl p-4">
+                    <p class="text-sm font-bold mb-2 flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-full bg-amber-400 text-indigo-900 inline-flex items-center justify-center font-extrabold text-xs">2</span>
+                        É o limite da taxa média de variação
+                    </p>
+                    <p class="text-xs text-blue-100 mb-3">
+                        É o valor para que tende a taxa média de variação <em>tmv</em>(<em>x</em>, <em>a</em>)
+                        quando <em>x</em> se aproxima de <em>a</em>:
+                    </p>
+                    <div class="bg-white text-slate-800 rounded-lg p-3 flex items-center justify-center flex-wrap gap-2 text-sm">
+                        <span class="inline-flex flex-col items-center leading-tight text-[11px] text-slate-500">
+                            <span>lim</span>
+                            <span><em>x</em>&rarr;<em>a</em></span>
+                        </span>
+                        <span><em>tmv</em>(<em>x</em>,&nbsp;<em>a</em>)&nbsp;=</span>
+                        <span class="inline-flex flex-col items-center leading-tight text-[11px] text-slate-500">
+                            <span>lim</span>
+                            <span><em>x</em>&rarr;<em>a</em></span>
+                        </span>
+                        <span class="inline-flex flex-col items-center leading-none">
+                            <span class="px-1"><em>f</em>(<em>x</em>) &minus; <em>f</em>(<em>a</em>)</span>
+                            <span class="border-t border-slate-400 px-1 pt-0.5"><em>x</em> &minus; <em>a</em></span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <p class="text-xs text-blue-100 mt-4">
+                Lê-se «f linha de a» ou «derivada de f em a». É um <strong>número</strong>.
+                No caso da posição em função do tempo, costuma escrever-se
+                <span class="inline-flex flex-col items-center leading-none align-middle mx-0.5 text-[11px]">
+                    <span>ds</span>
+                    <span class="border-t border-blue-100">dt</span>
+                </span> (a).
+            </p>
+        </section>
+
+        <!-- COMO CALCULAR -->
+        <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <h2 class="text-base font-bold text-slate-800 mb-1 flex items-center gap-2">
+                <i class="fa-solid fa-calculator text-blue-600"></i>
+                Como calcular a derivada (sem regras de derivação)
+            </h2>
+            <p class="text-xs text-slate-500 mb-4">Não precisamos de técnicas de derivação: a calculadora gráfica ou uma linguagem de programação calculam a derivada por nós.</p>
+
+            <div class="grid grid-cols-3 gap-4">
+                <a id="linkCalc" href="#" class="block bg-slate-50 border border-slate-200 rounded-xl p-5 text-center hover:shadow-md hover:border-blue-300 transition group">
+                    <i class="fa-solid fa-calculator text-5xl text-indigo-500 group-hover:text-indigo-600 transition"></i>
+                    <p class="text-sm font-semibold text-slate-700 mt-3">Calculadora gráfica</p>
+                    <p class="text-[11px] text-slate-400 mt-1">(em breve)</p>
+                </a>
+                <a id="linkPython" href="#" class="block bg-slate-900 border border-slate-700 rounded-xl p-5 text-center hover:shadow-md hover:border-emerald-500 transition group">
+                    <i class="fa-brands fa-python text-5xl text-emerald-400 group-hover:text-emerald-300 transition"></i>
+                    <p class="text-sm font-semibold text-white mt-3">Python</p>
+                    <p class="text-[11px] text-slate-400 mt-1">(em breve)</p>
+                </a>
+                <a href="https://www.geogebra.org/cas?lang=pt" target="_blank" rel="noopener" class="block bg-slate-50 border border-slate-200 rounded-xl p-5 text-center hover:shadow-md hover:border-blue-300 transition group">
+                    <i class="fa-solid fa-compass-drafting text-5xl text-blue-500 group-hover:text-blue-600 transition"></i>
+                    <p class="text-sm font-semibold text-slate-700 mt-3">GeoGebra</p>
+                </a>
+            </div>
+        </section>
+
+        <!-- QUESTÃO 5 -->
+        <section class="bg-indigo-900 text-white p-5 rounded-2xl shadow-md">
+            <h3 class="text-sm font-bold text-indigo-200 uppercase tracking-wider mb-2 flex items-center gap-2">
+                <i class="fa-solid fa-brain text-amber-400"></i> Questão 5
+            </h3>
+            <p class="text-sm text-indigo-100 leading-relaxed mb-3">
+                Num gráfico <strong>altura (cm) × idade (anos)</strong> de uma pessoa, o que representa a reta tangente aos 2 anos de idade? E o que significaria essa tangente ser muito <strong>inclinada</strong>?
+            </p>
+            <textarea id="q5" rows="3" class="w-full rounded-lg border-0 bg-white/10 text-white placeholder-indigo-300 text-sm p-3 focus:ring-2 focus:ring-amber-400 focus:outline-none resize-none" placeholder="A tangente representa..."></textarea>
+            <button onclick="toggleReveal('sug5')" class="mt-3 px-3 py-1.5 bg-amber-400 text-indigo-900 rounded-lg text-xs font-bold hover:bg-amber-300 transition">
+                <i class="fa-solid fa-lightbulb mr-1"></i> Ver sugestão de resposta
+            </button>
+            <div id="sug5" class="reveal-box mt-2 bg-white/10 rounded-lg px-4 text-sm text-indigo-50">
+                Representa o <strong>ritmo de crescimento</strong> da pessoa nesse instante, em cm por ano (a taxa de variação instantânea da altura). Uma tangente muito inclinada significa que a pessoa estava a crescer <strong>muito depressa</strong> nessa altura.
+            </div>
+        </section>
+
+        <!-- QUESTÃO 6 -->
+        <section class="bg-indigo-900 text-white p-5 rounded-2xl shadow-md">
+            <h3 class="text-sm font-bold text-indigo-200 uppercase tracking-wider mb-2 flex items-center gap-2">
+                <i class="fa-solid fa-brain text-amber-400"></i> Questão 6
+            </h3>
+            <p class="text-sm text-indigo-100 leading-relaxed mb-3">
+                Para a função <code class="bg-white/10 px-1 rounded">f(x) = 80x &minus; 5x²</code>, usa a calculadora gráfica (ou o programa) para descobrir a derivada em <strong>x = 6</strong>, ou seja f&#39;(6). O que significa esse valor?
+            </p>
+            <textarea id="q6" rows="3" class="w-full rounded-lg border-0 bg-white/10 text-white placeholder-indigo-300 text-sm p-3 focus:ring-2 focus:ring-amber-400 focus:outline-none resize-none" placeholder="f'(6) = ..."></textarea>
+            <button onclick="toggleReveal('sug6')" class="mt-3 px-3 py-1.5 bg-amber-400 text-indigo-900 rounded-lg text-xs font-bold hover:bg-amber-300 transition">
+                <i class="fa-solid fa-lightbulb mr-1"></i> Ver sugestão de resposta
+            </button>
+            <div id="sug6" class="reveal-box mt-2 bg-white/10 rounded-lg px-4 text-sm text-indigo-50">
+                f&#39;(6) = <strong>20</strong>. Significa que, no instante t = 6 h, o carro seguia a <strong>20 km/h</strong> — bastante mais devagar do que os 50 km/h que tinha em t = 3 h (o carro foi abrandando).
+            </div>
+        </section>
+
+        <div class="text-center text-xs text-slate-400 py-2">
+            <i class="fa-solid fa-flag-checkered"></i> Fim da atividade 2 &mdash; Generalização
+        </div>
+    </main>
+
+    <!-- ===================== PÁGINA 3 ===================== -->
+    <main id="page3" class="max-w-4xl mx-auto w-full p-4 md:p-6 flex flex-col gap-6 hidden">
+
+        <!-- INTRO -->
+        <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex items-start gap-3">
+                <i class="fa-solid fa-circle-info text-blue-500 text-lg mt-0.5 shrink-0"></i>
+                <p class="text-sm md:text-[15px] text-slate-700 leading-relaxed">
+                    Já sabemos calcular a derivada <strong>num ponto</strong> (o declive da tangente aí). E se fizermos isso em
+                    <strong>todos os pontos</strong>? A cada <em>x</em> fica a corresponder o declive da tangente nesse <em>x</em> &mdash;
+                    isso é uma <strong>nova função</strong>, a <strong>função derivada</strong>, que se escreve <em>f&#39;</em>.
+                </p>
+            </div>
+        </section>
+
+        <!-- GRÁFICO DUPLO INTERATIVO -->
+        <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <h2 class="text-base font-bold text-slate-800 mb-1 flex items-center gap-2">
+                <i class="fa-solid fa-wave-square text-blue-600"></i>
+                Percorre a tangente e vê nascer a função derivada
+            </h2>
+            <p class="text-xs text-slate-500 mb-3">Move o ponto ao longo da curva. À <strong>esquerda</strong> vês a tangente e o seu declive; à <strong>direita</strong>, esse declive fica registado como o valor de <em>f&#39;</em> nesse ponto.</p>
+
+            <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                    <p class="text-xs font-semibold text-slate-600 mb-1 text-center">Gráfico de <em>f</em> (com a tangente)</p>
+                    <div class="relative w-full" style="padding-bottom:72%; min-height:230px;">
+                        <canvas id="canvasF" class="absolute inset-0 w-full h-full" style="border-radius:0.75rem;"></canvas>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-slate-600 mb-1 text-center">Gráfico de <em>f&#39;</em> (os declives)</p>
+                    <div class="relative w-full" style="padding-bottom:72%; min-height:230px;">
+                        <canvas id="canvasD" class="absolute inset-0 w-full h-full" style="border-radius:0.75rem;"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slider -->
+            <div class="mt-4">
+                <div class="flex justify-between items-center mb-1">
+                    <span class="text-xs font-semibold text-slate-600">Ponto: <span id="slider2Val" class="text-blue-600 font-bold">x = 1,0</span></span>
+                    <button onclick="resetTrace()" class="text-[11px] px-2 py-1 bg-slate-200 text-slate-600 rounded-lg hover:bg-slate-300 transition"><i class="fa-solid fa-rotate-left mr-1"></i>Reiniciar traçado</button>
+                </div>
+                <input type="range" id="slider2" min="0" max="8" step="0.1" value="1" class="w-full">
+                <p class="text-[11px] text-slate-400 text-center mt-1">Varre o <em>x</em> de uma ponta à outra para traçar <em>f&#39;</em> completa.</p>
+            </div>
+
+            <div class="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm text-slate-700 flex items-center gap-3">
+                <i class="fa-solid fa-ruler-combined text-amber-500 text-base shrink-0"></i>
+                <div>
+                    Declive da tangente em <strong>x = <span id="aVal">1,0</span></strong>:
+                    <span id="slopeD" class="text-blue-700 font-bold">&mdash;</span>
+                    &nbsp;&rarr;&nbsp; é o valor de <em>f&#39;</em>(<span id="aVal2">1,0</span>).
+                </div>
+            </div>
+            <p class="text-xs text-slate-500 mt-2"><i class="fa-solid fa-lightbulb text-amber-400 mr-1"></i>Repara: onde <em>f</em> <strong>sobe</strong>, <em>f&#39;</em> é <strong>positiva</strong>; onde <em>f</em> <strong>desce</strong>, <em>f&#39;</em> é <strong>negativa</strong>; nos cumes e nos vales (tangente horizontal), <em>f&#39;</em> = 0.</p>
+        </section>
+
+        <!-- COMO ACHAR A FUNÇÃO DERIVADA -->
+        <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <h2 class="text-base font-bold text-slate-800 mb-1 flex items-center gap-2">
+                <i class="fa-solid fa-wrench text-blue-600"></i>
+                Como achar a função derivada
+            </h2>
+            <p class="text-xs text-slate-500 mb-3">Na prática, há ferramentas que a dão de imediato:</p>
+            <div class="grid grid-cols-3 gap-3">
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center">
+                    <i class="fa-solid fa-calculator text-4xl text-indigo-500"></i>
+                    <p class="text-xs font-semibold text-slate-700 mt-2">Calculadora gráfica</p>
+                </div>
+                <div class="bg-slate-900 border border-slate-700 rounded-xl p-4 text-center">
+                    <i class="fa-brands fa-python text-4xl text-emerald-400"></i>
+                    <p class="text-xs font-semibold text-white mt-2">Python</p>
+                </div>
+                <a href="https://www.geogebra.org/cas?lang=pt" target="_blank" rel="noopener" class="block bg-slate-50 border border-slate-200 rounded-xl p-4 text-center hover:shadow-md hover:border-blue-300 transition group">
+                    <i class="fa-solid fa-compass-drafting text-4xl text-blue-500 group-hover:text-blue-600 transition"></i>
+                    <p class="text-xs font-semibold text-slate-700 mt-2">GeoGebra</p>
+                </a>
+            </div>
+            <p class="text-xs text-slate-500 mt-3">Mas para <strong>polinómios</strong> é tão simples que se faz de cabeça &mdash; vê a regra em baixo.</p>
+        </section>
+
+        <!-- REGRA RÁPIDA PARA POLINÓMIOS -->
+        <section class="bg-gradient-to-br from-indigo-600 to-blue-700 text-white p-6 rounded-2xl shadow-lg">
+            <h2 class="text-base font-extrabold mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-bolt text-amber-400"></i> Derivar polinómios num instante
+            </h2>
+            <p class="text-sm leading-relaxed mb-4">Há só <strong>uma ideia</strong> a reter &mdash; a <strong>regra da potência</strong>: o expoente desce para a frente e diminui uma unidade.</p>
+
+            <div class="bg-white/10 rounded-xl p-4 flex flex-wrap items-center justify-center gap-3 text-xl font-bold mb-4">
+                <span>(<em>x</em><sup>n</sup>)&#39;</span>
+                <span>=</span>
+                <span><em>n</em> &middot; <em>x</em><sup>n&minus;1</sup></span>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm mb-4">
+                <div class="bg-white/10 rounded-lg py-2 text-center">(<em>x</em>&sup2;)&#39; = 2<em>x</em></div>
+                <div class="bg-white/10 rounded-lg py-2 text-center">(<em>x</em>&sup3;)&#39; = 3<em>x</em>&sup2;</div>
+                <div class="bg-white/10 rounded-lg py-2 text-center">(5<em>x</em>)&#39; = 5</div>
+                <div class="bg-white/10 rounded-lg py-2 text-center">(7)&#39; = 0</div>
+            </div>
+
+            <p class="text-xs text-blue-100 mb-4">Mais nada: a derivada de uma <strong>constante</strong> é 0, um <strong>número a multiplicar</strong> mantém-se, e numa <strong>soma</strong> deriva-se parcela a parcela.</p>
+
+            <p class="text-sm font-bold mb-2">Experimenta tu:</p>
+            <div class="space-y-2">
+                <div class="bg-white/10 rounded-lg p-3">
+                    <p class="text-sm">a) &nbsp; <em>f</em>(<em>x</em>) = <em>x</em>&sup3; &minus; 4<em>x</em>&sup2; + 2<em>x</em> &minus; 7</p>
+                    <button onclick="toggleReveal('sugE1')" class="mt-2 px-3 py-1 bg-amber-400 text-indigo-900 rounded-lg text-xs font-bold hover:bg-amber-300 transition"><i class="fa-solid fa-lightbulb mr-1"></i> Ver resposta</button>
+                    <div id="sugE1" class="reveal-box mt-2 bg-white/10 rounded-lg px-4 text-sm text-indigo-50"><em>f</em>&#39;(<em>x</em>) = <strong>3<em>x</em>&sup2; &minus; 8<em>x</em> + 2</strong></div>
+                </div>
+                <div class="bg-white/10 rounded-lg p-3">
+                    <p class="text-sm">b) &nbsp; <em>f</em>(<em>x</em>) = 2<em>x</em><sup>4</sup> &minus; <em>x</em> + 10</p>
+                    <button onclick="toggleReveal('sugE2')" class="mt-2 px-3 py-1 bg-amber-400 text-indigo-900 rounded-lg text-xs font-bold hover:bg-amber-300 transition"><i class="fa-solid fa-lightbulb mr-1"></i> Ver resposta</button>
+                    <div id="sugE2" class="reveal-box mt-2 bg-white/10 rounded-lg px-4 text-sm text-indigo-50"><em>f</em>&#39;(<em>x</em>) = <strong>8<em>x</em>&sup3; &minus; 1</strong></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- QUESTÃO 7 -->
+        <section class="bg-indigo-900 text-white p-5 rounded-2xl shadow-md">
+            <h3 class="text-sm font-bold text-indigo-200 uppercase tracking-wider mb-2 flex items-center gap-2">
+                <i class="fa-solid fa-brain text-amber-400"></i> Questão 7
+            </h3>
+            <p class="text-sm text-indigo-100 leading-relaxed mb-3">
+                Para <code class="bg-white/10 px-1 rounded">f(x) = x&sup3; &minus; 9x</code>, escreve a função derivada <em>f&#39;</em> e descobre em que valores de <em>x</em> a tangente é <strong>horizontal</strong> (ou seja, <em>f&#39;</em>(x) = 0).
+            </p>
+            <textarea id="q7" rows="3" class="w-full rounded-lg border-0 bg-white/10 text-white placeholder-indigo-300 text-sm p-3 focus:ring-2 focus:ring-amber-400 focus:outline-none resize-none" placeholder="f'(x) = ..."></textarea>
+            <button onclick="toggleReveal('sug7')" class="mt-3 px-3 py-1.5 bg-amber-400 text-indigo-900 rounded-lg text-xs font-bold hover:bg-amber-300 transition">
+                <i class="fa-solid fa-lightbulb mr-1"></i> Ver sugestão de resposta
+            </button>
+            <div id="sug7" class="reveal-box mt-2 bg-white/10 rounded-lg px-4 text-sm text-indigo-50">
+                <em>f</em>&#39;(x) = <strong>3x&sup2; &minus; 9</strong>. É zero quando 3x&sup2; = 9, ou seja x&sup2; = 3, logo x = &minus;&radic;3 &asymp; &minus;1,7 e x = &radic;3 &asymp; 1,7. Nesses dois pontos a tangente é horizontal (um é cume, outro é vale).
+            </div>
+        </section>
+
+        <div class="text-center text-xs text-slate-400 py-2">
+            <i class="fa-solid fa-flag-checkered"></i> Fim da atividade 3 &mdash; A função derivada
+        </div>
+    </main>
+
+    <!-- ===================== PÁGINA 4 ===================== -->
+    <main id="page4" class="max-w-4xl mx-auto w-full p-4 md:p-6 flex flex-col gap-6 hidden">
+
+        <!-- LEMBRETE -->
+        <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <h2 class="text-base font-bold text-slate-800 mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-rotate-left text-blue-600"></i> Revisão: três ideias sobre uma função
+            </h2>
+            <div class="grid sm:grid-cols-3 gap-3">
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                    <p class="text-sm font-bold text-slate-700 mb-2"><i class="fa-solid fa-arrow-trend-up text-blue-500 mr-1"></i> Monotonia</p>
+                    <p class="text-xs text-slate-600 mb-2">Como a função varia num intervalo:</p>
+                    <ul class="text-xs text-slate-600 space-y-1">
+                        <li><span class="text-emerald-600 font-bold">&#8599; cresce</span> (sobe)</li>
+                        <li><span class="text-slate-500 font-bold">&#8594; mantém-se</span> (constante)</li>
+                        <li><span class="text-red-600 font-bold">&#8600; decresce</span> (desce)</li>
+                    </ul>
+                </div>
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                    <p class="text-sm font-bold text-slate-700 mb-2"><i class="fa-solid fa-plus-minus text-blue-500 mr-1"></i> Sinal</p>
+                    <p class="text-xs text-slate-600 mb-2">O valor da função num ponto é:</p>
+                    <ul class="text-xs text-slate-600 space-y-1">
+                        <li><span class="text-emerald-600 font-bold">+ positivo</span> (acima do eixo)</li>
+                        <li><span class="text-slate-500 font-bold">0 nulo</span> (sobre o eixo)</li>
+                        <li><span class="text-red-600 font-bold">&minus; negativo</span> (abaixo do eixo)</li>
+                    </ul>
+                </div>
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                    <p class="text-sm font-bold text-slate-700 mb-2"><i class="fa-solid fa-mountain-sun text-blue-500 mr-1"></i> Extremos relativos</p>
+                    <p class="text-xs text-slate-600 mb-2">Os «cumes» e «vales»:</p>
+                    <ul class="text-xs text-slate-600 space-y-1">
+                        <li><span class="text-emerald-700 font-bold">máximo</span>: cresce e passa a decrescer (&#8599;&#8600;)</li>
+                        <li><span class="text-red-700 font-bold">mínimo</span>: decresce e passa a crescer (&#8600;&#8599;)</li>
+                    </ul>
+                    <p class="text-[11px] text-slate-400 mt-2">«Relativos» = na vizinhança, não em toda a função.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ILUSTRAÇÃO: distinguir os 3 conceitos na MESMA função -->
+        <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <h2 class="text-base font-bold text-slate-800 mb-1 flex items-center gap-2">
+                <i class="fa-solid fa-eye text-blue-600"></i> A mesma função, três olhares diferentes
+            </h2>
+            <p class="text-xs text-slate-500 mb-4">Repara que <strong>monotonia</strong>, <strong>sinal</strong> e <strong>extremos</strong> são coisas diferentes — lemos a mesma curva de três maneiras.</p>
+            <div class="grid sm:grid-cols-3 gap-4">
+                <div class="border border-slate-200 rounded-xl p-3">
+                    <p class="text-xs font-bold text-slate-700 text-center mb-2">1. Monotonia</p>
+                    <svg viewBox="0 0 246 150" class="w-full h-auto">
+  <line x1="10" y1="78" x2="236" y2="78" stroke="#94a3b8" stroke-width="1.5"/>
+  <polyline points="18.0,62.6 20.0,59.7 22.1,56.8 24.1,54.0 26.2,51.3 28.2,48.6 30.2,46.1 32.3,43.7 34.3,41.4 36.3,39.3 38.4,37.3 40.4,35.4 42.5,33.7 44.5,32.1 46.5,30.8 48.6,29.5 50.6,28.5 52.6,27.6 54.7,26.9 56.7,26.4 58.8,26.1 60.8,26.0" fill="none" stroke="#16a34a" stroke-width="3.5" stroke-linecap="round"/>
+  <polyline points="62.8,26.1 64.9,26.3 66.9,26.7 69.0,27.4 71.0,28.2 73.0,29.1 75.1,30.3 77.1,31.6 79.1,33.1 81.2,34.8 83.2,36.6 85.3,38.5 87.3,40.6 89.3,42.9 91.4,45.2 93.4,47.7 95.4,50.3 97.5,53.0 99.5,55.8 101.6,58.6 103.6,61.6 105.6,64.6 107.7,67.6 109.7,70.7 111.8,73.8 113.8,76.9 115.8,80.0 117.9,83.1 119.9,86.2 121.9,89.3 124.0,92.3 126.0,95.3 128.1,98.2 130.1,101.0 132.1,103.8 134.2,106.4 136.2,109.0 138.2,111.4 140.3,113.8 142.3,116.0 144.4,118.0 146.4,119.9 148.4,121.7 150.5,123.3 152.5,124.8 154.6,126.0 156.6,127.2 158.6,128.1 160.7,128.8 162.7,129.4 164.7,129.8 166.8,130.0" fill="none" stroke="#ef4444" stroke-width="3.5" stroke-linecap="round"/>
+  <polyline points="168.8,130.0 170.9,129.8 172.9,129.4 174.9,128.9 177.0,128.1 179.0,127.2 181.0,126.1 183.1,124.9 185.1,123.4 187.2,121.8 189.2,120.1 191.2,118.2 193.3,116.1 195.3,113.9 197.4,111.6 199.4,109.2 201.4,106.6 203.5,104.0 205.5,101.2 207.5,98.4 209.6,95.5 211.6,92.5 213.7,89.5 215.7,86.4 217.7,83.4 219.8,80.2 221.8,77.1 223.8,74.0 225.9,70.9 227.9,67.8 230.0,64.8 232.0,61.8" fill="none" stroke="#16a34a" stroke-width="3.5" stroke-linecap="round"/>
+  <text x="40" y="20" fill="#16a34a" font-size="18" font-weight="bold">&#8599;</text>
+  <text x="110" y="70" fill="#ef4444" font-size="18" font-weight="bold">&#8600;</text>
+  <text x="205" y="60" fill="#16a34a" font-size="18" font-weight="bold">&#8599;</text>
+</svg>
+                    <p class="text-[11px] text-slate-500 text-center mt-2">Onde <span class="text-emerald-600 font-semibold">cresce</span> e onde <span class="text-red-600 font-semibold">decresce</span>.</p>
+                </div>
+                <div class="border border-slate-200 rounded-xl p-3">
+                    <p class="text-xs font-bold text-slate-700 text-center mb-2">2. Sinal</p>
+                    <svg viewBox="0 0 246 150" class="w-full h-auto">
+  <path d="M 18.0,78 L 18.0,62.6 L 20.0,59.7 L 22.1,56.8 L 24.1,54.0 L 26.2,51.3 L 28.2,48.6 L 30.2,46.1 L 32.3,43.7 L 34.3,41.4 L 36.3,39.3 L 38.4,37.3 L 40.4,35.4 L 42.5,33.7 L 44.5,32.1 L 46.5,30.8 L 48.6,29.5 L 50.6,28.5 L 52.6,27.6 L 54.7,26.9 L 56.7,26.4 L 58.8,26.1 L 60.8,26.0 L 62.8,26.1 L 64.9,26.3 L 66.9,26.7 L 69.0,27.4 L 71.0,28.2 L 73.0,29.1 L 75.1,30.3 L 77.1,31.6 L 79.1,33.1 L 81.2,34.8 L 83.2,36.6 L 85.3,38.5 L 87.3,40.6 L 89.3,42.9 L 91.4,45.2 L 93.4,47.7 L 95.4,50.3 L 97.5,53.0 L 99.5,55.8 L 101.6,58.6 L 103.6,61.6 L 105.6,64.6 L 107.7,67.6 L 109.7,70.7 L 111.8,73.8 L 113.8,76.9 L 113.8,78 Z M 221.2,78 L 221.2,78.0 L 223.3,74.9 L 225.3,71.8 L 227.4,68.7 L 229.4,65.6 L 231.4,62.6 L 231.4,78 Z" fill="rgba(16,185,129,0.18)"/>
+  <path d="M 114.5,78 L 114.5,78.0 L 116.6,81.1 L 118.6,84.2 L 120.6,87.3 L 122.7,90.4 L 124.7,93.4 L 126.8,96.3 L 128.8,99.2 L 130.8,102.0 L 132.9,104.7 L 134.9,107.4 L 136.9,109.9 L 139.0,112.3 L 141.0,114.6 L 143.1,116.7 L 145.1,118.7 L 147.1,120.6 L 149.2,122.3 L 151.2,123.9 L 153.2,125.2 L 155.3,126.5 L 157.3,127.5 L 159.4,128.4 L 161.4,129.1 L 163.4,129.6 L 165.5,129.9 L 167.5,130.0 L 169.6,129.9 L 171.6,129.7 L 173.6,129.3 L 175.7,128.6 L 177.7,127.8 L 179.7,126.9 L 181.8,125.7 L 183.8,124.4 L 185.9,122.9 L 187.9,121.2 L 189.9,119.4 L 192.0,117.5 L 194.0,115.4 L 196.0,113.1 L 198.1,110.8 L 200.1,108.3 L 202.2,105.7 L 204.2,103.0 L 206.2,100.2 L 208.3,97.4 L 210.3,94.4 L 212.4,91.4 L 214.4,88.4 L 216.4,85.3 L 218.5,82.2 L 220.5,79.1 L 220.5,78 Z" fill="rgba(239,68,68,0.18)"/>
+  <line x1="10" y1="78" x2="236" y2="78" stroke="#94a3b8" stroke-width="1.5"/>
+  <polyline points="18.0,62.6 20.0,59.7 22.1,56.8 24.1,54.0 26.2,51.3 28.2,48.6 30.2,46.1 32.3,43.7 34.3,41.4 36.3,39.3 38.4,37.3 40.4,35.4 42.5,33.7 44.5,32.1 46.5,30.8 48.6,29.5 50.6,28.5 52.6,27.6 54.7,26.9 56.7,26.4 58.8,26.1 60.8,26.0 62.8,26.1 64.9,26.3 66.9,26.7 69.0,27.4 71.0,28.2 73.0,29.1 75.1,30.3 77.1,31.6 79.1,33.1 81.2,34.8 83.2,36.6 85.3,38.5 87.3,40.6 89.3,42.9 91.4,45.2 93.4,47.7 95.4,50.3 97.5,53.0 99.5,55.8 101.6,58.6 103.6,61.6 105.6,64.6 107.7,67.6 109.7,70.7 111.8,73.8 113.8,76.9 115.8,80.0 117.9,83.1 119.9,86.2 121.9,89.3 124.0,92.3 126.0,95.3 128.1,98.2 130.1,101.0 132.1,103.8 134.2,106.4 136.2,109.0 138.2,111.4 140.3,113.8 142.3,116.0 144.4,118.0 146.4,119.9 148.4,121.7 150.5,123.3 152.5,124.8 154.6,126.0 156.6,127.2 158.6,128.1 160.7,128.8 162.7,129.4 164.7,129.8 166.8,130.0 168.8,130.0 170.9,129.8 172.9,129.4 174.9,128.9 177.0,128.1 179.0,127.2 181.0,126.1 183.1,124.9 185.1,123.4 187.2,121.8 189.2,120.1 191.2,118.2 193.3,116.1 195.3,113.9 197.4,111.6 199.4,109.2 201.4,106.6 203.5,104.0 205.5,101.2 207.5,98.4 209.6,95.5 211.6,92.5 213.7,89.5 215.7,86.4 217.7,83.4 219.8,80.2 221.8,77.1 223.8,74.0 225.9,70.9 227.9,67.8 230.0,64.8 232.0,61.8" fill="none" stroke="#64748b" stroke-width="3" stroke-linecap="round"/>
+  <text x="55" y="52" fill="#16a34a" font-size="20" font-weight="bold">+</text>
+  <text x="162" y="110" fill="#ef4444" font-size="22" font-weight="bold">&minus;</text>
+</svg>
+                    <p class="text-[11px] text-slate-500 text-center mt-2">Onde está <span class="text-emerald-600 font-semibold">acima (+)</span> e <span class="text-red-600 font-semibold">abaixo (&minus;)</span> do eixo.</p>
+                </div>
+                <div class="border border-slate-200 rounded-xl p-3">
+                    <p class="text-xs font-bold text-slate-700 text-center mb-2">3. Extremos</p>
+                    <svg viewBox="0 0 246 150" class="w-full h-auto">
+  <line x1="10" y1="78" x2="236" y2="78" stroke="#94a3b8" stroke-width="1.5"/>
+  <polyline points="18.0,62.6 20.0,59.7 22.1,56.8 24.1,54.0 26.2,51.3 28.2,48.6 30.2,46.1 32.3,43.7 34.3,41.4 36.3,39.3 38.4,37.3 40.4,35.4 42.5,33.7 44.5,32.1 46.5,30.8 48.6,29.5 50.6,28.5 52.6,27.6 54.7,26.9 56.7,26.4 58.8,26.1 60.8,26.0 62.8,26.1 64.9,26.3 66.9,26.7 69.0,27.4 71.0,28.2 73.0,29.1 75.1,30.3 77.1,31.6 79.1,33.1 81.2,34.8 83.2,36.6 85.3,38.5 87.3,40.6 89.3,42.9 91.4,45.2 93.4,47.7 95.4,50.3 97.5,53.0 99.5,55.8 101.6,58.6 103.6,61.6 105.6,64.6 107.7,67.6 109.7,70.7 111.8,73.8 113.8,76.9 115.8,80.0 117.9,83.1 119.9,86.2 121.9,89.3 124.0,92.3 126.0,95.3 128.1,98.2 130.1,101.0 132.1,103.8 134.2,106.4 136.2,109.0 138.2,111.4 140.3,113.8 142.3,116.0 144.4,118.0 146.4,119.9 148.4,121.7 150.5,123.3 152.5,124.8 154.6,126.0 156.6,127.2 158.6,128.1 160.7,128.8 162.7,129.4 164.7,129.8 166.8,130.0 168.8,130.0 170.9,129.8 172.9,129.4 174.9,128.9 177.0,128.1 179.0,127.2 181.0,126.1 183.1,124.9 185.1,123.4 187.2,121.8 189.2,120.1 191.2,118.2 193.3,116.1 195.3,113.9 197.4,111.6 199.4,109.2 201.4,106.6 203.5,104.0 205.5,101.2 207.5,98.4 209.6,95.5 211.6,92.5 213.7,89.5 215.7,86.4 217.7,83.4 219.8,80.2 221.8,77.1 223.8,74.0 225.9,70.9 227.9,67.8 230.0,64.8 232.0,61.8" fill="none" stroke="#64748b" stroke-width="3" stroke-linecap="round"/>
+  <line x1="35.2" y1="26" x2="87.2" y2="26" stroke="#16a34a" stroke-width="2" stroke-dasharray="4 3"/>
+  <line x1="141.9" y1="130" x2="193.9" y2="130" stroke="#ef4444" stroke-width="2" stroke-dasharray="4 3"/>
+  <circle cx="61.2" cy="26" r="5" fill="#16a34a"/>
+  <circle cx="167.9" cy="130" r="5" fill="#ef4444"/>
+  <text x="45.2" y="18" fill="#15803d" font-size="12" font-weight="bold">máx.</text>
+  <text x="153.9" y="146" fill="#b91c1c" font-size="12" font-weight="bold">mín.</text>
+</svg>
+                    <p class="text-[11px] text-slate-500 text-center mt-2">O <span class="text-emerald-700 font-semibold">máximo</span> e o <span class="text-red-700 font-semibold">mínimo</span> relativos.</p>
+                </div>
+            </div>
+            <div class="mt-4 bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800">
+                <i class="fa-solid fa-triangle-exclamation mr-1"></i> Cuidado: uma função pode estar a <strong>crescer</strong> (monotonia) e, ao mesmo tempo, ter valor <strong>negativo</strong> (sinal). São perguntas diferentes!
+            </div>
+        </section>
+
+        <div class="text-center text-xs text-slate-400 py-2">
+            <i class="fa-solid fa-flag-checkered"></i> Revisões concluídas &mdash; segue para a derivada e a monotonia
+        </div>
+    </main>
+
+    <!-- ===================== PÁGINA 5 ===================== -->
+    <main id="page5" class="max-w-4xl mx-auto w-full p-4 md:p-6 flex flex-col gap-6 hidden">
+
+        <!-- INTRO -->
+        <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex items-start gap-3">
+                <i class="fa-solid fa-circle-info text-blue-500 text-lg mt-0.5 shrink-0"></i>
+                <p class="text-sm md:text-[15px] text-slate-700 leading-relaxed">
+                    A derivada é o declive da tangente. Então o <strong>sinal</strong> da derivada diz-nos se a função está a
+                    <strong>subir</strong> ou a <strong>descer</strong>. Desliza a tangente ao longo da curva e repara na cor:
+                    onde <em>f</em> cresce a tangente sobe (<span class="text-emerald-600 font-semibold">m &gt; 0</span>),
+                    onde decresce a tangente desce (<span class="text-red-600 font-semibold">m &lt; 0</span>),
+                    e onde é constante a tangente é horizontal (<span class="text-slate-500 font-semibold">m = 0</span>).
+                </p>
+            </div>
+        </section>
+
+        <!-- GRÁFICO DUPLO -->
+        <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <h2 class="text-base font-bold text-slate-800 mb-1 flex items-center gap-2">
+                <i class="fa-solid fa-arrow-trend-up text-blue-600"></i>
+                Crescer, decrescer, constante &mdash; e o que faz a derivada
+            </h2>
+            <p class="text-xs text-slate-500 mb-3">À <strong>esquerda</strong>, a função <em>f</em> com a tangente que desliza. À <strong>direita</strong>, a função derivada <em>f&#39;</em>: repara que ela está <strong>acima</strong> do eixo onde <em>f</em> cresce e <strong>abaixo</strong> onde <em>f</em> decresce.</p>
+
+            <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                    <p class="text-xs font-semibold text-slate-600 mb-1 text-center">Gráfico de <em>f</em></p>
+                    <div class="relative w-full" style="padding-bottom:70%; min-height:230px;">
+                        <canvas id="canvasF4" class="absolute inset-0 w-full h-full" style="border-radius:0.75rem;"></canvas>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-slate-600 mb-1 text-center">Gráfico de <em>f&#39;</em> (a derivada)</p>
+                    <div class="relative w-full" style="padding-bottom:70%; min-height:230px;">
+                        <canvas id="canvasD4" class="absolute inset-0 w-full h-full" style="border-radius:0.75rem;"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slider -->
+            <div class="mt-4">
+                <div class="flex justify-between items-center mb-1">
+                    <span class="text-xs font-semibold text-slate-600">Tangente em: <span id="slider4Val" class="text-blue-600 font-bold">x = 0,5</span></span>
+                    <span id="monoTag4" class="text-xs font-bold px-2 py-0.5 rounded-lg">&mdash;</span>
+                </div>
+                <input type="range" id="slider4" min="0" max="6" step="0.05" value="0.5" class="w-full">
+            </div>
+
+            <div class="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm text-slate-700 flex items-center gap-3">
+                <i class="fa-solid fa-ruler-combined text-amber-500 text-base shrink-0"></i>
+                <div>
+                    Declive da tangente: <span id="slopeD4" class="text-blue-700 font-bold">&mdash;</span>
+                    &nbsp;&rarr;&nbsp; <span id="interp4" class="font-semibold">&mdash;</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- TABELA DE SINAIS -->
+        <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <h2 class="text-base font-bold text-slate-800 mb-1 flex items-center gap-2">
+                <i class="fa-solid fa-table text-blue-600"></i>
+                Tabela de sinais da derivada e monotonia de <em>f</em>
+            </h2>
+            <p class="text-xs text-slate-500 mb-3">Juntando tudo: o sinal de <em>f&#39;</em> em cada intervalo diz-nos se <em>f</em> cresce, decresce ou é constante. (Os pontos <em>a</em>, <em>b</em> e <em>c</em> são onde a tangente fica horizontal.)</p>
+            <div class="overflow-x-auto">
+                <table class="w-full text-center text-sm border-collapse">
+                    <thead>
+                        <tr class="text-slate-600">
+                            <th class="border border-slate-300 bg-slate-100 px-2 py-2 text-left"><em>x</em></th>
+                            <th class="border border-slate-300 bg-blue-50 px-2 py-2">0 &lt; x &lt; a</th>
+                            <th class="border border-slate-300 bg-slate-100 px-2 py-2">a</th>
+                            <th class="border border-slate-300 bg-pink-50 px-2 py-2">a &lt; x &lt; b</th>
+                            <th class="border border-slate-300 bg-slate-100 px-2 py-2">b</th>
+                            <th class="border border-slate-300 bg-amber-50 px-2 py-2">b &lt; x &lt; c</th>
+                            <th class="border border-slate-300 bg-slate-100 px-2 py-2">c</th>
+                            <th class="border border-slate-300 bg-emerald-50 px-2 py-2">c &lt; x &lt; d</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="border border-slate-300 bg-slate-50 px-2 py-2 font-semibold text-left">Sinal de <em>f&#39;</em></td>
+                            <td class="border border-slate-300 px-2 py-2 text-red-600 font-bold text-lg">&minus;</td>
+                            <td class="border border-slate-300 px-2 py-2 text-slate-500 font-bold">0</td>
+                            <td class="border border-slate-300 px-2 py-2 text-emerald-600 font-bold text-lg">+</td>
+                            <td class="border border-slate-300 px-2 py-2 text-slate-500 font-bold">0</td>
+                            <td class="border border-slate-300 px-2 py-2 text-red-600 font-bold text-lg">&minus;</td>
+                            <td class="border border-slate-300 px-2 py-2 text-slate-500 font-bold">0</td>
+                            <td class="border border-slate-300 px-2 py-2 text-slate-500 font-bold">0</td>
+                        </tr>
+                        <tr>
+                            <td class="border border-slate-300 bg-slate-50 px-2 py-2 font-semibold text-left">Monotonia de <em>f</em></td>
+                            <td class="border border-slate-300 px-2 py-2 text-red-600 text-xl">&#8600;</td>
+                            <td class="border border-slate-300 px-2 py-2 text-slate-500 text-xs">mín.</td>
+                            <td class="border border-slate-300 px-2 py-2 text-emerald-600 text-xl">&#8599;</td>
+                            <td class="border border-slate-300 px-2 py-2 text-slate-500 text-xs">máx.</td>
+                            <td class="border border-slate-300 px-2 py-2 text-red-600 text-xl">&#8600;</td>
+                            <td class="border border-slate-300 px-2 py-2 text-slate-500 text-xs">&mdash;</td>
+                            <td class="border border-slate-300 px-2 py-2 text-slate-500 text-xl">&#8594;</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="flex flex-wrap gap-4 mt-3 text-xs text-slate-500">
+                <span><span class="text-emerald-600 text-base">&#8599;</span> cresce &nbsp;(<em>f&#39;</em> &gt; 0)</span>
+                <span><span class="text-red-600 text-base">&#8600;</span> decresce &nbsp;(<em>f&#39;</em> &lt; 0)</span>
+                <span><span class="text-slate-500 text-base">&#8594;</span> constante &nbsp;(<em>f&#39;</em> = 0)</span>
+            </div>
+        </section>
+
+        <!-- REGRA GERAL + IDEIA-CHAVE -->
+        <section class="bg-gradient-to-br from-indigo-600 to-blue-700 text-white p-6 rounded-2xl shadow-lg">
+            <h2 class="text-base font-extrabold mb-1 flex items-center gap-2">
+                <i class="fa-solid fa-key text-amber-400"></i> A ideia-chave (a regra geral)
+            </h2>
+            <p class="text-sm md:text-base font-extrabold flex items-center justify-center gap-2 flex-wrap text-center my-4">
+                <span>sinal da <span class="text-amber-300">derivada</span> <em>f&#39;</em></span>
+                <i class="fa-solid fa-left-right text-amber-400"></i>
+                <span><span class="text-amber-300">monotonia</span> da função <em>f</em></span>
+            </p>
+            <div class="grid sm:grid-cols-3 gap-3 text-sm">
+                <div class="bg-white/10 rounded-xl p-4">
+                    <p class="font-bold text-emerald-300 mb-1"><i class="fa-solid fa-arrow-up"></i> f&#39; &gt; 0</p>
+                    <p class="text-blue-100 text-xs">Num intervalo onde a derivada é <strong>positiva</strong>, a função é <strong>crescente</strong>.</p>
+                </div>
+                <div class="bg-white/10 rounded-xl p-4">
+                    <p class="font-bold text-red-300 mb-1"><i class="fa-solid fa-arrow-down"></i> f&#39; &lt; 0</p>
+                    <p class="text-blue-100 text-xs">Num intervalo onde a derivada é <strong>negativa</strong>, a função é <strong>decrescente</strong>.</p>
+                </div>
+                <div class="bg-white/10 rounded-xl p-4">
+                    <p class="font-bold text-slate-200 mb-1"><i class="fa-solid fa-arrow-right"></i> f&#39; = 0</p>
+                    <p class="text-blue-100 text-xs">Onde a derivada é <strong>nula</strong> num intervalo, a função é <strong>constante</strong>.</p>
+                </div>
+            </div>
+            <p class="text-xs md:text-sm text-blue-100 mt-4 text-center leading-relaxed border-t border-white/20 pt-3">
+                E sempre que a derivada <strong class="text-amber-300">passa por zero mudando de sinal</strong>, a função <em>f</em> tem aí um <strong class="text-amber-300">extremo relativo</strong>: máximo se <em>f&#39;</em> passa de <span class="text-emerald-300 font-bold">+</span> a <span class="text-red-300 font-bold">&minus;</span>, mínimo se passa de <span class="text-red-300 font-bold">&minus;</span> a <span class="text-emerald-300 font-bold">+</span>. Se <strong>não muda de sinal</strong>, não há extremo.
+            </p>
+        </section>
+
+        <!-- QUESTÃO 8 -->
+        <section class="bg-indigo-900 text-white p-5 rounded-2xl shadow-md">
+            <h3 class="text-sm font-bold text-indigo-200 uppercase tracking-wider mb-2 flex items-center gap-2">
+                <i class="fa-solid fa-brain text-amber-400"></i> Questão 8
+            </h3>
+            <p class="text-sm text-indigo-100 leading-relaxed mb-3">
+                Uma função tem derivada <em>f&#39;</em>(x) = (x &minus; 1)(x &minus; 4). <strong>Faz uma tabela de sinais</strong>: uma linha para o sinal de <code class="bg-white/10 px-1 rounded">x &minus; 1</code>, outra para <code class="bg-white/10 px-1 rounded">x &minus; 4</code>, depois multiplica-as para obter o sinal de <em>f&#39;</em> e, a partir daí, escreve a linha da <strong>monotonia de <em>f</em></strong>.
+            </p>
+            <textarea id="q8" rows="3" class="w-full rounded-lg border-0 bg-white/10 text-white placeholder-indigo-300 text-sm p-3 focus:ring-2 focus:ring-amber-400 focus:outline-none resize-none" placeholder="x-1:  ... | x-4:  ... | f':  ... | monotonia de f:  ..."></textarea>
+            <button onclick="toggleReveal('sug8')" class="mt-3 px-3 py-1.5 bg-amber-400 text-indigo-900 rounded-lg text-xs font-bold hover:bg-amber-300 transition">
+                <i class="fa-solid fa-lightbulb mr-1"></i> Ver sugestão de resposta
+            </button>
+            <div id="sug8" class="reveal-box mt-2 bg-white/10 rounded-lg px-4 py-1 text-sm text-indigo-50">
+                <p class="mb-2">Os zeros de <em>f&#39;</em> são <strong>x = 1</strong> e <strong>x = 4</strong>. Construindo a tabela:</p>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-center text-xs border-collapse mb-2">
+                        <thead>
+                            <tr>
+                                <th class="border border-white/30 px-2 py-1 text-left"><em>x</em></th>
+                                <th class="border border-white/30 px-2 py-1">x &lt; 1</th>
+                                <th class="border border-white/30 px-2 py-1">1</th>
+                                <th class="border border-white/30 px-2 py-1">1 &lt; x &lt; 4</th>
+                                <th class="border border-white/30 px-2 py-1">4</th>
+                                <th class="border border-white/30 px-2 py-1">x &gt; 4</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td class="border border-white/30 px-2 py-1 text-left">x &minus; 1</td><td class="border border-white/30 text-red-300 font-bold">&minus;</td><td class="border border-white/30">0</td><td class="border border-white/30 text-emerald-300 font-bold">+</td><td class="border border-white/30 text-emerald-300 font-bold">+</td><td class="border border-white/30 text-emerald-300 font-bold">+</td></tr>
+                            <tr><td class="border border-white/30 px-2 py-1 text-left">x &minus; 4</td><td class="border border-white/30 text-red-300 font-bold">&minus;</td><td class="border border-white/30 text-red-300 font-bold">&minus;</td><td class="border border-white/30 text-red-300 font-bold">&minus;</td><td class="border border-white/30">0</td><td class="border border-white/30 text-emerald-300 font-bold">+</td></tr>
+                            <tr><td class="border border-white/30 px-2 py-1 text-left font-bold"><em>f&#39;</em> (produto)</td><td class="border border-white/30 text-emerald-300 font-bold">+</td><td class="border border-white/30">0</td><td class="border border-white/30 text-red-300 font-bold">&minus;</td><td class="border border-white/30">0</td><td class="border border-white/30 text-emerald-300 font-bold">+</td></tr>
+                            <tr><td class="border border-white/30 px-2 py-1 text-left font-bold">monotonia de <em>f</em></td><td class="border border-white/30 text-emerald-300">&#8599;</td><td class="border border-white/30 text-amber-200">máx.</td><td class="border border-white/30 text-red-300">&#8600;</td><td class="border border-white/30 text-amber-200">mín.</td><td class="border border-white/30 text-emerald-300">&#8599;</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>Ou seja: <em>f</em> <strong>cresce</strong> em ]&minus;&infin;, 1[ e em ]4, +&infin;[, e <strong>decresce</strong> em ]1, 4[. Em x = 1 há um <strong>máximo</strong> e em x = 4 um <strong>mínimo</strong>.</p>
+            </div>
+        </section>
+
+        <!-- EXERCÍCIOS -->
+        <section class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+            <h2 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-pen-ruler text-blue-600"></i> Exercícios
+            </h2>
+
+            <!-- 2.1 -->
+            <div class="mb-5 pb-5 border-b border-slate-200">
+                <p class="text-sm text-slate-700 mb-2"><strong>2.1)</strong> Uma função <em>f</em> tem derivada <em>f&#39;</em>(x) = 2x<sup>2</sup> &minus; 10x. Estuda a <strong>monotonia</strong> e os <strong>extremos relativos</strong> de <em>f</em>.</p>
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs text-slate-600 mb-2">
+                    <p class="font-semibold text-slate-700 mb-1"><i class="fa-solid fa-lightbulb text-amber-500 mr-1"></i>Sugestão (como fazer):</p>
+                    <ol class="list-decimal list-inside space-y-1">
+                        <li>Descobre os <strong>zeros</strong> de <em>f&#39;</em>, pondo em evidência e usando a <strong>lei do anulamento do produto</strong>.</li>
+                        <li>Esboça onde a derivada é <strong>positiva</strong> ou <strong>negativa</strong> (é uma parábola).</li>
+                        <li>Faz a <strong>tabela de sinais</strong> e tira as conclusões.</li>
+                    </ol>
+                </div>
+                <textarea id="e21" rows="4" class="w-full rounded-lg border border-slate-300 bg-white text-slate-700 text-sm p-3 focus:ring-2 focus:ring-blue-400 focus:outline-none resize-none mb-2" placeholder="Resolve aqui a tua tentativa..."></textarea>
+                <button onclick="toggleReveal('sug21')" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-500 transition">
+                    <i class="fa-solid fa-lightbulb mr-1"></i> Ver resolução
+                </button>
+                <div id="sug21" class="reveal-box mt-2 bg-blue-50 border border-blue-100 rounded-lg px-4 py-1 text-sm text-slate-700">
+                    <p class="mb-2"><strong>Zeros:</strong> 2x<sup>2</sup> &minus; 10x = 2x(x &minus; 5) = 0 &rArr; x = 0 ou x = 5.</p>
+                    <p class="mb-2">A parábola <em>f&#39;</em> tem a concavidade voltada para cima, logo é <span class="text-emerald-600 font-bold">positiva</span> fora dos zeros e <span class="text-red-600 font-bold">negativa</span> entre eles.</p>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-center text-xs border-collapse mb-2">
+                            <thead><tr>
+                                <th class="border border-slate-300 px-2 py-1 text-left"><em>x</em></th>
+                                <th class="border border-slate-300 px-2 py-1">x &lt; 0</th>
+                                <th class="border border-slate-300 px-2 py-1">0</th>
+                                <th class="border border-slate-300 px-2 py-1">0 &lt; x &lt; 5</th>
+                                <th class="border border-slate-300 px-2 py-1">5</th>
+                                <th class="border border-slate-300 px-2 py-1">x &gt; 5</th>
+                            </tr></thead>
+                            <tbody>
+                                <tr><td class="border border-slate-300 px-2 py-1 text-left font-semibold">sinal de <em>f&#39;</em></td><td class="border border-slate-300 text-emerald-600 font-bold">+</td><td class="border border-slate-300">0</td><td class="border border-slate-300 text-red-600 font-bold">&minus;</td><td class="border border-slate-300">0</td><td class="border border-slate-300 text-emerald-600 font-bold">+</td></tr>
+                                <tr><td class="border border-slate-300 px-2 py-1 text-left font-semibold">monotonia de <em>f</em></td><td class="border border-slate-300 text-emerald-600">&#8599;</td><td class="border border-slate-300 text-amber-600 text-xs">máx.</td><td class="border border-slate-300 text-red-600">&#8600;</td><td class="border border-slate-300 text-amber-600 text-xs">mín.</td><td class="border border-slate-300 text-emerald-600">&#8599;</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p><em>f</em> <strong>cresce</strong> em ]&minus;&infin;, 0[ e em ]5, +&infin;[ e <strong>decresce</strong> em ]0, 5[. Tem um <strong>máximo relativo</strong> em x = 0 (f&#39; passa de + a &minus;) e um <strong>mínimo relativo</strong> em x = 5 (f&#39; passa de &minus; a +).</p>
+                </div>
+            </div>
+
+            <!-- 2.2 -->
+            <div class="mb-5 pb-5 border-b border-slate-200">
+                <p class="text-sm text-slate-700 mb-2"><strong>2.2)</strong> Considera <em>f</em>(x) = x<sup>3</sup>, cuja derivada é <em>f&#39;</em>(x) = 3x<sup>2</sup>. A função tem algum <strong>extremo relativo</strong>?</p>
+                <textarea id="e22" rows="4" class="w-full rounded-lg border border-slate-300 bg-white text-slate-700 text-sm p-3 focus:ring-2 focus:ring-blue-400 focus:outline-none resize-none mb-2" placeholder="Resolve aqui a tua tentativa..."></textarea>
+                <button onclick="toggleReveal('sug22')" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-500 transition">
+                    <i class="fa-solid fa-lightbulb mr-1"></i> Ver resolução
+                </button>
+                <div id="sug22" class="reveal-box mt-2 bg-blue-50 border border-blue-100 rounded-lg px-4 py-1 text-sm text-slate-700">
+                    <p class="mb-2"><strong>Zero de <em>f&#39;</em>:</strong> 3x<sup>2</sup> = 0 &rArr; x = 0. Mas 3x<sup>2</sup> é sempre <span class="text-emerald-600 font-bold">&ge; 0</span>: antes e depois de 0 a derivada é sempre <strong>positiva</strong>.</p>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-center text-xs border-collapse mb-2">
+                            <thead><tr>
+                                <th class="border border-slate-300 px-2 py-1 text-left"><em>x</em></th>
+                                <th class="border border-slate-300 px-2 py-1">x &lt; 0</th>
+                                <th class="border border-slate-300 px-2 py-1">0</th>
+                                <th class="border border-slate-300 px-2 py-1">x &gt; 0</th>
+                            </tr></thead>
+                            <tbody>
+                                <tr><td class="border border-slate-300 px-2 py-1 text-left font-semibold">sinal de <em>f&#39;</em></td><td class="border border-slate-300 text-emerald-600 font-bold">+</td><td class="border border-slate-300">0</td><td class="border border-slate-300 text-emerald-600 font-bold">+</td></tr>
+                                <tr><td class="border border-slate-300 px-2 py-1 text-left font-semibold">monotonia de <em>f</em></td><td class="border border-slate-300 text-emerald-600">&#8599;</td><td class="border border-slate-300 text-slate-400 text-xs">&mdash;</td><td class="border border-slate-300 text-emerald-600">&#8599;</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>Como a derivada <strong>não muda de sinal</strong>, a função <strong>não tem extremo</strong> em x = 0 — apenas fica «momentaneamente horizontal» e continua a crescer. (É um ponto de inflexão.)</p>
+                </div>
+            </div>
+
+            <!-- 2.3 -->
+            <div>
+                <div class="flex flex-col sm:flex-row gap-4 mb-2">
+                    <div class="sm:w-2/3">
+                        <p class="text-sm text-slate-700 mb-2"><strong>2.3)</strong> A Maria pratica <strong>kitesurf</strong>. Seja <em>f</em> a função que dá a <strong>altitude</strong> da Maria (em metros), <em>t</em> minutos após o início da observação. Sabe-se que <em>f&#39;</em>(t) = t<sup>2</sup> &minus; 20t + 51, com t &isin; [0, 20].</p>
+                        <p class="text-sm text-slate-700">Durante a observação, a Maria atingiu uma altitude <strong>máxima</strong> e uma altitude <strong>mínima</strong>. Determina os <strong>instantes</strong> em que isso aconteceu.</p>
+                    </div>
+                    <div class="sm:w-1/3">
+                        <div class="relative w-full rounded-xl overflow-hidden bg-slate-200" style="padding-bottom:66%;">
+                            <img src="https://cdn.abacus.ai/images/5249fe11-8178-470e-8519-7770e6d8832a.png" alt="Pessoa a praticar kitesurf no mar, com o papagaio no céu" class="absolute inset-0 w-full h-full object-cover" loading="lazy">
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs text-slate-600 mb-2">
+                    <p class="font-semibold text-slate-700 mb-1">Sugestão:</p>
+                    Desenha o gráfico de <em>f&#39;</em>(t) (uma parábola) e marca bem as abcissas dos <strong>zeros</strong> (t = 3 e t = 17). Depois vê, para cada zero, se a derivada muda de <strong>+</strong> para <strong>&minus;</strong> (máximo) ou de <strong>&minus;</strong> para <strong>+</strong> (mínimo).
+                </div>
+                <textarea id="e23" rows="4" class="w-full rounded-lg border border-slate-300 bg-white text-slate-700 text-sm p-3 focus:ring-2 focus:ring-blue-400 focus:outline-none resize-none mb-2" placeholder="Resolve aqui a tua tentativa..."></textarea>
+                <button onclick="toggleReveal('sug23')" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-bold hover:bg-blue-500 transition">
+                    <i class="fa-solid fa-lightbulb mr-1"></i> Ver resolução
+                </button>
+                <div id="sug23" class="reveal-box mt-2 bg-blue-50 border border-blue-100 rounded-lg px-4 py-1 text-sm text-slate-700">
+                    <p class="mb-2">Os zeros de <em>f&#39;</em> são <strong>t = 3</strong> e <strong>t = 17</strong>. Como a parábola tem concavidade para cima, <em>f&#39;</em> é <span class="text-emerald-600 font-bold">positiva</span> fora dos zeros e <span class="text-red-600 font-bold">negativa</span> entre eles.</p>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-center text-xs border-collapse mb-2">
+                            <thead><tr>
+                                <th class="border border-slate-300 px-2 py-1 text-left"><em>t</em></th>
+                                <th class="border border-slate-300 px-2 py-1">0 &le; t &lt; 3</th>
+                                <th class="border border-slate-300 px-2 py-1">3</th>
+                                <th class="border border-slate-300 px-2 py-1">3 &lt; t &lt; 17</th>
+                                <th class="border border-slate-300 px-2 py-1">17</th>
+                                <th class="border border-slate-300 px-2 py-1">17 &lt; t &le; 20</th>
+                            </tr></thead>
+                            <tbody>
+                                <tr><td class="border border-slate-300 px-2 py-1 text-left font-semibold">sinal de <em>f&#39;</em></td><td class="border border-slate-300 text-emerald-600 font-bold">+</td><td class="border border-slate-300">0</td><td class="border border-slate-300 text-red-600 font-bold">&minus;</td><td class="border border-slate-300">0</td><td class="border border-slate-300 text-emerald-600 font-bold">+</td></tr>
+                                <tr><td class="border border-slate-300 px-2 py-1 text-left font-semibold">altitude <em>f</em></td><td class="border border-slate-300 text-emerald-600">&#8599;</td><td class="border border-slate-300 text-amber-600 text-xs">máx.</td><td class="border border-slate-300 text-red-600">&#8600;</td><td class="border border-slate-300 text-amber-600 text-xs">mín.</td><td class="border border-slate-300 text-emerald-600">&#8599;</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p>A Maria atingiu a altitude <strong>máxima</strong> aos <strong>t = 3 minutos</strong> (aí a subida passou a descida) e a altitude <strong>mínima</strong> aos <strong>t = 17 minutos</strong> (aí a descida passou a subida).</p>
+                </div>
+            </div>
+        </section>
+
+        <div class="text-center text-xs text-slate-400 py-2">
+            <i class="fa-solid fa-flag-checkered"></i> Fim da atividade 4 &mdash; Derivada e monotonia
+        </div>
+    </main>
+
+    <!-- FOOTER FIXO -->
+    <div class="footer-bar bg-white border-t border-slate-200 shadow-lg">
+        <div class="max-w-4xl mx-auto px-3 py-2 flex items-center justify-between gap-2">
+            <!-- Guardar / Abrir -->
+            <div class="flex gap-1.5 shrink-0">
+                <button onclick="saveToFile()" title="Guardar respostas num ficheiro .txt" class="px-2.5 py-1.5 bg-emerald-600 text-white rounded-lg text-xs font-semibold hover:bg-emerald-700 transition flex items-center gap-1">
+                    <i class="fa-solid fa-floppy-disk"></i><span class="hidden sm:inline"> Guardar</span>
+                </button>
+                <button onclick="loadFromFile()" title="Abrir respostas de um ficheiro .txt" class="px-2.5 py-1.5 bg-slate-600 text-white rounded-lg text-xs font-semibold hover:bg-slate-700 transition flex items-center gap-1">
+                    <i class="fa-solid fa-folder-open"></i><span class="hidden sm:inline"> Abrir</span>
+                </button>
+            </div>
+            <!-- Navegação: anterior | índice | seguinte -->
+            <div class="flex items-center gap-1.5">
+                <button id="navPrev" onclick="goToPage(currentPage - 1)" title="Página anterior" class="px-2.5 py-1.5 bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold hover:bg-slate-300 transition flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <button id="idx1" onclick="goToPage(1)" title="1. Velocidade instantânea" class="w-8 h-8 rounded-lg text-xs font-bold bg-blue-600 text-white transition">1</button>
+                <button id="idx2" onclick="goToPage(2)" title="2. Generalização" class="w-8 h-8 rounded-lg text-xs font-bold bg-slate-200 text-slate-700 hover:bg-slate-300 transition">2</button>
+                <button id="idx3" onclick="goToPage(3)" title="3. A função derivada" class="w-8 h-8 rounded-lg text-xs font-bold bg-slate-200 text-slate-700 hover:bg-slate-300 transition">3</button>
+                <button id="idx4" onclick="goToPage(4)" title="4. Revisões: funções" class="w-8 h-8 rounded-lg text-xs font-bold bg-slate-200 text-slate-700 hover:bg-slate-300 transition">4</button>
+                <button id="idx5" onclick="goToPage(5)" title="5. Derivada e monotonia" class="w-8 h-8 rounded-lg text-xs font-bold bg-slate-200 text-slate-700 hover:bg-slate-300 transition">5</button>
+                <button id="navNext" onclick="goToPage(currentPage + 1)" title="Página seguinte" class="px-2.5 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700 transition flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="fileInput" accept=".txt" class="hidden">
+
+    <script>
+    (function() {
+        // ===== FUNÇÃO: s(t) = 80t - 5t²  (carro a abrandar) =====
+        const S = (t) => 80 * t - 5 * t * t;
+        const dS = (t) => 80 - 10 * t;      // s'(3) = 50 km/h
+        const T_FIXED = 3;
+        const S_FIXED = S(T_FIXED);         // 195
+        const T_MIN = 0, T_MAX = 8;         // s(8) = 320 (máximo)
+        const S_MAX = 340;
+
+        // ===== DESENHO DO GRÁFICO =====
+        function drawGraph(tB) {
+            const canvas = document.getElementById('canvasMain');
+            if (!canvas) return null;
+            const rect = canvas.parentElement.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            canvas.style.width = rect.width + 'px';
+            canvas.style.height = rect.height + 'px';
+            const ctx = canvas.getContext('2d');
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            const W = rect.width, H = rect.height;
+
+            const ml = 55, mr = 25, mt = 22, mb = 48;
+            const gw = W - ml - mr, gh = H - mt - mb;
+            const toX = (t) => ml + (t - T_MIN) / (T_MAX - T_MIN) * gw;
+            const toY = (s) => mt + gh - (s / S_MAX) * gh;
+
+            ctx.clearRect(0, 0, W, H);
+            ctx.fillStyle = '#f8fafc';
+            ctx.fillRect(ml, mt, gw, gh);
+
+            // Grid
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 1;
+            for (let t = 0; t <= T_MAX; t += 1) {
+                ctx.beginPath(); ctx.moveTo(toX(t), mt); ctx.lineTo(toX(t), mt + gh); ctx.stroke();
+            }
+            for (let s = 0; s <= S_MAX; s += 40) {
+                ctx.beginPath(); ctx.moveTo(ml, toY(s)); ctx.lineTo(ml + gw, toY(s)); ctx.stroke();
+            }
+
+            // Eixos
+            ctx.strokeStyle = '#64748b';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.moveTo(ml, mt + gh); ctx.lineTo(ml + gw, mt + gh); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(ml, mt); ctx.lineTo(ml, mt + gh); ctx.stroke();
+
+            // Rótulos
+            ctx.fillStyle = '#64748b';
+            ctx.font = '11px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            for (let t = 0; t <= T_MAX; t += 1) ctx.fillText(t.toString(), toX(t), mt + gh + 18);
+            ctx.fillText('Tempo (h)', ml + gw / 2, mt + gh + 40);
+            ctx.textAlign = 'right';
+            for (let s = 0; s <= S_MAX; s += 80) ctx.fillText(s.toString(), ml - 8, toY(s) + 4);
+            ctx.save();
+            ctx.translate(14, mt + gh / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.textAlign = 'center';
+            ctx.fillText('Posição (km)', 0, 0);
+            ctx.restore();
+
+            // Curva
+            ctx.strokeStyle = '#3b82f6';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            for (let t = T_MIN; t <= T_MAX + 0.001; t += 0.04) {
+                const x = toX(t), y = toY(S(t));
+                if (t === T_MIN) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            // Inclinação
+            const sB = S(tB);
+            const diff = Math.abs(tB - T_FIXED);
+            const slope = diff < 0.001 ? dS(T_FIXED) : (sB - S_FIXED) / (tB - T_FIXED);
+
+            // Reta secante/tangente
+            const color = diff < 0.2 ? '#16a34a' : diff < 0.5 ? '#f59e0b' : '#ef4444';
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2.5;
+            ctx.setLineDash([7, 5]);
+            ctx.beginPath();
+            ctx.moveTo(toX(T_MIN), toY(S_FIXED + slope * (T_MIN - T_FIXED)));
+            ctx.lineTo(toX(T_MAX), toY(S_FIXED + slope * (T_MAX - T_FIXED)));
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Ponto A
+            drawPoint(ctx, toX(T_FIXED), toY(S_FIXED), '#dc2626');
+            ctx.fillStyle = '#dc2626';
+            ctx.font = 'bold 12px Inter, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText('A (t=3)', toX(T_FIXED) + 11, toY(S_FIXED) + 20);
+
+            // Ponto B
+            if (diff > 0.1) {
+                drawPoint(ctx, toX(tB), toY(sB), '#2563eb');
+                ctx.fillStyle = '#2563eb';
+                ctx.font = 'bold 12px Inter, sans-serif';
+                ctx.textAlign = tB > T_FIXED ? 'left' : 'right';
+                ctx.fillText('B (t=' + tB.toFixed(1).replace('.', ',') + ')', toX(tB) + (tB > T_FIXED ? 11 : -11), toY(sB) - 10);
+            }
+
+            return slope;
+        }
+
+        function drawPoint(ctx, x, y, color) {
+            ctx.fillStyle = color;
+            ctx.beginPath(); ctx.arc(x, y, 7, 0, 2 * Math.PI); ctx.fill();
+            ctx.fillStyle = '#fff';
+            ctx.beginPath(); ctx.arc(x, y, 3, 0, 2 * Math.PI); ctx.fill();
+        }
+
+        // ===== SLIDER =====
+        function onSlider() {
+            const tB = parseFloat(document.getElementById('slider').value);
+            document.getElementById('sliderVal').textContent = 't = ' + tB.toFixed(2).replace('.', ',') + ' h';
+            const slope = drawGraph(tB);
+            if (slope != null) document.getElementById('slope').textContent = slope.toFixed(1).replace('.', ',');
+
+            const diff = Math.abs(tB - T_FIXED);
+            const lineName = document.getElementById('lineName');
+            const alertBox = document.getElementById('alertBox');
+            const alertText = document.getElementById('alertText');
+            const alertIcon = document.getElementById('alertIcon');
+            alertBox.className = 'mt-3 p-4 rounded-xl text-sm border';
+
+            if (diff < 0.2) {
+                lineName.textContent = 'Reta tangente';
+                lineName.className = 'font-bold text-emerald-600';
+                alertBox.classList.add('bg-emerald-50', 'border-emerald-300', 'text-emerald-900', 'alert-tangent');
+                alertIcon.className = 'fa-solid fa-circle-check text-emerald-500 mt-0.5';
+                alertText.innerHTML = 'A reta é agora <strong>tangente</strong>: a sua inclinação é <strong>' + slope.toFixed(1).replace('.', ',') + ' km/h</strong> &mdash; é exatamente o que o velocímetro marca neste instante.';
+            } else if (diff < 0.5) {
+                lineName.textContent = 'Reta quase tangente';
+                lineName.className = 'font-bold text-amber-600';
+                alertBox.classList.add('bg-amber-50', 'border-amber-300', 'text-amber-900');
+                alertIcon.className = 'fa-solid fa-triangle-exclamation text-amber-500 mt-0.5';
+                alertText.innerHTML = 'Estás quase! A reta está a deixar de ser <strong>secante</strong> (tocava a curva em dois pontos) e a tornar-se <strong>tangente</strong> (toca num único ponto). Continua a aproximar B de A.';
+            } else {
+                lineName.textContent = 'Reta secante';
+                lineName.className = 'font-bold text-red-600';
+                alertBox.classList.add('hidden');
+            }
+            saveAnswers();
+        }
+
+        // ===== PÁGINA 3: FUNÇÃO DERIVADA =====
+        const F  = (x) => 0.1 * x * x * x - 0.9 * x * x + 2 * x + 3;
+        const dFn = (x) => 0.3 * x * x - 1.8 * x + 2;   // derivada de F
+        const FX0 = 0, FX1 = 8, FY0 = 0, FY1 = 14;
+        const DY0 = -2, DY1 = 8;
+        let visited = {};
+
+        function plotAxes(ctx, W, H, xmin, xmax, ymin, ymax, zeroLine) {
+            const ml = 36, mr = 12, mt = 12, mb = 26;
+            const gw = W - ml - mr, gh = H - mt - mb;
+            const toX = (x) => ml + (x - xmin) / (xmax - xmin) * gw;
+            const toY = (y) => mt + gh - (y - ymin) / (ymax - ymin) * gh;
+            ctx.clearRect(0, 0, W, H);
+            ctx.fillStyle = '#f8fafc'; ctx.fillRect(ml, mt, gw, gh);
+            ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 1;
+            for (let x = Math.ceil(xmin); x <= xmax; x++) { ctx.beginPath(); ctx.moveTo(toX(x), mt); ctx.lineTo(toX(x), mt + gh); ctx.stroke(); }
+            ctx.strokeStyle = '#64748b'; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.moveTo(ml, mt + gh); ctx.lineTo(ml + gw, mt + gh); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(ml, mt); ctx.lineTo(ml, mt + gh); ctx.stroke();
+            if (zeroLine && ymin < 0 && ymax > 0) {
+                ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]);
+                ctx.beginPath(); ctx.moveTo(ml, toY(0)); ctx.lineTo(ml + gw, toY(0)); ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.fillStyle = '#94a3b8'; ctx.font = '10px Inter, sans-serif'; ctx.textAlign = 'right';
+                ctx.fillText('0', ml - 5, toY(0) + 3);
+            }
+            ctx.fillStyle = '#64748b'; ctx.font = '10px Inter, sans-serif'; ctx.textAlign = 'center';
+            for (let x = Math.ceil(xmin); x <= xmax; x += 2) ctx.fillText(x.toString(), toX(x), mt + gh + 14);
+            ctx.fillText('x', ml + gw / 2, mt + gh + 24);
+            return { toX, toY };
+        }
+
+        function sizeCanvas(c) {
+            const r = c.parentElement.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            c.width = r.width * dpr; c.height = r.height * dpr;
+            c.style.width = r.width + 'px'; c.style.height = r.height + 'px';
+            const cx = c.getContext('2d'); cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            c._w = r.width; c._h = r.height;
+            return cx;
+        }
+
+        function drawDeriv(a) {
+            const cF = document.getElementById('canvasF');
+            const cD = document.getElementById('canvasD');
+            if (!cF || !cD) return null;
+            const ctxF = sizeCanvas(cF);
+            const ctxD = sizeCanvas(cD);
+
+            // --- ESQUERDA: f com tangente ---
+            const mF = plotAxes(ctxF, cF._w, cF._h, FX0, FX1, FY0, FY1, false);
+            ctxF.strokeStyle = '#3b82f6'; ctxF.lineWidth = 3; ctxF.beginPath();
+            for (let x = FX0; x <= FX1 + 0.001; x += 0.04) { const px = mF.toX(x), py = mF.toY(F(x)); x === FX0 ? ctxF.moveTo(px, py) : ctxF.lineTo(px, py); }
+            ctxF.stroke();
+            const m = dFn(a), fa = F(a);
+            const x1 = Math.max(FX0, a - 1.9), x2 = Math.min(FX1, a + 1.9);
+            ctxF.strokeStyle = '#f59e0b'; ctxF.lineWidth = 2.5;
+            ctxF.beginPath();
+            ctxF.moveTo(mF.toX(x1), mF.toY(fa + m * (x1 - a)));
+            ctxF.lineTo(mF.toX(x2), mF.toY(fa + m * (x2 - a)));
+            ctxF.stroke();
+            drawPoint(ctxF, mF.toX(a), mF.toY(fa), '#4338ca');
+
+            // --- DIREITA: f' construída pelos declives visitados ---
+            const mD = plotAxes(ctxD, cD._w, cD._h, FX0, FX1, DY0, DY1, true);
+            const keys = Object.keys(visited).map(parseFloat).sort((u, v) => u - v);
+            if (keys.length) {
+                ctxD.strokeStyle = '#16a34a'; ctxD.lineWidth = 3; ctxD.beginPath();
+                keys.forEach((x, i) => { const px = mD.toX(x), py = mD.toY(dFn(x)); i === 0 ? ctxD.moveTo(px, py) : ctxD.lineTo(px, py); });
+                ctxD.stroke();
+                ctxD.fillStyle = '#16a34a';
+                keys.forEach((x) => { ctxD.beginPath(); ctxD.arc(mD.toX(x), mD.toY(dFn(x)), 2.2, 0, 2 * Math.PI); ctxD.fill(); });
+            }
+            drawPoint(ctxD, mD.toX(a), mD.toY(dFn(a)), '#4338ca');
+            return m;
+        }
+
+        function onSlider2() {
+            const el = document.getElementById('slider2');
+            if (!el) return;
+            const a = parseFloat(el.value);
+            visited[a.toFixed(1)] = true;
+            const m = drawDeriv(a);
+            const av = a.toFixed(1).replace('.', ',');
+            document.getElementById('slider2Val').textContent = 'x = ' + av;
+            document.getElementById('aVal').textContent = av;
+            document.getElementById('aVal2').textContent = av;
+            if (m != null) document.getElementById('slopeD').textContent = m.toFixed(1).replace('.', ',');
+            saveAnswers();
+        }
+        window.resetTrace = function() { visited = {}; onSlider2(); };
+
+        // ===== PÁGINA 4: DERIVADA E MONOTONIA =====
+        const A4 = 1.5, B4 = 3.5, C4 = 4.8, X4MIN = 0, X4MAX = 6, K4 = 0.85;
+        // derivada: negativa em (0,a), positiva em (a,b), negativa em (b,c), zero a partir de c
+        // fator suave para a derivada chegar a 0 junto de c (ligação à parte constante, sem canto)
+        function smoothC4(x) {
+            const W = 0.9;
+            if (x <= C4 - W) return 1;
+            if (x >= C4) return 0;
+            const t = (C4 - x) / W;          // 1 -> 0
+            return t * t * (3 - 2 * t);      // smoothstep
+        }
+        function dF4(x) { if (x >= C4) return 0; return -K4 * (x - A4) * (x - B4) * smoothC4(x); }
+        let F4tab = null, F4min = 0, F4max = 1, D4min = -1, D4max = 1;
+        const F4N = 600, F4h = (X4MAX - X4MIN) / F4N;
+        function buildF4() {
+            F4tab = new Float64Array(F4N + 1);
+            F4tab[0] = 0;
+            for (let i = 1; i <= F4N; i++) {
+                const x0 = X4MIN + (i - 1) * F4h, x1 = X4MIN + i * F4h;
+                F4tab[i] = F4tab[i - 1] + 0.5 * (dF4(x0) + dF4(x1)) * F4h;
+            }
+            F4min = Infinity; F4max = -Infinity; D4min = Infinity; D4max = -Infinity;
+            for (let i = 0; i <= F4N; i++) {
+                if (F4tab[i] < F4min) F4min = F4tab[i];
+                if (F4tab[i] > F4max) F4max = F4tab[i];
+                const d = dF4(X4MIN + i * F4h);
+                if (d < D4min) D4min = d;
+                if (d > D4max) D4max = d;
+            }
+        }
+        function F4(x) {
+            if (!F4tab) buildF4();
+            if (x <= X4MIN) return F4tab[0];
+            if (x >= X4MAX) return F4tab[F4N];
+            const t = (x - X4MIN) / F4h, i = Math.floor(t), fr = t - i;
+            return F4tab[i] + (F4tab[i + 1] - F4tab[i]) * fr;
+        }
+
+        function shadeRegions(ctx, m, xmin) {
+            // faixas coloridas por intervalo de monotonia (como na imagem)
+            const bands = [
+                [X4MIN, A4, 'rgba(59,130,246,0.07)'],
+                [A4, B4, 'rgba(236,72,153,0.07)'],
+                [B4, C4, 'rgba(245,158,11,0.09)'],
+                [C4, X4MAX, 'rgba(16,185,129,0.09)']
+            ];
+            bands.forEach(([x0, x1, col]) => {
+                ctx.fillStyle = col;
+                ctx.fillRect(m.toX(x0), m.plotTop, m.toX(x1) - m.toX(x0), m.plotH);
+            });
+            // marcas verticais a, b, c
+            ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 1; ctx.setLineDash([4, 3]);
+            ctx.fillStyle = '#64748b'; ctx.font = 'italic 11px Inter, sans-serif'; ctx.textAlign = 'center';
+            [[A4, 'a'], [B4, 'b'], [C4, 'c']].forEach(([x, lab]) => {
+                ctx.beginPath(); ctx.moveTo(m.toX(x), m.plotTop); ctx.lineTo(m.toX(x), m.plotTop + m.plotH); ctx.stroke();
+                ctx.fillText(lab, m.toX(x), m.plotTop + m.plotH + 13);
+            });
+            ctx.setLineDash([]);
+        }
+
+        function axes4(ctx, W, H, xmin, xmax, ymin, ymax) {
+            const ml = 30, mr = 12, mt = 12, mb = 22;
+            const gw = W - ml - mr, gh = H - mt - mb;
+            const pad = (ymax - ymin) * 0.12 || 1;
+            const lo = ymin - pad, hi = ymax + pad;
+            const toX = (x) => ml + (x - xmin) / (xmax - xmin) * gw;
+            const toY = (y) => mt + gh - (y - lo) / (hi - lo) * gh;
+            ctx.clearRect(0, 0, W, H);
+            ctx.fillStyle = '#f8fafc'; ctx.fillRect(ml, mt, gw, gh);
+            const m = { toX, toY, plotTop: mt, plotH: gh, ml, gw };
+            return m;
+        }
+        function drawFrame4(ctx, m, drawZero) {
+            ctx.strokeStyle = '#64748b'; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.moveTo(m.ml, m.plotTop + m.plotH); ctx.lineTo(m.ml + m.gw, m.plotTop + m.plotH); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(m.ml, m.plotTop); ctx.lineTo(m.ml, m.plotTop + m.plotH); ctx.stroke();
+            if (drawZero) {
+                const y0 = m.toY(0);
+                ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1.5; ctx.setLineDash([5, 3]);
+                ctx.beginPath(); ctx.moveTo(m.ml, y0); ctx.lineTo(m.ml + m.gw, y0); ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.fillStyle = '#94a3b8'; ctx.font = '10px Inter, sans-serif'; ctx.textAlign = 'right';
+                ctx.fillText('0', m.ml - 4, y0 + 3);
+            }
+        }
+
+        function drawMono(a) {
+            const cF = document.getElementById('canvasF4');
+            const cD = document.getElementById('canvasD4');
+            if (!cF || !cD) return null;
+            if (!F4tab) buildF4();
+            const ctxF = sizeCanvas(cF), ctxD = sizeCanvas(cD);
+
+            // ---- ESQUERDA: f ----
+            const mF = axes4(ctxF, cF._w, cF._h, X4MIN, X4MAX, F4min, F4max);
+            shadeRegions(ctxF, mF, X4MIN);
+            drawFrame4(ctxF, mF, false);
+            ctxF.strokeStyle = '#ef4444'; ctxF.lineWidth = 3; ctxF.beginPath();
+            for (let x = X4MIN; x <= X4MAX + 0.001; x += 0.03) { const px = mF.toX(x), py = mF.toY(F4(x)); x === X4MIN ? ctxF.moveTo(px, py) : ctxF.lineTo(px, py); }
+            ctxF.stroke();
+            ctxF.fillStyle = '#ef4444'; ctxF.font = 'italic bold 15px Inter, sans-serif'; ctxF.textAlign = 'left';
+            ctxF.fillText('f', mF.toX(X4MAX) - 14, mF.toY(F4(X4MAX)) - 8);
+            // tangente
+            const m = dF4(a), fa = F4(a);
+            const dx = 0.9, x1 = Math.max(X4MIN, a - dx), x2 = Math.min(X4MAX, a + dx);
+            const col = m > 0.05 ? '#16a34a' : m < -0.05 ? '#ef4444' : '#64748b';
+            ctxF.strokeStyle = col; ctxF.lineWidth = 3;
+            ctxF.beginPath();
+            ctxF.moveTo(mF.toX(x1), mF.toY(fa + m * (x1 - a)));
+            ctxF.lineTo(mF.toX(x2), mF.toY(fa + m * (x2 - a)));
+            ctxF.stroke();
+            drawPoint(ctxF, mF.toX(a), mF.toY(fa), '#4338ca');
+
+            // ---- DIREITA: f' ----
+            const mD = axes4(ctxD, cD._w, cD._h, X4MIN, X4MAX, D4min, D4max);
+            shadeRegions(ctxD, mD, X4MIN);
+            drawFrame4(ctxD, mD, true);
+            ctxD.strokeStyle = '#16a34a'; ctxD.lineWidth = 3; ctxD.beginPath();
+            for (let x = X4MIN; x <= X4MAX + 0.001; x += 0.03) { const px = mD.toX(x), py = mD.toY(dF4(x)); x === X4MIN ? ctxD.moveTo(px, py) : ctxD.lineTo(px, py); }
+            ctxD.stroke();
+            ctxD.fillStyle = '#16a34a'; ctxD.font = 'italic bold 14px Inter, sans-serif'; ctxD.textAlign = 'left';
+            ctxD.fillText("f'", mD.toX(X4MIN) + 6, mD.toY(D4max) + 4);
+            drawPoint(ctxD, mD.toX(a), mD.toY(dF4(a)), '#4338ca');
+            return m;
+        }
+
+        function onSlider4() {
+            const el = document.getElementById('slider4');
+            if (!el) return;
+            const a = parseFloat(el.value);
+            const m = drawMono(a);
+            document.getElementById('slider4Val').textContent = 'x = ' + a.toFixed(2).replace('.', ',');
+            if (m != null) document.getElementById('slopeD4').textContent = m.toFixed(2).replace('.', ',');
+            const tag = document.getElementById('monoTag4');
+            const interp = document.getElementById('interp4');
+            if (m > 0.05) {
+                tag.textContent = 'f cresce'; tag.className = 'text-xs font-bold px-2 py-0.5 rounded-lg bg-emerald-100 text-emerald-700';
+                interp.textContent = 'f\' > 0, logo f é crescente aqui.'; interp.className = 'font-semibold text-emerald-600';
+            } else if (m < -0.05) {
+                tag.textContent = 'f decresce'; tag.className = 'text-xs font-bold px-2 py-0.5 rounded-lg bg-red-100 text-red-700';
+                interp.textContent = 'f\' < 0, logo f é decrescente aqui.'; interp.className = 'font-semibold text-red-600';
+            } else {
+                tag.textContent = 'tangente horizontal'; tag.className = 'text-xs font-bold px-2 py-0.5 rounded-lg bg-slate-200 text-slate-600';
+                interp.textContent = 'f\' = 0 (constante ou extremo).'; interp.className = 'font-semibold text-slate-500';
+            }
+            saveAnswers();
+        }
+
+        // ===== LOCALSTORAGE =====
+        const STORAGE_KEY = 'tvi_velocidade_instantanea';
+        const questionIds = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7', 'q8', 'e21', 'e22', 'e23'];
+
+        // ===== NAVEGAÇÃO ENTRE PÁGINAS =====
+        const TOTAL_PAGES = 5;
+        let currentPage = 1;
+        window.goToPage = function(n) {
+            n = Math.min(TOTAL_PAGES, Math.max(1, n));
+            currentPage = n;
+            window.currentPage = n;
+            document.getElementById('page1').classList.toggle('hidden', n !== 1);
+            document.getElementById('page2').classList.toggle('hidden', n !== 2);
+            document.getElementById('page3').classList.toggle('hidden', n !== 3);
+            document.getElementById('page4').classList.toggle('hidden', n !== 4);
+            document.getElementById('page5').classList.toggle('hidden', n !== 5);
+            const titles = {
+                1: '<i class="fa-solid fa-gauge-high text-amber-400"></i> 1. Velocidade Instantânea',
+                2: '<i class="fa-solid fa-arrows-to-dot text-amber-400"></i> 2. Generalização',
+                3: '<i class="fa-solid fa-wave-square text-amber-400"></i> 3. A Função Derivada',
+                4: '<i class="fa-solid fa-rotate-left text-amber-400"></i> 4. Revisões: Funções',
+                5: '<i class="fa-solid fa-arrow-trend-up text-amber-400"></i> 5. Derivada e Monotonia'
+            };
+            document.getElementById('pageTitle').innerHTML = titles[n];
+            // Índice no rodapé
+            const idxBase = 'w-8 h-8 rounded-lg text-xs font-bold transition ';
+            [1, 2, 3, 4, 5].forEach(i => {
+                document.getElementById('idx' + i).className = idxBase + (n === i ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-700 hover:bg-slate-300');
+            });
+            document.getElementById('navPrev').disabled = (n === 1);
+            document.getElementById('navNext').disabled = (n === TOTAL_PAGES);
+            window.scrollTo(0, 0);
+            if (n === 1) requestAnimationFrame(onSlider);
+            if (n === 3) requestAnimationFrame(onSlider2);
+            if (n === 5) requestAnimationFrame(onSlider4);
+        };
+
+        function saveAnswers() {
+            const data = {};
+            questionIds.forEach(id => { const el = document.getElementById(id); if (el) data[id] = el.value || ''; });
+            data._slider = document.getElementById('slider').value;
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+        }
+
+        function loadAnswers() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return;
+                const data = JSON.parse(raw);
+                questionIds.forEach(id => { const el = document.getElementById(id); if (el && data[id] != null) el.value = data[id]; });
+                if (data._slider) document.getElementById('slider').value = data._slider;
+            } catch(e) {}
+        }
+
+        questionIds.forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('input', saveAnswers); });
+
+        // ===== GUARDAR / ABRIR .TXT =====
+        const labels = {
+            q1: 'Questão 1 — O que acontece à reta quando B se aproxima de A?',
+            q2: 'Questão 2 — Como "sabe" o velocímetro que percorreria 50 km numa hora?',
+            q3: 'Questão 3 — Porquê a tangente e não a secante?',
+            q4: 'Questão 4 — Com as tuas palavras: o que é a velocidade instantânea?',
+            q5: 'Questão 5 — Gráfico altura × idade: o que representa a tangente aos 2 anos?',
+            q6: 'Questão 6 — f(x)=80x-5x²: valor e significado de f\'(6)?',
+            q7: 'Questão 7 — f(x)=x³-9x: função derivada e onde a tangente é horizontal',
+            q8: 'Questão 8 — f\'(x)=(x-1)(x-4): intervalos de crescimento e decrescimento',
+            e21: 'Exercício 2.1 — f\'(x)=2x²-10x: monotonia e extremos',
+            e22: 'Exercício 2.2 — f(x)=x³: tem extremo?',
+            e23: 'Exercício 2.3 — kitesurf, f\'(t)=t²-20t+51: instantes de altitude máx/mín'
+        };
+
+        window.saveToFile = function() {
+            const lines = ['=== Taxa de Variação Instantânea — Respostas ===', 'Data: ' + new Date().toLocaleString('pt-PT'), ''];
+            questionIds.forEach(id => {
+                const el = document.getElementById(id);
+                lines.push(labels[id] || id);
+                lines.push((el ? el.value : '') || '(sem resposta)');
+                lines.push('');
+            });
+            const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'velocidade_instantanea_respostas.txt';
+            a.click();
+            URL.revokeObjectURL(a.href);
+        };
+
+        window.loadFromFile = function() { document.getElementById('fileInput').click(); };
+
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                const text = ev.target.result || '';
+                const blocks = text.split('\n\n');
+                let qIdx = 0;
+                blocks.forEach(block => {
+                    const bl = block.split('\n');
+                    if (bl.length >= 2 && bl[0].startsWith('Questão')) {
+                        const answer = bl.slice(1).join('\n').trim();
+                        if (questionIds[qIdx]) {
+                            const el = document.getElementById(questionIds[qIdx]);
+                            if (el && answer !== '(sem resposta)') el.value = answer;
+                            qIdx++;
+                        }
+                    }
+                });
+                saveAnswers();
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        });
+
+        // ===== REVEAL =====
+        window.toggleReveal = function(id) { const el = document.getElementById(id); if (el) el.classList.toggle('open'); };
+
+        // ===== RESIZE =====
+        let resizeTimer;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(function() { onSlider(); if (currentPage === 3) onSlider2(); if (currentPage === 5) onSlider4(); }, 100);
+        });
+
+        // ===== INIT =====
+        document.getElementById('slider').addEventListener('input', onSlider);
+        document.getElementById('slider2').addEventListener('input', onSlider2);
+        document.getElementById('slider4').addEventListener('input', onSlider4);
+        window.addEventListener('DOMContentLoaded', function() {
+            buildF4();
+            loadAnswers();
+            onSlider();
+            goToPage(1);
+        });
+    })();
+    </script>
+</body>
+</html>
