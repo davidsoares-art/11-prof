@@ -127,6 +127,24 @@
         .file-icon {
             font-size: 1.1rem;
         }
+
+        .lesson-subsection {
+            margin-top: 1.5rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .subsection-title {
+            color: var(--text-main);
+            font-size: 1.05rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .subsection-descriptor {
+            color: var(--text-muted);
+            font-size: 0.92rem;
+            margin-bottom: 0.75rem;
+        }
     </style>
 </head>
 <body>
@@ -207,48 +225,80 @@
                     <p class="lesson-descriptor">
                         Taxa de variação (velocidade) instantânea e função derivada
                     </p>
-                    <ul class="file-list">
-                        <li>
-                            <a class="file-link" href="velocidade_instantanea.html">
-                                <span class="file-icon">📄</span> Ficheiro principal da aula.
-                            </a>
-                        </li>                      
-                        <li>
-                            <a class="file-link" href="Derivação.ipynb">
-                                <span class="file-icon">📄</span> Código phyton usando função derivada
-                            </a>
-                        </li>
-                        <li>
-                            <a class="file-link" href="Derivação_definição.ipynb">
-                                <span class="file-icon">📄</span> Código phyton usando definição de derivada (precisa de eval)
-                            </a>
-                        </li>
-                        <li>
-                            <a class="file-link" href="Derivação_polinómios.ipynb">
-                                <span class="file-icon">📄</span> Código phyton usando regra e definição de derivada
-                            </a>
-                        </li>
-                        <li>
-                            <a class="file-link" href="guia_calculadora_derivada.html">
-                                <span class="file-icon">📄</span> Guia para derivação em calculadoras gráficas (por confirmar)
-                            </a>
-                        </li>
-                         <li>
-                            <a class="file-link" href="temperatura_do_cpu.html">
-                                <span class="file-icon">📄</span> Exemplo do uso da função derivada.
-                            </a>
-                        </li>
-                           <li>
-                            <a class="file-link" href="simulador_protocolo_tcp.html">
-                                <span class="file-icon">📄</span> Exemplo do uso da função derivada.
-                            </a>
-                        </li>
-                           <li>
-                            <a class="file-link" href="Temperatura_do_cpu.html">
-                                <span class="file-icon">📄</span> Guia para derivação em calculadoras gráficas (por confirmar)
-                            </a>
-                        </li>
-                    </ul>
+
+                    <!-- Secção 1: ficheiro principal -->
+                    <div class="lesson-subsection">
+                        <h3 class="subsection-title">1. Aula</h3>
+                        <ul class="file-list">
+                            <li>
+                                <a class="file-link" href="velocidade_instantanea.html">
+                                    <span class="file-icon">📄</span> Ficheiro principal da aula
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Secção 2: cálculo da derivada -->
+                    <div class="lesson-subsection">
+                        <h3 class="subsection-title">2. Cálculo da derivada</h3>
+                        <p class="subsection-descriptor">
+                            Exploração do cálculo da derivada com Python e com calculadoras gráficas.
+                        </p>
+                        <ul class="file-list">
+                            <li>
+                                <a class="file-link" href="Derivação.ipynb">
+                                    <span class="file-icon">🐍</span> Python — cálculo usando a função derivada
+                                </a>
+                            </li>
+                            <li>
+                                <a class="file-link" href="Derivação_definição.ipynb">
+                                    <span class="file-icon">🐍</span> Python — cálculo pela definição de derivada (requer eval)
+                                </a>
+                            </li>
+                            <li>
+                                <a class="file-link" href="Derivação_polinómios.ipynb">
+                                    <span class="file-icon">🐍</span> Python — regras de derivação e definição de derivada
+                                </a>
+                            </li>
+                            <li>
+                                <a class="file-link" href="guia_calculadora_derivada.html">
+                                    <span class="file-icon">🧮</span> Guia para calcular derivadas em calculadoras gráficas
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Secção 3: exemplos práticos -->
+                    <div class="lesson-subsection">
+                        <h3 class="subsection-title">3. Exemplos práticos</h3>
+                        <p class="subsection-descriptor">
+                            Aplicações da função derivada a situações relacionadas com a informática.
+                        </p>
+                        <ul class="file-list">
+                            <li>
+                                <a class="file-link" href="temperatura_do_cpu.html">
+                                    <span class="file-icon">🌡️</span> Temperatura do CPU
+                                </a>
+                            </li>
+                            <li>
+                                <a class="file-link" href="simulador_protocolo_tcp.html">
+                                    <span class="file-icon">🌐</span> Protocolo TCP
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Secção 4: trabalho a pares -->
+                    <div class="lesson-subsection">
+                        <h3 class="subsection-title">4. Trabalho a pares</h3>
+                        <ul class="file-list">
+                            <li>
+                                <a class="file-link" href="Trabalho_decisoes_no_escuro.html">
+                                    <span class="file-icon">👥</span> Trabalho a pares — Decisões no escuro
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </section>
 
 
