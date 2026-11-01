@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador TCP: Correção da Derivada do PING</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --border-color: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            text-align: center;
+            max-width: 900px;
+            margin-bottom: 12px;
+        }
+
+        h1 { margin: 0 0 4px 0; color: #38bdf8; font-size: 1.6em; }
+        p { color: var(--text-muted); margin: 0; font-size: 0.88em; }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+            background: var(--card-bg);
+            padding: 10px 15px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 900px;
+            box-sizing: border-box;
+            border: 1px solid var(--border-color);
+            height: 72px;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .metric { text-align: center; }
+        .metric-title { font-size: 0.72em; color: var(--text-muted); text-transform: uppercase; white-space: nowrap; }
+        .metric-val { 
+            font-size: 1.2em; 
+            font-weight: bold; 
+            margin-top: 2px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 4px; 
+            white-space: nowrap;
+            height: 28px;
+        }
+
+        .controls-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            width: 100%;
+            max-width: 900px;
+            margin-bottom: 15px;
+        }
+
+        .control-box {
+            background: var(--card-bg);
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-box h3 {
+            margin: 0 0 2px 0;
+            font-size: 0.88em;
+            color: #38bdf8;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 4px;
+        }
+
+        .btn-group { display: flex; gap: 8px; }
+
+        button {
+            flex: 1;
+            padding: 8px 10px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.82em;
+        }
+
+        .btn-load-idle { background-color: #10b981; color: white; }
+        .btn-load-game { background-color: #ef4444; color: white; }
+        .btn-hazard { background-color: #dc2626; color: white; }
+
+        button:hover { opacity: 0.85; }
+        button.active { outline: 2px solid white; transform: scale(0.98); }
+
+        .slider-container { display: flex; flex-direction: column; gap: 4px; }
+        .slider-label { display: flex; justify-content: space-between; font-size: 0.8em; color: var(--text-main); }
+        input[type=range] { width: 100%; accent-color: #06b6d4; cursor: pointer; }
+
+        .card {
+            background: var(--card-bg);
+            padding: 15px 20px 20px 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-sizing: border-box;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .chart-title { font-size: 0.92em; font-weight: bold; color: #f8fafc; }
+
+        canvas {
+            background-color: #090d16;
+            border-radius: 8px;
+            width: 100%;
+            height: 320px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Simulador TCP: Correção da Derivada PING' (t)</h1>
+        <p>Qualquer subida na linha amarela (PING) ativa imediatamente a derivada positiva PING' > 0.</p>
+    </div>
+
+    <div class="dashboard">
+        <div class="metric">
+            <div class="metric-title">Janela CWND (Camiões)</div>
+            <div id="cwndVal" class="metric-val" style="color: #f8fafc;">10 MSS</div>
+        </div>
+        <div class="metric">
+            <div class="metric-title">Latência (PING)</div>
+            <div id="pingVal" class="metric-val" style="color: #f59e0b;">20 ms</div>
+        </div>
+        <div class="metric">
+            <div class="metric-title">Derivada PING' (t)</div>
+            <div id="signalVal" class="metric-val" style="color: #10b981;">
+                <span id="arrowIcon">➡️</span> <span id="signalText">PING' ≈ 0</span>
+            </div>
+        </div>
+        <div class="metric">
+            <div class="metric-title">Modo do Algoritmo</div>
+            <div id="statusVal" class="metric-val" style="color: #10b981;">🧠 Preditivo</div>
+        </div>
+    </div>
+
+    <div class="controls-panel">
+        <div class="control-box">
+            <h3>1. Modos de Algoritmo</h3>
+            <div class="btn-group">
+                <button class="btn-load-game active" id="btnPredictive">🧠 Com Derivada</button>
+                <button class="btn-load-idle" id="btnClassic">🐢 Sem Derivada</button>
+            </div>
+        </div>
+
+        <div class="control-box">
+            <h3>2. Limite da Estrada (Router)</h3>
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Largura de Banda:</span>
+                    <strong id="bandwidthText">60 MSS</strong>
+                </div>
+                <input type="range" id="bandwidthSlider" min="20" max="100" value="60">
+            </div>
+        </div>
+
+        <div class="control-box">
+            <h3>3. Eventos</h3>
+            <button class="btn-hazard" id="btnPerturb">⚡ Carga Extra</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="chart-header">
+            <span class="chart-title">Evolução Temporal: CWND [Linha Branca] vs PING [Linha Amarela]</span>
+        </div>
+        <canvas id="canvasCwnd" width="860" height="320"></canvas>
+    </div>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('canvasCwnd');
+            const ctx = canvas.getContext('2d');
+
+            const maxPoints = 80;
+            let cwndData = Array(maxPoints).fill(10.0);
+            let pingData = Array(maxPoints).fill(20.0);
+
+            let currentCwnd = 10.0;
+            let currentPing = 20.0;
+            let routerQueue = 0;
+            let isPredictive = true;
+            let routerCapacity = 60; 
+            let spikeTimer = 0;
+            let currentActionText = "Acelerar Envio";
+
+            const bandwidthSlider = document.getElementById('bandwidthSlider');
+
+            document.getElementById('btnPredictive').addEventListener('click', () => {
+                isPredictive = true;
+                document.getElementById('btnPredictive').classList.add('active');
+                document.getElementById('btnClassic').classList.remove('active');
+            });
+
+            document.getElementById('btnClassic').addEventListener('click', () => {
+                isPredictive = false;
+                document.getElementById('btnClassic').classList.add('active');
+                document.getElementById('btnPredictive').classList.remove('active');
+            });
+
+            bandwidthSlider.addEventListener('input', (e) => {
+                routerCapacity = parseInt(e.target.value);
+                document.getElementById('bandwidthText').innerText = routerCapacity + " MSS";
+            });
+
+            document.getElementById('btnPerturb').addEventListener('click', () => {
+                spikeTimer = 15;
+            });
+
+            function render() {
+                let prevPing = currentPing;
+
+                // 1. FÍSICA DO ROUTER
+                let excessTraffic = currentCwnd - (routerCapacity - 3); // Margem de segurança física
+                if (spikeTimer > 0) {
+                    excessTraffic += 15; 
+                    spikeTimer--;
+                }
+
+                if (excessTraffic > 0) {
+                    routerQueue += excessTraffic * 0.2;
+                } else {
+                    routerQueue += excessTraffic * 0.3;
+                }
+                if (routerQueue < 0) routerQueue = 0;
+
+                let basePing = 20;
+                currentPing = basePing + (routerQueue * 1.8);
+
+                // 2. DERIVADA REAL E SENSÍVEL
+                let pingDeriv = currentPing - prevPing;
+
+                // 3. DECISÃO BASEADA STRICTAMENTE NO SINAL DA DERIVADA
+                if (isPredictive) {
+                    if (pingDeriv > 0.05) { 
+                        // SUBINDO: PING' > 0 -> RECUO IMEDIATO
+                        currentCwnd -= 0.8;
+                        currentActionText = "⚠️ PING A SUBIR (PING' > 0) -> Travar preventivamente!";
+                    } else if (pingDeriv < -0.05) { 
+                        // DESCENDO: PING' < 0 -> RECUPERAR LENTAMENTE
+                        currentCwnd += 0.2;
+                        currentActionText = "⬇️ PING A DESCER (PING' < 0) -> Fila a esvaziar.";
+                    } else { 
+                        // ESTÁVEL: PING' ≈ 0 -> TESTAR SUBIDA SE ESTIVER ABAIXO
+                        if (currentCwnd < routerCapacity - 2) {
+                            currentCwnd += 0.4;
+                            currentActionText = "🟢 PING Estável (PING' ≈ 0) -> Testar mais tráfego";
+                        } else {
+                            currentCwnd -= 0.1;
+                            currentActionText = "🔵 PONTO ÓTIMO -> Oscilação no limite sem acumular PING";
+                        }
+                    }
+                } else {
+                    // MODO SEM DERIVADA (SÓ REAGE AO DROP)
+                    if (routerQueue > 30) {
+                        currentCwnd = routerCapacity * 0.5;
+                        routerQueue = 0;
+                        currentActionText = "💥 PACKET DROP! -> Recuo drástico";
+                    } else {
+                        currentCwnd += 0.8;
+                        currentActionText = "🚀 Subida cega (Ignora PING a subir)";
+                    }
+                }
+
+                if (currentCwnd < 2) currentCwnd = 2;
+
+                cwndData.push(currentCwnd);
+                cwndData.shift();
+
+                pingData.push(currentPing);
+                pingData.shift();
+
+                // DESENHO
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                const w = canvas.width;
+                const h = canvas.height;
+                const paddingLeft = 45;
+                const paddingRight = 45;
+                const chartWidth = w - paddingLeft - paddingRight;
+
+                const getCwndY = (val) => h - 40 - (val / 110) * (h - 60);
+                const getPingY = (val) => h - 40 - (val / 150) * (h - 60);
+
+                const step = chartWidth / (maxPoints - 1);
+
+                // Eixos
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.font = '10px Segoe UI';
+                ctx.textAlign = 'right';
+                ctx.fillText('100 MSS', paddingLeft - 8, getCwndY(100));
+                ctx.fillText('50 MSS', paddingLeft - 8, getCwndY(50));
+                ctx.fillText('0 MSS', paddingLeft - 8, getCwndY(0));
+
+                ctx.textAlign = 'left';
+                ctx.fillStyle = '#f59e0b';
+                ctx.fillText('150 ms', w - paddingRight + 8, getPingY(150));
+                ctx.fillText('75 ms', w - paddingRight + 8, getPingY(75));
+                ctx.fillText('20 ms', w - paddingRight + 8, getPingY(20));
+
+                // Limite do Router
+                const limitY = getCwndY(routerCapacity);
+                ctx.strokeStyle = 'rgba(56, 189, 248, 0.7)';
+                ctx.lineWidth = 1.5;
+                ctx.setLineDash([6, 6]);
+                ctx.beginPath(); ctx.moveTo(paddingLeft, limitY); ctx.lineTo(w - paddingRight, limitY); ctx.stroke();
+                ctx.setLineDash([]);
+
+                ctx.fillStyle = '#38bdf8';
+                ctx.font = 'bold 11px Segoe UI';
+                ctx.textAlign = 'left';
+                ctx.fillText('🚧 Capacidade do Router (' + routerCapacity + ' MSS)', paddingLeft + 10, limitY - 6);
+
+                // CURVA PING (AMARELA)
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                for (let i = 0; i < pingData.length; i++) {
+                    const x = paddingLeft + i * step;
+                    const y = getPingY(pingData[i]);
+                    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+
+                // CURVA CWND (BRANCA)
+                ctx.strokeStyle = '#f8fafc';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                for (let i = 0; i < cwndData.length; i++) {
+                    const x = paddingLeft + i * step;
+                    const y = getCwndY(cwndData[i]);
+                    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+
+                // CAIXA INFORMATIVA
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+                ctx.fillRect(paddingLeft, h - 32, chartWidth, 26);
+                ctx.strokeStyle = '#334155';
+                ctx.strokeRect(paddingLeft, h - 32, chartWidth, 26);
+
+                ctx.fillStyle = pingDeriv > 0.05 ? '#f59e0b' : (isPredictive ? '#38bdf8' : '#ef4444');
+                ctx.font = 'bold 11.5px Segoe UI';
+                ctx.textAlign = 'center';
+                ctx.fillText(currentActionText, paddingLeft + chartWidth / 2, h - 15);
+
+                // Dashboard
+                document.getElementById('cwndVal').innerText = currentCwnd.toFixed(1) + " MSS";
+                document.getElementById('pingVal').innerText = currentPing.toFixed(1) + " ms";
+
+                const arrowEl = document.getElementById('arrowIcon');
+                const signalTextEl = document.getElementById('signalText');
+
+                if (pingDeriv > 0.05) {
+                    arrowEl.innerText = "⬆️";
+                    signalTextEl.innerText = "PING' > 0 (A Subir)";
+                    signalTextEl.style.color = "#f59e0b";
+                } else if (pingDeriv < -0.05) {
+                    arrowEl.innerText = "⬇️";
+                    signalTextEl.innerText = "PING' < 0 (A Descer)";
+                    signalTextEl.style.color = "#38bdf8";
+                } else {
+                    arrowEl.innerText = "➡️";
+                    signalTextEl.innerText = "PING' ≈ 0 (Estável)";
+                    signalTextEl.style.color = "#10b981";
+                }
+
+                const statusEl = document.getElementById('statusVal');
+                statusEl.innerText = isPredictive ? "🧠 Preditivo" : "🐢 Sem Derivada";
+                statusEl.style.color = isPredictive ? "#10b981" : "#ef4444";
+            }
+
+            setInterval(render, 250);
+        });
+    </script>
+</body>
+</html>

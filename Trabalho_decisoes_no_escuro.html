@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tomar Decisões no Escuro: O Poder do Sinal da Derivada</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome para Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            dark: '#0b0f19',
+                            card: '#151c2e',
+                            border: '#232d45',
+                            accent: '#38bdf8',
+                            neon: '#06b6d4',
+                            emerald: '#10b981',
+                            amber: '#f59e0b',
+                            rose: '#f43f5e'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0b0f19;
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+        }
+        .page-content {
+            display: none;
+        }
+        .page-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .glow-accent {
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.12);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #0b0f19;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #232d45;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between custom-scrollbar selection:bg-sky-500 selection:text-white">
+
+    <!-- BARRA DE NAVEGAÇÃO SUPERIOR -->
+    <header class="sticky top-0 z-50 bg-brand-dark/90 backdrop-blur-md border-b border-brand-border">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- LOGO / TÍTULO -->
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="switchPage('home')">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 to-emerald-400 flex items-center justify-center text-slate-950 font-black text-xl shadow-lg">
+                        Δ
+                    </div>
+                    <div>
+                        <span class="font-bold text-lg text-white block leading-tight">Sinal da Derivada</span>
+                        <span class="text-xs text-brand-accent font-medium">Decisões no Escuro</span>
+                    </div>
+                </div>
+
+                <!-- MENU DESKTOP -->
+                <nav class="hidden lg:flex space-x-1">
+                    <button onclick="switchPage('home')" id="nav-home" class="nav-btn px-3 py-2 rounded-lg text-xs font-semibold transition-all text-brand-accent bg-brand-card border border-brand-border">
+                        <i class="fa-solid fa-lightbulb mr-1.5"></i> A Ideia
+                    </button>
+                    <button onclick="switchPage('steps')" id="nav-steps" class="nav-btn px-3 py-2 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white hover:bg-brand-card">
+                        <i class="fa-solid fa-list-check mr-1.5"></i> Passos do Desafio
+                    </button>
+                    <button onclick="switchPage('topics')" id="nav-topics" class="nav-btn px-3 py-2 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white hover:bg-brand-card">
+                        <i class="fa-solid fa-shapes mr-1.5"></i> Temas
+                    </button>
+                    <button onclick="switchPage('creation-guide')" id="nav-creation-guide" class="nav-btn px-3 py-2 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white hover:bg-brand-card">
+                        <i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> Guião de Criação
+                    </button>
+                    <button onclick="switchPage('submit')" id="nav-submit" class="nav-btn px-3 py-2 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white hover:bg-brand-card">
+                        <i class="fa-solid fa-paper-plane mr-1.5"></i> Submeter
+                    </button>
+                    <button onclick="switchPage('vote')" id="nav-vote" class="nav-btn px-3 py-2 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white hover:bg-brand-card">
+                        <i class="fa-solid fa-star mr-1.5"></i> Votação Anónima
+                    </button>
+                    <button onclick="switchPage('teacher')" id="nav-teacher" class="nav-btn px-3 py-2 rounded-lg text-xs font-semibold transition-all text-amber-400 hover:bg-amber-500/10 border border-amber-500/20">
+                        <i class="fa-solid fa-user-shield mr-1.5"></i> Área do Professor
+                    </button>
+                </nav>
+
+                <!-- BOTÃO MENU MOBILE -->
+                <div class="lg:hidden">
+                    <button id="mobile-menu-btn" onclick="toggleMobileMenu()" class="text-slate-400 hover:text-white p-2">
+                        <i class="fa-solid fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MENU MOBILE DROPDOWN -->
+        <div id="mobile-menu" class="hidden lg:hidden bg-brand-card border-b border-brand-border px-4 pt-2 pb-4 space-y-2">
+            <button onclick="switchPage('home'); toggleMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-white hover:bg-brand-border">
+                <i class="fa-solid fa-lightbulb mr-2 text-sky-400"></i> A Ideia Principal
+            </button>
+            <button onclick="switchPage('steps'); toggleMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-white hover:bg-brand-border">
+                <i class="fa-solid fa-list-check mr-2 text-sky-400"></i> Passos do Desafio
+            </button>
+            <button onclick="switchPage('topics'); toggleMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-white hover:bg-brand-border">
+                <i class="fa-solid fa-shapes mr-2 text-sky-400"></i> Catálogo de Temas
+            </button>
+            <button onclick="switchPage('creation-guide'); toggleMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-white hover:bg-brand-border">
+                <i class="fa-solid fa-wand-magic-sparkles mr-2 text-sky-400"></i> Guião de Criação (Infograma & Áudio)
+            </button>
+            <button onclick="switchPage('submit'); toggleMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-white hover:bg-brand-border">
+                <i class="fa-solid fa-paper-plane mr-2 text-sky-400"></i> Submeter Trabalho
+            </button>
+            <button onclick="switchPage('vote'); toggleMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-white hover:bg-brand-border">
+                <i class="fa-solid fa-star mr-2 text-sky-400"></i> Votação Anónima
+            </button>
+            <button onclick="switchPage('teacher'); toggleMobileMenu();" class="w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-amber-400 hover:bg-brand-border">
+                <i class="fa-solid fa-user-shield mr-2"></i> Área do Professor
+            </button>
+        </div>
+    </header>
+
+    <!-- CONTEÚDO PRINCIPAL (MULTIPÁGINAS) -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- ================= PÁGINA 1: A IDEIA PRINCIPAL ================= -->
+        <div id="page-home" class="page-content active space-y-10">
+            <!-- HERO BANNER -->
+            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-card via-brand-card to-slate-900 border border-brand-border p-8 sm:p-12 glow-accent">
+                <div class="absolute -right-10 -bottom-10 w-80 h-80 bg-sky-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="max-w-3xl relative z-10">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/20 mb-4">
+                        <i class="fa-solid fa-compass mr-1.5"></i> Desafio Prático &amp; Matemática do Dia a Dia
+                    </span>
+                    <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white mb-4 leading-tight">
+                        Tomar decisões no escuro: <br>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-cyan-300 to-emerald-400">O poder do sinal da derivada</span>
+                    </h1>
+                    <p class="text-slate-300 text-base sm:text-lg mb-8 leading-relaxed">
+                        Na vida real, nos computadores e no corpo humano, raramente temos um medidor digital perfeito com o valor absoluto. Nós tomamos decisões quase todas as horas sem saber exatamente onde estamos — sabemos apenas se a situação está a <strong>subir (positiva)</strong>, a <strong>descer (negativa)</strong> ou <strong>estável (nula)</strong> ao longo do tempo.
+                    </p>
+                    <div>
+                        <button onclick="switchPage('steps')" class="px-8 py-4 rounded-xl bg-gradient-to-r from-sky-500 to-cyan-500 text-slate-950 font-bold text-base hover:brightness-110 transition-all shadow-lg flex items-center">
+                            Ver Como Funciona o Desafio <i class="fa-solid fa-arrow-right ml-2.5"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AS 3 REGRAS DO SINAL DA DERIVADA (LAYOUT FIXO SEM SOBREPOSIÇÃO) -->
+            <div>
+                <h2 class="text-xl sm:text-2xl font-bold text-white mb-6 flex items-center">
+                    <i class="fa-solid fa-gauge-high text-sky-400 mr-2.5"></i> A Bússola Universal de Decisão
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- DERIVADA POSITIVA -->
+                    <div class="bg-brand-card border border-amber-500/30 p-6 rounded-2xl flex flex-col justify-between group hover:border-amber-500/60 transition-all min-h-[220px]">
+                        <div>
+                            <div class="inline-flex items-center px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-400 font-bold text-xs border border-amber-500/20 mb-3">
+                                ▲ Maior que Zero
+                            </div>
+                            <h3 class="text-base font-bold text-white mb-2">Variação Positiva (A Subir)</h3>
+                            <p class="text-slate-400 text-xs sm:text-sm leading-relaxed">
+                                A variável está a subir ou a aquecer no tempo. É um sinal de crescimento ou acumulação no sistema.
+                            </p>
+                        </div>
+                        <div class="mt-4 bg-brand-dark/70 p-2.5 rounded-xl text-xs text-amber-300 font-medium border border-brand-border text-center">
+                            Ação: Travar / Alerta de Segurança
+                        </div>
+                    </div>
+
+                    <!-- DERIVADA NEGATIVA -->
+                    <div class="bg-brand-card border border-sky-500/30 p-6 rounded-2xl flex flex-col justify-between group hover:border-sky-500/60 transition-all min-h-[220px]">
+                        <div>
+                            <div class="inline-flex items-center px-3 py-1.5 rounded-xl bg-sky-500/10 text-sky-400 font-bold text-xs border border-sky-500/20 mb-3">
+                                ▼ Menor que Zero
+                            </div>
+                            <h3 class="text-base font-bold text-white mb-2">Variação Negativa (A Descer)</h3>
+                            <p class="text-slate-400 text-xs sm:text-sm leading-relaxed">
+                                A variável está a descer ou a arrefecer no tempo. É um sinal de queda, alívio ou perda de ritmo.
+                            </p>
+                        </div>
+                        <div class="mt-4 bg-brand-dark/70 p-2.5 rounded-xl text-xs text-sky-300 font-medium border border-brand-border text-center">
+                            Ação: Acelerar / Recuperar Ritmo
+                        </div>
+                    </div>
+
+                    <!-- DERIVADA NULA -->
+                    <div class="bg-brand-card border border-emerald-500/30 p-6 rounded-2xl flex flex-col justify-between group hover:border-emerald-500/60 transition-all min-h-[220px]">
+                        <div>
+                            <div class="inline-flex items-center px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 font-bold text-xs border border-emerald-500/20 mb-3">
+                                ► Igual a Zero
+                            </div>
+                            <h3 class="text-base font-bold text-white mb-2">Variação Nula (Estável)</h3>
+                            <p class="text-slate-400 text-xs sm:text-sm leading-relaxed">
+                                A taxa de variação parou de mudar. Atingiu-se o ponto de equilíbrio, ponto máximo ou ponto mínimo.
+                            </p>
+                        </div>
+                        <div class="mt-4 bg-brand-dark/70 p-2.5 rounded-xl text-xs text-emerald-300 font-medium border border-brand-border text-center">
+                            Ação: Manter Ponto Ótimo
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PORQUÊ ESTE FORMATO DE TRABALHO? -->
+            <div class="bg-brand-card border border-brand-border rounded-2xl p-6 sm:p-8">
+                <h3 class="text-lg font-bold text-white mb-4 flex items-center">
+                    <i class="fa-solid fa-shield-halved text-emerald-400 mr-2.5"></i> Sem Apresentações Orais Constrangedoras
+                </h3>
+                <p class="text-slate-300 text-sm sm:text-base leading-relaxed mb-4">
+                    Ninguém vai ter de ir para a frente do quadro passar vergonha ou gaguejar perante a turma. O teu trabalho consiste unicamente em criar <strong>1 Infográfico Visual</strong> e <strong>1 Áudio Curto (30 a 45 segundos)</strong> com voz gerada por Inteligência Artificial ou gravada por ti.
+                </p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+                    <div class="flex items-center space-x-3 bg-brand-dark/50 p-3 rounded-xl border border-brand-border">
+                        <i class="fa-solid fa-robot text-sky-400 text-lg"></i>
+                        <span class="text-xs text-slate-300 font-medium">Usa Voz de IA (sem ter de falar)</span>
+                    </div>
+                    <div class="flex items-center space-x-3 bg-brand-dark/50 p-3 rounded-xl border border-brand-border">
+                        <i class="fa-solid fa-palette text-emerald-400 text-lg"></i>
+                        <span class="text-xs text-slate-300 font-medium">Cria Imagem com IA no Canva</span>
+                    </div>
+                    <div class="flex items-center space-x-3 bg-brand-dark/50 p-3 rounded-xl border border-brand-border">
+                        <i class="fa-solid fa-ticket text-amber-400 text-lg"></i>
+                        <span class="text-xs text-slate-300 font-medium">Gera Código Único de Entrega</span>
+                    </div>
+                    <div class="flex items-center space-x-3 bg-brand-dark/50 p-3 rounded-xl border border-brand-border">
+                        <i class="fa-solid fa-user-secret text-rose-400 text-lg"></i>
+                        <span class="text-xs text-slate-300 font-medium">Votação 100% Anónima</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PÁGINA 2: PASSOS DO DESAFIO ================= -->
+        <div id="page-steps" class="page-content space-y-8">
+            <div class="border-b border-brand-border pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-white">Como Funciona o Desafio (Passo a Passo)</h1>
+                    <p class="text-slate-400 text-sm mt-1">Segue estes passos simples para criares e entregares o teu projeto.</p>
+                </div>
+                <button onclick="switchPage('topics')" class="px-4 py-2 bg-sky-500/10 text-sky-400 border border-sky-500/20 rounded-xl text-xs font-bold hover:bg-sky-500/20 transition-all flex items-center">
+                    Avançar para Temas <i class="fa-solid fa-arrow-right ml-1.5"></i>
+                </button>
+            </div>
+
+            <div class="space-y-6">
+                <!-- PASSO 1 -->
+                <div class="bg-brand-card border border-brand-border rounded-2xl p-6 flex flex-col md:flex-row gap-6 items-start">
+                    <div class="w-12 h-12 rounded-2xl bg-sky-500/10 text-sky-400 border border-sky-500/20 font-black text-xl flex items-center justify-center shrink-0">
+                        01
+                    </div>
+                    <div class="space-y-2 flex-grow">
+                        <h3 class="text-lg font-bold text-white">Escolher 1 Tema do Catálogo</h3>
+                        <p class="text-slate-300 text-sm leading-relaxed">
+                            Acede ao catálogo de temas e escolhe o cenário que achares mais interessante (ex: <i>Felicidade Humana, O Chuveiro Cego, A IA na Montanha, O Jogo Quente/Frio ou Os Camiões da Internet</i>).
+                        </p>
+                        <button onclick="switchPage('topics')" class="inline-flex items-center text-xs font-semibold text-sky-400 hover:text-sky-300 pt-1">
+                            Ver Escolha de Temas <i class="fa-solid fa-arrow-right ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PASSO 2 -->
+                <div class="bg-brand-card border border-brand-border rounded-2xl p-6 flex flex-col md:flex-row gap-6 items-start">
+                    <div class="w-12 h-12 rounded-2xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-black text-xl flex items-center justify-center shrink-0">
+                        02
+                    </div>
+                    <div class="space-y-2 flex-grow">
+                        <h3 class="text-lg font-bold text-white">Criar o Infograma Visual &amp; o Áudio de IA</h3>
+                        <p class="text-slate-300 text-sm leading-relaxed">
+                            Cria 1 imagem explicativa e 1 áudio curto (30 a 45 segundos). Podes usar ferramentas de Inteligência Artificial para gerar tanto a imagem como a voz sintetizada.
+                        </p>
+                        <button onclick="switchPage('creation-guide')" class="inline-flex items-center text-xs font-semibold text-cyan-400 hover:text-cyan-300 pt-1">
+                            Abrir Guião Completo de Criação <i class="fa-solid fa-wand-magic-sparkles ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PASSO 3 -->
+                <div class="bg-brand-card border border-brand-border rounded-2xl p-6 flex flex-col md:flex-row gap-6 items-start">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-black text-xl flex items-center justify-center shrink-0">
+                        03
+                    </div>
+                    <div class="space-y-2 flex-grow">
+                        <h3 class="text-lg font-bold text-white">Submeter e Receber o Código Único</h3>
+                        <p class="text-slate-300 text-sm leading-relaxed">
+                            Acede à página de submissão. Escreve o teu nome/grupo e os links do infograma e áudio. O sistema grava a entrega e gera um <strong>Código de Trabalho Anónimo</strong> (ex: <code>#TRABALHO-01</code>).
+                        </p>
+                        <button onclick="switchPage('submit')" class="inline-flex items-center text-xs font-semibold text-emerald-400 hover:text-emerald-300 pt-1">
+                            Ir para Formulário de Submissão <i class="fa-solid fa-arrow-right ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PASSO 4 -->
+                <div class="bg-brand-card border border-brand-border rounded-2xl p-6 flex flex-col md:flex-row gap-6 items-start">
+                    <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 font-black text-xl flex items-center justify-center shrink-0">
+                        04
+                    </div>
+                    <div class="space-y-2 flex-grow">
+                        <h3 class="text-lg font-bold text-white">Votação Anónima na Turma</h3>
+                        <p class="text-slate-300 text-sm leading-relaxed">
+                            Na aula de apresentação, os trabalhos aparecem apenas identificados pelos seus códigos anónimos. Os colegas veem o infograma, ouvem o áudio e votam de 1 a 5 estrelas sem saber quem é o autor.
+                        </p>
+                        <button onclick="switchPage('vote')" class="inline-flex items-center text-xs font-semibold text-amber-400 hover:text-amber-300 pt-1">
+                            Ver Galeria de Votação <i class="fa-solid fa-arrow-right ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PÁGINA 3: CATÁLOGO DE TEMAS ================= -->
+        <div id="page-topics" class="page-content space-y-8">
+            <div class="border-b border-brand-border pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-white">Catálogo de Temas &amp; Frases Sugestivas</h1>
+                    <p class="text-slate-400 text-sm mt-1">Escolhe 1 tema do catálogo ou cria o teu próprio tema original com ajuda de IA para ganhares pontos extra!</p>
+                </div>
+                <button onclick="switchPage('creation-guide')" class="px-4 py-2 bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 rounded-xl text-xs font-bold hover:bg-cyan-500/20 transition-all flex items-center">
+                    Ir para Guião de Criação <i class="fa-solid fa-arrow-right ml-1.5"></i>
+                </button>
+            </div>
+
+            <!-- LISTA DE TEMAS -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <!-- TEMA 1 -->
+                <div class="bg-brand-card border border-brand-border rounded-2xl p-6 flex flex-col justify-between hover:border-sky-500/50 transition-all space-y-4">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="px-2.5 py-1 rounded-md text-xs font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                                Opção 1 — Psicologia &amp; Vida
+                            </span>
+                            <i class="fa-solid fa-brain text-sky-400 text-xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">A Bateria da Felicidade Humana</h3>
+                        <p class="text-slate-300 text-sm leading-relaxed mb-4">
+                            Como avaliamos a nossa vida sem ter um número no peito, ajustando rotinas apenas ao sentir se o nosso bem-estar está a subir ou a descer no tempo.
+                        </p>
+                        <div class="bg-brand-dark/80 p-4 rounded-xl border border-brand-border text-xs text-slate-300 italic relative">
+                            <i class="fa-solid fa-quote-left text-sky-500/30 text-2xl absolute top-2 right-2"></i>
+                            <span id="text-topic-1">"Ninguém acorda de manhã, espreguiça-se e diz: 'Hoje estou a 64,3% de felicidade!'. Nós apenas damos pequenos passos — ginásio, pizza, estudo — e sentimos a velocidade no tempo: a minha vida está a subir ou em colapso?"</span>
+                        </div>
+                    </div>
+                    <button onclick="copyText('text-topic-1')" class="w-full py-2.5 rounded-xl bg-brand-border hover:bg-sky-500/20 hover:text-sky-300 text-slate-200 text-xs font-semibold transition-all flex items-center justify-center">
+                        <i class="fa-solid fa-copy mr-1.5"></i> Copiar Frase Sugestiva
+                    </button>
+                </div>
+
+                <!-- TEMA 2 -->
+                <div class="bg-brand-card border border-brand-border rounded-2xl p-6 flex flex-col justify-between hover:border-cyan-500/50 transition-all space-y-4">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="px-2.5 py-1 rounded-md text-xs font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                                Opção 2 — Sensação Térmica
+                            </span>
+                            <i class="fa-solid fa-shower text-cyan-400 text-xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">O Mistério do Chuveiro Cego</h3>
+                        <p class="text-slate-300 text-sm leading-relaxed mb-4">
+                            Ajustar a torneira do banho sem saber a temperatura exata em graus Celsius, reagindo unicamente à velocidade de aquecimento no tempo.
+                        </p>
+                        <div class="bg-brand-dark/80 p-4 rounded-xl border border-brand-border text-xs text-slate-300 italic relative">
+                            <i class="fa-solid fa-quote-left text-cyan-500/30 text-2xl absolute top-2 right-2"></i>
+                            <span id="text-topic-2">"Quando entras no banho, não dizes: 'A água está a 38,5 graus Celsius!'. Tu sentes a variação no tempo: 'Isto vai arrancar-me a pele' ou 'Está a congelar os pés'. Giras a torneira até a variação parar no zero."</span>
+                        </div>
+                    </div>
+                    <button onclick="copyText('text-topic-2')" class="w-full py-2.5 rounded-xl bg-brand-border hover:bg-cyan-500/20 hover:text-cyan-300 text-slate-200 text-xs font-semibold transition-all flex items-center justify-center">
+                        <i class="fa-solid fa-copy mr-1.5"></i> Copiar Frase Sugestiva
+                    </button>
+                </div>
+
+                <!-- TEMA 3 -->
+                <div class="bg-brand-card border border-brand-border rounded-2xl p-6 flex flex-col justify-between hover:border-emerald-500/50 transition-all space-y-4">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="px-2.5 py-1 rounded-md text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                Opção 3 — Inteligência Artificial
+                            </span>
+                            <i class="fa-solid fa-robot text-emerald-400 text-xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">A IA Perdida na Montanha de Nevoeiro</h3>
+                        <p class="text-slate-300 text-sm leading-relaxed mb-4">
+                            Como os modelos de IA aprendem sem mapa completo, dando passos e avaliando apenas se o erro subiu ou desceu no passo anterior.
+                        </p>
+                        <div class="bg-brand-dark/80 p-4 rounded-xl border border-brand-border text-xs text-slate-300 italic relative">
+                            <i class="fa-solid fa-quote-left text-emerald-500/30 text-2xl absolute top-2 right-2"></i>
+                            <span id="text-topic-3">"Uma IA em treino é como um robô de olhos vendados numa montanha com nevoeiro. Sem mapa de altitude, ele tateia o chão: 'O erro subiu? Recua! O erro desceu? Continua na mesma direção!'."</span>
+                        </div>
+                    </div>
+                    <button onclick="copyText('text-topic-3')" class="w-full py-2.5 rounded-xl bg-brand-border hover:bg-emerald-500/20 hover:text-emerald-300 text-slate-200 text-xs font-semibold transition-all flex items-center justify-center">
+                        <i class="fa-solid fa-copy mr-1.5"></i> Copiar Frase Sugestiva
+                    </button>
+                </div>
+
+                <!-- TEMA 4 -->
+                <div class="bg-brand-card border border-brand-border rounded-2xl p-6 flex flex-col justify-between hover:border-amber-500/50 transition-all space-y-4">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="px-2.5 py-1 rounded-md text-xs font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                Opção 4 — Jogos &amp; Intuição
+                            </span>
+                            <i class="fa-solid fa-gamepad text-amber-400 text-xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">O Jogo do "Quente ou Frio"</h3>
+                        <p class="text-slate-300 text-sm leading-relaxed mb-4">
+                            Encontrar um objeto num quarto sem fita métrica, navegando apenas com o sinal de aproximação (variação positiva ou negativa).
+                        </p>
+                        <div class="bg-brand-dark/80 p-4 rounded-xl border border-brand-border text-xs text-slate-300 italic relative">
+                            <i class="fa-solid fa-quote-left text-amber-500/30 text-2xl absolute top-2 right-2"></i>
+                            <span id="text-topic-4">"No jogo do 'Quente ou Frio', o teu amigo não diz: 'Estás a 2,3 metros'. Ele dá-te o sinal da taxa de variação: 'AQUECEU!'. Sem medir distâncias em metros, tu encontras o objeto em 15 segundos."</span>
+                        </div>
+                    </div>
+                    <button onclick="copyText('text-topic-4')" class="w-full py-2.5 rounded-xl bg-brand-border hover:bg-amber-500/20 hover:text-amber-300 text-slate-200 text-xs font-semibold transition-all flex items-center justify-center">
+                        <i class="fa-solid fa-copy mr-1.5"></i> Copiar Frase Sugestiva
+                    </button>
+                </div>
+
+                <!-- TEMA 5 -->
+                <div class="bg-brand-card border border-brand-border rounded-2xl p-6 flex flex-col justify-between hover:border-rose-500/50 transition-all space-y-4">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="px-2.5 py-1 rounded-md text-xs font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                                Opção 5 — Redes &amp; Internet
+                            </span>
+                            <i class="fa-solid fa-truck-fast text-rose-400 text-xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">A Troca de Pacotes na Internet (TCP)</h3>
+                        <p class="text-slate-300 text-sm leading-relaxed mb-4">
+                            Como os servidores de vídeo ajustam o envio de dados sem saber a capacidade exata da rede, travando assim que a taxa de variação do PING fica positiva no tempo.
+                        </p>
+                        <div class="bg-brand-dark/80 p-4 rounded-xl border border-brand-border text-xs text-slate-300 italic relative">
+                            <i class="fa-solid fa-quote-left text-rose-500/30 text-2xl absolute top-2 right-2"></i>
+                            <span id="text-topic-5">"O YouTube não sabe a capacidade exata da tua internet. Ele envia pacotes de dados e olha para o tempo de resposta (PING). Se o PING começa a subir no tempo, o servidor trava o envio antes do buffering."</span>
+                        </div>
+                    </div>
+                    <button onclick="copyText('text-topic-5')" class="w-full py-2.5 rounded-xl bg-brand-border hover:bg-rose-500/20 hover:text-rose-300 text-slate-200 text-xs font-semibold transition-all flex items-center justify-center">
+                        <i class="fa-solid fa-copy mr-1.5"></i> Copiar Frase Sugestiva
+                    </button>
+                </div>
+
+                <!-- TEMA 6: NOVO TEMA PERSONALIZADO / ORIGINAL -->
+                <div class="bg-gradient-to-br from-brand-card via-brand-card to-amber-500/10 border border-amber-500/40 rounded-2xl p-6 flex flex-col justify-between hover:border-amber-400 transition-all space-y-4 glow-accent">
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="px-2.5 py-1 rounded-md text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                                ⭐ Opção 6 — Tema Original (Cria o Teu!)
+                            </span>
+                            <i class="fa-solid fa-wand-magic-sparkles text-amber-400 text-xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">Cria o Teu Próprio Cenário do Dia a Dia</h3>
+                        <p class="text-slate-300 text-sm leading-relaxed mb-3">
+                            Queres destacar-te da turma e ganhar votos extra na avaliação? Pergunta ao ChatGPT ou Copilot por um exemplo original da vida real onde se decide apenas pelo sinal da derivada!
+                        </p>
+                        <div class="bg-brand-dark/90 p-3.5 rounded-xl border border-amber-500/30 text-xs text-amber-200/90 italic">
+                            <i class="fa-solid fa-lightbulb text-amber-400 mr-1.5"></i>
+                            <strong>Ideias originais:</strong> Nível de café no organismo, afinação de instrumentos, condução sem velocímetro ou gestão de bateria do smartphone.
+                        </div>
+                    </div>
+                    <div class="bg-brand-dark p-3 rounded-xl border border-brand-border text-xs text-slate-300 font-mono">
+                        <span class="text-amber-400 font-bold">Prompt para a IA:</span> "Dá-me um exemplo original e engraçado da vida real onde tomamos decisões no escuro apenas vendo se algo está a subir ou a descer."
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ================= PÁGINA 4: GUIÃO DE CRIAÇÃO (DEDICADA) ================= -->
+        <div id="page-creation-guide" class="page-content space-y-8">
+            <div class="border-b border-brand-border pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-white">Guião de Criação: Infograma &amp; Áudio</h1>
+                    <p class="text-slate-400 text-sm mt-1">Usa ferramentas de Inteligência Artificial para gerar o teu infograma visual e a tua narração em áudio.</p>
+                </div>
+                <button onclick="switchPage('submit')" class="px-4 py-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-xl text-xs font-bold hover:bg-emerald-500/20 transition-all flex items-center">
+                    Ir para Submissão <i class="fa-solid fa-arrow-right ml-1.5"></i>
+                </button>
+            </div>
+
+            <!-- CHECKLIST OBRIGATÓRIA (TANTO NO INFOGRAMA COMO NO ÁUDIO) -->
+            <div class="bg-gradient-to-r from-amber-500/10 via-brand-card to-sky-500/10 border border-amber-500/30 rounded-2xl p-6 sm:p-8 space-y-4 glow-accent">
+                <div class="flex items-center space-x-3 border-b border-brand-border pb-3">
+                    <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center font-bold text-lg">
+                        <i class="fa-solid fa-list-check"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-white">O que TANTO o Infograma COMO o Áudio DEVEM CONTER (Obrigatório)</h3>
+                        <p class="text-xs text-amber-300">Garante que ambos os recursos explicam claramente estes 3 pontos centrais:</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                    <div class="bg-brand-dark/80 p-4 rounded-xl border border-brand-border space-y-2">
+                        <span class="w-7 h-7 rounded-lg bg-sky-500/20 text-sky-400 font-extrabold text-xs flex items-center justify-center">1</span>
+                        <h4 class="text-sm font-bold text-white">O Problema / Variável Invisível</h4>
+                        <p class="text-xs text-slate-300 leading-relaxed">
+                            Explica qual é o elemento que <strong>não conseguimos medir com um valor absoluto exacto</strong> (ex: nível de felicidade, temperatura exata do banho, capacidade total da rede ou erro da IA).
+                        </p>
+                    </div>
+
+                    <div class="bg-brand-dark/80 p-4 rounded-xl border border-brand-border space-y-2">
+                        <span class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 font-extrabold text-xs flex items-center justify-center">2</span>
+                        <h4 class="text-sm font-bold text-white">O Sinal da Derivada no Tempo</h4>
+                        <p class="text-xs text-slate-300 leading-relaxed">
+                            Mostra o que acontece quando a variação é <strong>Positiva</strong> (a subir/aquecer), <strong>Negativa</strong> (a descer/arrefecer) ou <strong>Nula</strong> (estável/equilíbrio).
+                        </p>
+                    </div>
+
+                    <div class="bg-brand-dark/80 p-4 rounded-xl border border-brand-border space-y-2">
+                        <span class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 font-extrabold text-xs flex items-center justify-center">3</span>
+                        <h4 class="text-sm font-bold text-white">A Decisão Preventiva</h4>
+                        <p class="text-xs text-slate-300 leading-relaxed">
+                            Qual é a <strong>ação automática ou mudança de comportamento</strong> que o sistema/pessoa toma com base nesse sinal antes que aconteça um desastre (ex: burnout, queimar a pele ou crash da rede).
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTOR 1: COMO CRIAR O INFOGRAMA COM IA -->
+            <div class="bg-brand-card border border-brand-border rounded-2xl p-6 sm:p-8 space-y-6">
+                <div class="flex items-center space-x-3 text-sky-400 border-b border-brand-border pb-4">
+                    <i class="fa-solid fa-image text-2xl"></i>
+                    <h2 class="text-xl font-bold text-white">1. Como Criar o Infograma Visual com IA</h2>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-brand-dark/60 p-4 rounded-xl border border-brand-border space-y-2">
+                        <div class="text-xs font-bold text-sky-400 uppercase">Canva (Magic Design)</div>
+                        <p class="text-xs text-slate-300">Abre o Canva.com, pesquisa por "Infográfico", escolhe um layout limpo e usa as ferramentas de IA integradas para gerar esquemas e ilustrações.</p>
+                    </div>
+                    <div class="bg-brand-dark/60 p-4 rounded-xl border border-brand-border space-y-2">
+                        <div class="text-xs font-bold text-cyan-400 uppercase">Microsoft Copilot / Designer</div>
+                        <p class="text-xs text-slate-300">Acede ao Copilot, pede para gerar uma imagem de infografia explicativa em estilo cartaz com fundo escuro e esquemas visuais.</p>
+                    </div>
+                    <div class="bg-brand-dark/60 p-4 rounded-xl border border-brand-border space-y-2">
+                        <div class="text-xs font-bold text-emerald-400 uppercase">ChatGPT / DALL-E</div>
+                        <p class="text-xs text-slate-300">Pede ao ChatGPT para desenhar um esquema visual simples dividido nos 3 blocos obrigatórios (Variável Invisível, Seta de Variação e Decisão).</p>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <h4 class="text-sm font-bold text-white">Prompt Sugerido de IA para o Infograma:</h4>
+                    <div class="bg-brand-dark p-4 rounded-xl border border-brand-border relative space-y-2">
+                        <p class="text-xs text-slate-300 font-mono italic pr-20" id="prompt-image-gen">
+                            "Cria um infográfico moderno e minimalista sobre 'Decisões no Escuro'. Mostra 3 blocos bem divididos: 1. A Variável Invisível sem medidor, 2. A Seta do Sinal da Variação no Tempo (subir a amarelo, descer a azul), 3. A Ação Preventiva Automática. Estilo profissional em fundo escuro."
+                        </p>
+                        <button onclick="copyText('prompt-image-gen')" class="absolute top-3 right-3 px-3 py-1.5 bg-brand-border hover:bg-sky-500/20 text-slate-200 text-xs font-semibold rounded-lg transition-all">
+                            <i class="fa-solid fa-copy mr-1"></i> Copiar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTOR 2: COMO GERAR O ÁUDIO COM IA -->
+            <div class="bg-brand-card border border-brand-border rounded-2xl p-6 sm:p-8 space-y-6">
+                <div class="flex items-center space-x-3 text-emerald-400 border-b border-brand-border pb-4">
+                    <i class="fa-solid fa-microphone-lines text-2xl"></i>
+                    <h2 class="text-xl font-bold text-white">2. Como Gerar o Áudio por Texto (IA / Text-to-Speech)</h2>
+                </div>
+
+                <p class="text-xs text-slate-300 leading-relaxed">
+                    Não precisas de gravar a tua própria voz se fores tímido! Podes usar o <strong>ChatGPT ou Claude</strong> para escrever o teu texto explicativo de 30 a 45 segundos e depois usar uma destas ferramentas de Inteligência Artificial para converter o texto numa voz sintética realista:
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-brand-dark/60 p-4 rounded-xl border border-brand-border space-y-2">
+                        <div class="text-xs font-bold text-emerald-400 uppercase">ElevenLabs (Voz Ultra-Realista)</div>
+                        <p class="text-xs text-slate-300">Abre o site ElevenLabs.io (gratuito). Cola o teu discurso de 30 a 45s, escolhe uma voz em Português e descarrega o ficheiro MP3.</p>
+                    </div>
+                    <div class="bg-brand-dark/60 p-4 rounded-xl border border-brand-border space-y-2">
+                        <div class="text-xs font-bold text-cyan-400 uppercase">Clipchamp (Nativo do Windows)</div>
+                        <p class="text-xs text-slate-300">Abre o Clipchamp no Windows, clica em "Criar Vídeo" -> "Gravar e Criar" -> "Texto para Fala". Escolhe a voz de Portugal e exporta o áudio.</p>
+                    </div>
+                    <div class="bg-brand-dark/60 p-4 rounded-xl border border-brand-border space-y-2">
+                        <div class="text-xs font-bold text-sky-400 uppercase">CapCut (PC ou Telemóvel)</div>
+                        <p class="text-xs text-slate-300">Cria um novo projeto no CapCut, adiciona uma caixa de texto com o teu guião e usa a opção "Texto para Fala" com voz em Português.</p>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <h4 class="text-sm font-bold text-white">Prompt Sugerido para Pedir o Guião do Áudio ao ChatGPT/Claude:</h4>
+                    <div class="bg-brand-dark p-4 rounded-xl border border-brand-border relative space-y-2">
+                        <p class="text-xs text-slate-300 font-mono italic pr-20" id="prompt-audio-script">
+                            "Escreve-me um guião de áudio para ser lido em 30 a 45 segundos, divertido e direto para o tema [INSERIR O TEU TEMA]. Deve explicar obrigatoriamente: 1. A variável invisível sem medidor, 2. O que significa a variação subir ou descer, 3. A decisão tomada antes do desastre. Usa tom dinâmico estilo Reels/TikTok."
+                        </p>
+                        <button onclick="copyText('prompt-audio-script')" class="absolute top-3 right-3 px-3 py-1.5 bg-brand-border hover:bg-emerald-500/20 text-slate-200 text-xs font-semibold rounded-lg transition-all">
+                            <i class="fa-solid fa-copy mr-1"></i> Copiar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PÁGINA 5: SUBMISSÃO ================= -->
+        <div id="page-submit" class="page-content space-y-8">
+            <div class="border-b border-brand-border pb-4">
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-white">Submeter Trabalho Prático</h1>
+                <p class="text-slate-400 text-sm mt-1">Preenche os campos abaixo. O teu nome ficará guardado apenas no registo do professor e na galeria o teu trabalho terá um código anónimo.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- FORMULÁRIO -->
+                <div class="lg:col-span-2 bg-brand-card border border-brand-border rounded-2xl p-6 sm:p-8 space-y-6">
+                    <form id="submission-form" onsubmit="handleSubmission(event)" class="space-y-4">
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Nome do Aluno / Dupla *</label>
+                                <input type="text" id="sub-name" required placeholder="Ex: João Silva e Maria Santos" class="w-full bg-brand-dark border border-brand-border rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-sky-500 transition-all">
+                                <span class="text-[11px] text-slate-500 mt-1 block"><i class="fa-solid fa-lock mr-1"></i> Visível apenas para o professor</span>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Número / Turma *</label>
+                                <input type="text" id="sub-class" required placeholder="Ex: Nº 5 e 12 - 11º Prof. TGPSI" class="w-full bg-brand-dark border border-brand-border rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-sky-500 transition-all">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Tema Escolhido *</label>
+                            <select id="sub-topic" required onchange="toggleCustomTopicInput()" class="w-full bg-brand-dark border border-brand-border rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-sky-500 transition-all">
+                                <option value="">Selecione o tema do catálogo...</option>
+                                <option value="A Bateria de Felicidade Humana">Opção 1 — A Bateria de Felicidade Humana</option>
+                                <option value="O Mistério do Chuveiro Cego">Opção 2 — O Mistério do Chuveiro Cego</option>
+                                <option value="A IA Perdida na Montanha">Opção 3 — A IA Perdida na Montanha</option>
+                                <option value="O Jogo do Quente ou Frio">Opção 4 — O Jogo do "Quente ou Frio"</option>
+                                <option value="A Troca de Pacotes na Internet">Opção 5 — A Troca de Pacotes na Internet (TCP)</option>
+                                <option value="OUTRO_TEMA">⭐ Opção 6 — Tema Original Personalizado</option>
+                            </select>
+                        </div>
+
+                        <!-- CAMPO CONDICIONAL PARA TEMA PERSONALIZADO -->
+                        <div id="custom-topic-box" class="hidden">
+                            <label class="block text-xs font-bold text-amber-400 uppercase tracking-wider mb-2">Escreve o Nome do Teu Tema Original *</label>
+                            <input type="text" id="sub-custom-topic" placeholder="Ex: Nível de Café no Organismo / Treino de Halteres" class="w-full bg-brand-dark border border-amber-500/40 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-400 transition-all">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Link do Infográfico (Canva / Google Drive / Imagem) *</label>
+                            <input type="url" id="sub-infographic" required placeholder="https://canva.com/... ou https://drive.google.com/..." class="w-full bg-brand-dark border border-brand-border rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-sky-500 transition-all">
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Link do Áudio (Vocaroo / Drive / MP3) *</label>
+                            <input type="url" id="sub-audio" required placeholder="https://vocaroo.com/... ou https://drive.google.com/..." class="w-full bg-brand-dark border border-brand-border rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-sky-500 transition-all">
+                        </div>
+
+                        <div class="pt-2">
+                            <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-sky-500 to-cyan-500 text-slate-950 font-bold rounded-xl shadow-lg hover:brightness-110 transition-all flex items-center justify-center text-sm">
+                                <i class="fa-solid fa-paper-plane mr-2"></i> Submeter Trabalho &amp; Receber Código Anónimo
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- COMPROVATIVO GERADO -->
+                <div class="space-y-6">
+                    <div id="receipt-card" class="bg-brand-card border border-brand-border rounded-2xl p-6 hidden space-y-4 glow-accent">
+                        <div class="flex items-center justify-between border-b border-brand-border pb-3">
+                            <span class="text-xs font-bold text-emerald-400 flex items-center">
+                                <i class="fa-solid fa-circle-check mr-1.5"></i> Submissão Registada
+                            </span>
+                            <span id="receipt-code" class="text-xs font-mono font-bold bg-sky-500/20 text-sky-300 px-2.5 py-1 rounded border border-sky-500/30">#TRABALHO-01</span>
+                        </div>
+                        <div class="space-y-2 text-xs text-slate-300">
+                            <p><strong class="text-white">Aluno/Dupla:</strong> <span id="r-name">-</span></p>
+                            <p><strong class="text-white">Turma:</strong> <span id="r-class">-</span></p>
+                            <p><strong class="text-white">Tema:</strong> <span id="r-topic">-</span></p>
+                            <p><strong class="text-white">Data de Submissão:</strong> <span id="r-date">-</span></p>
+                        </div>
+                        <div class="bg-brand-dark/80 p-3 rounded-xl border border-brand-border text-center space-y-1">
+                            <p class="text-xs text-emerald-400 font-semibold">Grave este código anónimo!</p>
+                            <p class="text-[11px] text-slate-400">Na galeria de votação da turma, este trabalho surgirá apenas identificado pelo código do comprovativo.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-brand-card border border-brand-border rounded-2xl p-6 space-y-3">
+                        <h4 class="text-sm font-bold text-white flex items-center">
+                            <i class="fa-solid fa-circle-info text-sky-400 mr-2"></i> Como Funciona o Armazenamento?
+                        </h4>
+                        <p class="text-xs text-slate-300 leading-relaxed">
+                            A submissão fica guardada na memória do navegador. Na aula, o professor pode descarregar o ficheiro consolidado da turma no <strong>Painel do Professor</strong> e disponibilizar a galeria anónima para votação.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PÁGINA 6: VOTAÇÃO ANÓNIMA ================= -->
+        <div id="page-vote" class="page-content space-y-8">
+            <div class="border-b border-brand-border pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-white">Votação Anónima da Turma</h1>
+                    <p class="text-slate-400 text-sm mt-1">Classifica cada projeto de 1 a 5 estrelas. Os nomes dos autores não são mostrados.</p>
+                </div>
+                <div class="bg-brand-card border border-brand-border px-3 py-1.5 rounded-xl text-xs text-emerald-400 font-semibold flex items-center">
+                    <i class="fa-solid fa-user-secret mr-1.5"></i> Votação 100% Anónima
+                </div>
+            </div>
+
+            <!-- GALERIA DE PROJETOS -->
+            <div id="voting-gallery" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Os trabalhos submetidos e pré-definidos serão carregados dinamicamente por JS -->
+            </div>
+        </div>
+
+        <!-- ================= PÁGINA 7: PAINEL DO PROFESSOR ================= -->
+        <div id="page-teacher" class="page-content space-y-8">
+            <div class="border-b border-brand-border pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-white">Área de Gestão do Professor</h1>
+                    <p class="text-slate-400 text-sm mt-1">Área privada para consultar a identificação dos alunos, exportar dados e gerir o sistema de votação.</p>
+                </div>
+                <div id="teacher-status-badge" class="bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-xl text-xs text-amber-400 font-semibold flex items-center">
+                    <i class="fa-solid fa-lock mr-1.5"></i> Acesso Bloqueado
+                </div>
+            </div>
+
+            <!-- LOGIN DO PROFESSOR (SEM EXIBIÇÃO PÚBLICA DA PALAVRA-PASSE) -->
+            <div id="teacher-login-box" class="max-w-md mx-auto bg-brand-card border border-brand-border rounded-2xl p-6 sm:p-8 space-y-4">
+                <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center font-bold text-xl mx-auto">
+                    <i class="fa-solid fa-user-shield"></i>
+                </div>
+                <h3 class="text-lg font-bold text-white text-center">Autenticação do Professor</h3>
+                <p class="text-xs text-slate-400 text-center">Insira a palavra-passe de acesso para visualizar os nomes reais dos trabalhos e aceder aos controlos da turma.</p>
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">Palavra-passe de Acesso:</label>
+                    <input type="password" id="teacher-pass" placeholder="Introduza a palavra-passe..." class="w-full bg-brand-dark border border-brand-border rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500 transition-all" onkeypress="if(event.key === 'Enter') loginTeacher()">
+                </div>
+                <button onclick="loginTeacher()" class="w-full py-3 bg-amber-500 text-slate-950 font-bold rounded-xl text-sm hover:brightness-110 transition-all flex items-center justify-center">
+                    <i class="fa-solid fa-key mr-2"></i> Entrar na Área do Professor
+                </button>
+            </div>
+
+            <!-- PAINEL DESBLOQUEADO DO PROFESSOR -->
+            <div id="teacher-dashboard" class="hidden space-y-8">
+                <!-- BARRA DE AÇÕES -->
+                <div class="bg-brand-card border border-brand-border rounded-2xl p-6 flex flex-wrap gap-4 justify-between items-center">
+                    <div>
+                        <h3 class="text-base font-bold text-white">Gestão Global da Turma</h3>
+                        <p class="text-xs text-slate-400">Exporta/importa dados ou repõe o sistema para uma nova aula.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-3">
+                        <button onclick="openChangePasswordModal()" class="px-4 py-2 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-xl text-xs font-bold hover:bg-amber-500/30 transition-all flex items-center">
+                            <i class="fa-solid fa-key mr-1.5"></i> Alterar Palavra-passe
+                        </button>
+                        <button onclick="exportSubmissionsJSON()" class="px-4 py-2 bg-sky-500/20 text-sky-300 border border-sky-500/30 rounded-xl text-xs font-bold hover:bg-sky-500/30 transition-all flex items-center">
+                            <i class="fa-solid fa-download mr-1.5"></i> Exportar Ficheiro JSON
+                        </button>
+                        <label class="px-4 py-2 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-xl text-xs font-bold hover:bg-emerald-500/30 transition-all cursor-pointer flex items-center">
+                            <i class="fa-solid fa-upload mr-1.5"></i> Importar Ficheiro JSON
+                            <input type="file" id="import-file" accept=".json" onchange="importSubmissionsJSON(event)" class="hidden">
+                        </label>
+                        <button onclick="resetSubmissionsData()" class="px-4 py-2 bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-xl text-xs font-bold hover:bg-rose-500/30 transition-all flex items-center">
+                            <i class="fa-solid fa-trash mr-1.5"></i> Limpar Todas as Submissões
+                        </button>
+                    </div>
+                </div>
+
+                <!-- MODAL DE ALTERAÇÃO DE PALAVRA-PASSE -->
+                <div id="change-pass-modal" class="hidden bg-brand-card border border-amber-500/30 rounded-2xl p-6 space-y-4 max-w-md">
+                    <h4 class="text-sm font-bold text-white flex items-center">
+                        <i class="fa-solid fa-lock text-amber-400 mr-2"></i> Alterar Palavra-passe do Professor
+                    </h4>
+                    <div>
+                        <label class="block text-xs text-slate-300 mb-1">Nova Palavra-passe:</label>
+                        <input type="password" id="new-teacher-pass" class="w-full bg-brand-dark border border-brand-border rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="saveNewPassword()" class="px-4 py-2 bg-amber-500 text-slate-950 font-bold rounded-xl text-xs hover:brightness-110">Guardar</button>
+                        <button onclick="closeChangePasswordModal()" class="px-4 py-2 bg-brand-border text-slate-300 rounded-xl text-xs">Cancelar</button>
+                    </div>
+                </div>
+
+                <!-- TABELA DE CORRESPONDÊNCIA DE NOMES -->
+                <div class="bg-brand-card border border-brand-border rounded-2xl p-6 space-y-4">
+                    <h3 class="text-base font-bold text-white flex items-center">
+                        <i class="fa-solid fa-table-list text-amber-400 mr-2"></i> Tabela de Correspondência (Identificação dos Alunos)
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-brand-dark text-slate-400 border-b border-brand-border uppercase tracking-wider">
+                                    <th class="p-3">Código Anónimo</th>
+                                    <th class="p-3">Nome Real / Dupla</th>
+                                    <th class="p-3">Turma / Nº</th>
+                                    <th class="p-3">Tema Escolhido</th>
+                                    <th class="p-3">Média de Votos</th>
+                                    <th class="p-3">Links dos Recursos</th>
+                                </tr>
+                            </thead>
+                            <tbody id="teacher-table-body" class="divide-y divide-brand-border text-slate-300">
+                                <!-- Preenchido por JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- FOOTER DA PLATAFORMA -->
+    <footer class="bg-brand-card/60 border-t border-brand-border py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 space-y-2">
+            <p>Plataforma Pedagógica — Cursos Profissionais</p>
+            <p class="text-slate-600">Conceito de Derivada &amp; Sinal da Variação no Tempo &copy; 2026</p>
+        </div>
+    </footer>
+
+    <!-- LÓGICA JAVASCRIPT -->
+    <script>
+        // CHAVE PADRÃO INICIAL PARA A PALAVRA-PASSE
+        const DEFAULT_TEACHER_PASS = '1234';
+
+        // OBTER PALAVRA-PASSE ATUAL DO PROFESSOR
+        function getTeacherPassword() {
+            return localStorage.getItem('derivada_teacher_pass') || DEFAULT_TEACHER_PASS;
+        }
+
+        // OBTER SUBMISSÕES DO LOCALSTORAGE (INICIA 100% VAZIA SE NÃO HOUVER REGISTO)
+        function getSubmissions() {
+            const stored = localStorage.getItem('derivada_submissoes_v2');
+            if (stored) {
+                try {
+                    return JSON.parse(stored);
+                } catch(e) {
+                    return [];
+                }
+            }
+            return [];
+        }
+
+        // SALVAR SUBMISSÕES NO LOCALSTORAGE
+        function saveSubmissions(data) {
+            localStorage.setItem('derivada_submissoes_v2', JSON.stringify(data));
+        }
+
+        // EXIBIR / OCULTAR CAMPO DE TEMA PERSONALIZADO
+        function toggleCustomTopicInput() {
+            const selectVal = document.getElementById('sub-topic').value;
+            const customBox = document.getElementById('custom-topic-box');
+            if (selectVal === 'OUTRO_TEMA') {
+                customBox.classList.remove('hidden');
+                document.getElementById('sub-custom-topic').setAttribute('required', 'required');
+            } else {
+                customBox.classList.add('hidden');
+                document.getElementById('sub-custom-topic').removeAttribute('required');
+            }
+        }
+
+        // MUDANÇA DE PÁGINAS MULTIPÁGINAS
+        function switchPage(pageId) {
+            document.querySelectorAll('.page-content').forEach(page => {
+                page.classList.remove('active');
+            });
+
+            const targetPage = document.getElementById(`page-${pageId}`);
+            if (targetPage) {
+                targetPage.classList.add('active');
+            }
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('text-brand-accent', 'bg-brand-card', 'border', 'border-brand-border');
+                if(!btn.classList.contains('text-amber-400')) {
+                    btn.classList.add('text-slate-400');
+                }
+            });
+
+            const activeNavBtn = document.getElementById(`nav-${pageId}`);
+            if (activeNavBtn && pageId !== 'teacher') {
+                activeNavBtn.classList.remove('text-slate-400');
+                activeNavBtn.classList.add('text-brand-accent', 'bg-brand-card', 'border', 'border-brand-border');
+            }
+
+            if (pageId === 'vote') {
+                renderVotingGallery();
+            }
+
+            if (pageId === 'teacher') {
+                renderTeacherDashboard();
+            }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // TOGGLE MENU MOBILE
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        // COPIAR TEXTO
+        function copyText(elementId) {
+            const textToCopy = document.getElementById(elementId).innerText;
+            
+            const tempInput = document.createElement("textarea");
+            tempInput.value = textToCopy.replace(/^"|"$/g, '');
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand("copy");
+            document.body.removeChild(tempInput);
+
+            alert("Texto copiado para a área de transferência!");
+        }
+
+        // PROCESSAR SUBMISSÃO DO FORMULÁRIO
+        function handleSubmission(e) {
+            e.preventDefault();
+
+            const name = document.getElementById('sub-name').value.trim();
+            const sClass = document.getElementById('sub-class').value.trim();
+            let topic = document.getElementById('sub-topic').value;
+            
+            if (topic === 'OUTRO_TEMA') {
+                const customTopic = document.getElementById('sub-custom-topic').value.trim();
+                topic = customTopic ? `⭐ ${customTopic}` : '⭐ Tema Original Personalizado';
+            }
+
+            const infographic = document.getElementById('sub-infographic').value.trim();
+            const audio = document.getElementById('sub-audio').value.trim();
+
+            const submissions = getSubmissions();
+            const newCode = '#TRABALHO-' + String(submissions.length + 1).padStart(2, '0');
+
+            const newSubmission = {
+                code: newCode,
+                name: name,
+                class: sClass,
+                topic: topic,
+                infographic: infographic,
+                audio: audio,
+                ratings: []
+            };
+
+            submissions.push(newSubmission);
+            saveSubmissions(submissions);
+
+            document.getElementById('r-name').innerText = name;
+            document.getElementById('r-class').innerText = sClass;
+            document.getElementById('r-topic').innerText = topic;
+            document.getElementById('r-date').innerText = new Date().toLocaleString('pt-PT');
+            document.getElementById('receipt-code').innerText = newCode;
+
+            document.getElementById('receipt-card').classList.remove('hidden');
+            document.getElementById('submission-form').reset();
+            document.getElementById('custom-topic-box').classList.add('hidden');
+
+            alert('Submissão realizada com sucesso! O teu trabalho está guardado com o código anónimo ' + newCode);
+        }
+
+        // RENDERIZAR GALERIA DE VOTAÇÃO (ANÓNIMA)
+        function renderVotingGallery() {
+            const gallery = document.getElementById('voting-gallery');
+            gallery.innerHTML = '';
+            const submissions = getSubmissions();
+
+            if (submissions.length === 0) {
+                gallery.innerHTML = `
+                    <div class="col-span-1 md:col-span-2 lg:col-span-3 text-center py-12 bg-brand-card border border-brand-border rounded-2xl p-8 space-y-3">
+                        <i class="fa-solid fa-inbox text-slate-500 text-4xl"></i>
+                        <h3 class="text-base font-bold text-white">Ainda não existem trabalhos submetidos</h3>
+                        <p class="text-xs text-slate-400">Quando os alunos começarem a submeter os seus projetos, a galeria de votação anónima aparecerá automaticamente aqui.</p>
+                        <button onclick="switchPage('submit')" class="px-4 py-2 bg-sky-500/10 text-sky-400 border border-sky-500/20 rounded-xl text-xs font-bold hover:bg-sky-500/20 transition-all">
+                            Ir para Submissão
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            submissions.forEach((sub, idx) => {
+                const avgRating = sub.ratings.length > 0 
+                    ? (sub.ratings.reduce((a, b) => a + b, 0) / sub.ratings.length).toFixed(1)
+                    : '0.0';
+
+                const card = document.createElement('div');
+                card.className = 'bg-brand-card border border-brand-border rounded-2xl p-5 flex flex-col justify-between space-y-4 hover:border-sky-500/40 transition-all';
+                card.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-mono font-bold bg-sky-500/10 text-sky-400 px-2.5 py-1 rounded-md border border-sky-500/20">
+                                ${sub.code}
+                            </span>
+                            <span class="text-xs text-slate-400 truncate max-w-[180px]">${sub.topic}</span>
+                        </div>
+                        <div class="h-36 bg-brand-dark rounded-xl border border-brand-border flex items-center justify-center p-3 text-center overflow-hidden relative">
+                            ${sub.infographic.match(/\.(jpeg|jpg|gif|png)$/) || sub.infographic.includes('unsplash.com') 
+                                ? `<img src="${sub.infographic}" alt="Infográfico" class="w-full h-full object-cover rounded-lg">`
+                                : `<div class="space-y-1">
+                                    <i class="fa-solid fa-file-image text-sky-400 text-2xl"></i>
+                                    <p class="text-xs font-semibold text-white">Infográfico Visual</p>
+                                    <a href="${sub.infographic}" target="_blank" class="text-[11px] text-sky-400 underline block">Abrir Imagem Explicativa</a>
+                                   </div>`
+                            }
+                        </div>
+                        <div class="bg-brand-dark/60 p-3 rounded-xl border border-brand-border flex items-center justify-between">
+                            <span class="text-xs text-slate-300 font-medium"><i class="fa-solid fa-circle-play text-emerald-400 mr-1.5"></i> Áudio Explicativo</span>
+                            <a href="${sub.audio}" target="_blank" class="px-2.5 py-1 bg-emerald-500/20 text-emerald-300 rounded text-xs hover:bg-emerald-500/30">Ouvir</a>
+                        </div>
+                    </div>
+
+                    <!-- SISTEMA DE ESTRELAS -->
+                    <div class="border-t border-brand-border pt-3 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-slate-400 block">Classificação da Turma:</span>
+                            <span class="text-xs font-mono font-bold text-amber-400">${avgRating} ★ (${sub.ratings.length} votos)</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex space-x-1 text-amber-400 text-lg cursor-pointer" id="stars-${idx}">
+                                <i class="fa-regular fa-star hover:text-amber-300" onclick="rateSubmission(${idx}, 1)"></i>
+                                <i class="fa-regular fa-star hover:text-amber-300" onclick="rateSubmission(${idx}, 2)"></i>
+                                <i class="fa-regular fa-star hover:text-amber-300" onclick="rateSubmission(${idx}, 3)"></i>
+                                <i class="fa-regular fa-star hover:text-amber-300" onclick="rateSubmission(${idx}, 4)"></i>
+                                <i class="fa-regular fa-star hover:text-amber-300" onclick="rateSubmission(${idx}, 5)"></i>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                gallery.appendChild(card);
+            });
+        }
+
+        // ATRIBUIR VOTO A UM TRABALHO
+        function rateSubmission(index, stars) {
+            const submissions = getSubmissions();
+            if (submissions[index]) {
+                submissions[index].ratings.push(stars);
+                saveSubmissions(submissions);
+                renderVotingGallery();
+                alert(`Atribuíste ${stars} estrelas ao ${submissions[index].code}. Voto registado anonimamente!`);
+            }
+        }
+
+        // LOGIN DO PROFESSOR (SEM PALAVRA-PASSE VISÍVEL NA INTERFACE)
+        function loginTeacher() {
+            const pass = document.getElementById('teacher-pass').value;
+            const currentPass = getTeacherPassword();
+
+            if (pass === currentPass) {
+                document.getElementById('teacher-login-box').classList.add('hidden');
+                document.getElementById('teacher-dashboard').classList.remove('hidden');
+                
+                const badge = document.getElementById('teacher-status-badge');
+                badge.className = "bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl text-xs text-emerald-400 font-semibold flex items-center";
+                badge.innerHTML = '<i class="fa-solid fa-lock-open mr-1.5"></i> Acesso Autorizado';
+
+                renderTeacherTable();
+            } else {
+                alert('Palavra-passe incorreta! Tente novamente.');
+            }
+        }
+
+        // ALTERAÇÃO DE PALAVRA-PASSE
+        function openChangePasswordModal() {
+            document.getElementById('change-pass-modal').classList.remove('hidden');
+        }
+
+        function closeChangePasswordModal() {
+            document.getElementById('change-pass-modal').classList.add('hidden');
+            document.getElementById('new-teacher-pass').value = '';
+        }
+
+        function saveNewPassword() {
+            const newPass = document.getElementById('new-teacher-pass').value.trim();
+            if (newPass.length < 3) {
+                alert('A palavra-passe deve ter pelo menos 3 caracteres.');
+                return;
+            }
+            localStorage.setItem('derivada_teacher_pass', newPass);
+            closeChangePasswordModal();
+            alert('Palavra-passe do professor alterada com sucesso!');
+        }
+
+        // RENDERIZAR TABELA DO PROFESSOR (COM NOMES REAIS)
+        function renderTeacherTable() {
+            const tbody = document.getElementById('teacher-table-body');
+            tbody.innerHTML = '';
+            const submissions = getSubmissions();
+
+            if (submissions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="p-6 text-center text-slate-500">Nenhum trabalho submetido até ao momento. A lista iniciou vazia.</td></tr>';
+                return;
+            }
+
+            submissions.forEach(sub => {
+                const avgRating = sub.ratings.length > 0 
+                    ? (sub.ratings.reduce((a, b) => a + b, 0) / sub.ratings.length).toFixed(1)
+                    : '0.0';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-3 font-mono font-bold text-sky-400">${sub.code}</td>
+                    <td class="p-3 font-semibold text-white">${sub.name}</td>
+                    <td class="p-3 text-slate-300">${sub.class}</td>
+                    <td class="p-3 text-slate-300">${sub.topic}</td>
+                    <td class="p-3 font-mono font-bold text-amber-400">${avgRating} ★ (${sub.ratings.length} votos)</td>
+                    <td class="p-3 space-x-2">
+                        <a href="${sub.infographic}" target="_blank" class="text-sky-400 underline">Infograma</a>
+                        <a href="${sub.audio}" target="_blank" class="text-emerald-400 underline">Áudio</a>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // EXPORTAR SUBMISSÕES PARA JSON
+        function exportSubmissionsJSON() {
+            const submissions = getSubmissions();
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(submissions, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "submissoes_turma_derivadas.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        // IMPORTAR SUBMISSÕES DE JSON
+        function importSubmissionsJSON(event) {
+            const fileReader = new FileReader();
+            fileReader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (Array.isArray(importedData)) {
+                        saveSubmissions(importedData);
+                        renderTeacherTable();
+                        alert('Ficheiro de submissões importado com sucesso!');
+                    } else {
+                        alert('Formato de ficheiro inválido.');
+                    }
+                } catch(err) {
+                    alert('Erro ao ler o ficheiro JSON.');
+                }
+            };
+            if(event.target.files[0]) {
+                fileReader.readAsText(event.target.files[0]);
+            }
+        }
+
+        // RESET COMPLETO DAS SUBMISSÕES
+        function resetSubmissionsData() {
+            if (confirm('Tem a certeza de que deseja apagar TODAS as submissões? A galeria e os registos da turma ficarão 100% vazios.')) {
+                localStorage.removeItem('derivada_submissoes_v2');
+                renderTeacherTable();
+                alert('Todas as submissões foram apagadas. A lista de trabalhos está novamente limpa.');
+            }
+        }
+
+        function renderTeacherDashboard() {
+            if (!document.getElementById('teacher-dashboard').classList.contains('hidden')) {
+                renderTeacherTable();
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador Térmico de CPU - Estável & Sem Cifrões</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --border-color: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            text-align: center;
+            max-width: 900px;
+            margin-bottom: 12px;
+        }
+
+        h1 { margin: 0 0 4px 0; color: #38bdf8; font-size: 1.6em; }
+        p { color: var(--text-muted); margin: 0; font-size: 0.9em; }
+
+        /* DASHBOARD FIXO: Tamanho reduzido e altura bloqueada para não empurrar a página */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+            background: var(--card-bg);
+            padding: 10px 15px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 900px;
+            box-sizing: border-box;
+            border: 1px solid var(--border-color);
+            height: 72px; /* Altura 100% fixa */
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .metric { text-align: center; }
+        .metric-title { 
+            font-size: 0.72em; 
+            color: var(--text-muted); 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+        .metric-val { 
+            font-size: 1.25em; 
+            font-weight: bold; 
+            margin-top: 2px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 4px;
+            white-space: nowrap;
+            height: 28px;
+        }
+
+        .controls-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            width: 100%;
+            max-width: 900px;
+            margin-bottom: 15px;
+        }
+
+        .control-box {
+            background: var(--card-bg);
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-box h3 {
+            margin: 0 0 2px 0;
+            font-size: 0.88em;
+            color: #38bdf8;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 4px;
+        }
+
+        .btn-group { display: flex; gap: 8px; }
+
+        button {
+            flex: 1;
+            padding: 8px 10px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.82em;
+        }
+
+        .btn-load-idle { background-color: #10b981; color: white; }
+        .btn-load-game { background-color: #ef4444; color: white; }
+        .btn-hazard { background-color: #dc2626; color: white; }
+
+        button:hover { opacity: 0.85; }
+        button.active { outline: 2px solid white; transform: scale(0.98); }
+
+        .slider-container {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8em;
+            color: var(--text-main);
+        }
+
+        input[type=range] {
+            width: 100%;
+            accent-color: #06b6d4;
+            cursor: pointer;
+        }
+
+        input[type=range]:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 15px 20px 20px 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-sizing: border-box;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .chart-title { font-size: 0.95em; font-weight: bold; color: #f8fafc; }
+
+        .legend-bar {
+            display: flex;
+            gap: 12px;
+            font-size: 0.72em;
+        }
+        .legend-item { display: flex; align-items: center; gap: 4px; }
+        .legend-box { width: 10px; height: 10px; border-radius: 2px; }
+
+        canvas {
+            background-color: #090d16;
+            border-radius: 8px;
+            width: 100%;
+            height: 280px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Simulador Térmico de CPU: Dinâmica Térmica e Derivada T'(t)</h1>
+        <p>Observa como o sinal da derivada T' indica instantaneamente a tendência da temperatura.</p>
+    </div>
+
+    <!-- DASHBOARD COMPACTO E FIXO (SEM SALTOS DE TAMANHO) -->
+    <div class="dashboard">
+        <div class="metric">
+            <div class="metric-title">Temperatura T(t)</div>
+            <div id="tempVal" class="metric-val" style="color: #10b981;">35.0 ºC</div>
+        </div>
+        <div class="metric">
+            <div class="metric-title">Derivada T'(t)</div>
+            <div id="derivVal" class="metric-val" style="color: #38bdf8;">0.00 ºC/s</div>
+        </div>
+        <div class="metric">
+            <div class="metric-title">Sinal / Monotonia</div>
+            <div id="signalVal" class="metric-val" style="color: #10b981;">
+                <span id="arrowIcon">➡️</span> <span id="signalText">T' ≈ 0</span>
+            </div>
+        </div>
+        <div class="metric">
+            <div class="metric-title">Estado do Hardware</div>
+            <div id="statusVal" class="metric-val" style="color: #10b981;">🟢 Repouso Normal</div>
+        </div>
+    </div>
+
+    <div class="controls-panel">
+        <div class="control-box">
+            <h3>1. Carga do Processador</h3>
+            <div class="btn-group">
+                <button class="btn-load-idle active" id="btnIdle">💻 Repouso (~30W)</button>
+                <button class="btn-load-game" id="btnGame">🎮 Jogo (Carga Imprevisível)</button>
+            </div>
+        </div>
+
+        <div class="control-box">
+            <h3>2. Ventoinha (Cooler)</h3>
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>RPM Ventoinha:</span>
+                    <strong id="fanSpeedText">30%</strong>
+                </div>
+                <input type="range" id="fanSlider" min="10" max="100" value="30">
+            </div>
+        </div>
+
+        <div class="control-box">
+            <h3>3. Avaria Física</h3>
+            <button class="btn-hazard" id="btnFail">🚨 Bloquear Ventoinha (Avaria)</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="chart-header">
+            <span class="chart-title">Evolução da Temperatura T(t) [ºC] ao Longo do Tempo</span>
+            <div class="legend-bar">
+                <div class="legend-item"><div class="legend-box" style="background:rgba(16, 185, 129, 0.4);"></div> &lt;60ºC Repouso</div>
+                <div class="legend-item"><div class="legend-box" style="background:rgba(56, 189, 248, 0.4);"></div> 60-80ºC Carga</div>
+                <div class="legend-item"><div class="legend-box" style="background:rgba(245, 158, 11, 0.4);"></div> 80-100ºC Atenção</div>
+                <div class="legend-item"><div class="legend-box" style="background:rgba(239, 68, 68, 0.4);"></div> &gt;100ºC Shutdown</div>
+            </div>
+        </div>
+        <canvas id="canvasTemp" width="860" height="280"></canvas>
+    </div>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const canvas = document.getElementById('canvasTemp');
+            const ctx = canvas.getContext('2d');
+
+            const maxPoints = 80;
+            let tempData = Array(maxPoints).fill(35.0);
+            let derivData = Array(maxPoints).fill(0.0);
+
+            let currentTemp = 35.0;
+            let isGaming = false;
+            let fanPercent = 30; 
+            let coolerBroken = false;
+            
+            let dynamicGameLoad = 135; 
+            let targetLoadTrend = 135;
+            let loadChangeTimer = 0;
+
+            const fanSlider = document.getElementById('fanSlider');
+            const fanSpeedText = document.getElementById('fanSpeedText');
+
+            document.getElementById('btnIdle').addEventListener('click', () => {
+                isGaming = false;
+                document.getElementById('btnIdle').classList.add('active');
+                document.getElementById('btnGame').classList.remove('active');
+            });
+
+            document.getElementById('btnGame').addEventListener('click', () => {
+                isGaming = true;
+                document.getElementById('btnGame').classList.add('active');
+                document.getElementById('btnIdle').classList.remove('active');
+            });
+
+            fanSlider.addEventListener('input', (e) => {
+                if (!coolerBroken) {
+                    fanPercent = parseInt(e.target.value);
+                    fanSpeedText.innerText = fanPercent + "%";
+                }
+            });
+
+            document.getElementById('btnFail').addEventListener('click', () => {
+                coolerBroken = !coolerBroken;
+                const btn = document.getElementById('btnFail');
+                if (coolerBroken) {
+                    btn.innerText = "🔧 Reparar Ventoinha";
+                    btn.style.backgroundColor = "#059669";
+                    fanSlider.disabled = true;
+                    fanSpeedText.innerText = "0% (BLOQUEADA)";
+                } else {
+                    btn.innerText = "🚨 Bloquear Ventoinha (Avaria)";
+                    btn.style.backgroundColor = "#dc2626";
+                    fanSlider.disabled = false;
+                    fanSpeedText.innerText = fanPercent + "%";
+                }
+            });
+
+            function drawBands(minVal, maxVal) {
+                const w = canvas.width;
+                const h = canvas.height;
+                const getY = (val) => h - ((val - minVal) / (maxVal - minVal)) * h;
+
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.15)';
+                ctx.fillRect(0, 0, w, getY(100));
+
+                ctx.fillStyle = 'rgba(245, 158, 11, 0.15)';
+                ctx.fillRect(0, getY(100), w, getY(80) - getY(100));
+
+                ctx.fillStyle = 'rgba(56, 189, 248, 0.10)';
+                ctx.fillRect(0, getY(80), w, getY(60) - getY(80));
+
+                ctx.fillStyle = 'rgba(16, 185, 129, 0.10)';
+                ctx.fillRect(0, getY(60), w, h - getY(60));
+
+                ctx.lineWidth = 1;
+                ctx.setLineDash([5, 5]);
+
+                const levels = [
+                    { temp: 60, label: '60ºC - Repouso', color: 'rgba(16, 185, 129, 0.7)' },
+                    { temp: 80, label: '80ºC - Carga Elevada', color: 'rgba(245, 158, 11, 0.7)' },
+                    { temp: 100, label: '100ºC - Shutdown de Emergência', color: 'rgba(239, 68, 68, 0.8)' }
+                ];
+
+                levels.forEach(lvl => {
+                    const y = getY(lvl.temp);
+                    ctx.strokeStyle = lvl.color;
+                    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+                    ctx.fillStyle = lvl.color;
+                    ctx.font = '11px Segoe UI, sans-serif';
+                    ctx.fillText(lvl.label, 10, y - 4);
+                });
+
+                ctx.setLineDash([]);
+            }
+
+            function render() {
+                let currentPower = 30;
+
+                if (isGaming) {
+                    loadChangeTimer++;
+                    if (loadChangeTimer > 12) {
+                        loadChangeTimer = 0;
+                        targetLoadTrend = 100 + Math.random() * 65; 
+                    }
+                    dynamicGameLoad += (targetLoadTrend - dynamicGameLoad) * 0.08;
+                    currentPower = dynamicGameLoad;
+                }
+
+                let currentFan = coolerBroken ? 0 : fanPercent;
+                let coolingPower = currentFan * 1.3;
+                let heatExcess = Math.max(0, currentPower - coolingPower);
+                
+                let targetTemp = 25 + (heatExcess * 0.52);
+
+                let prevTemp = currentTemp;
+                let noise = (Math.random() - 0.5) * 0.2;
+                
+                currentTemp += (targetTemp - currentTemp) * 0.025 + noise;
+                if (currentTemp < 22) currentTemp = 22;
+
+                let currentDeriv = currentTemp - prevTemp;
+
+                tempData.push(currentTemp);
+                tempData.shift();
+
+                derivData.push(currentDeriv);
+                derivData.shift();
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawBands(20, 120);
+
+                const w = canvas.width;
+                const h = canvas.height;
+                const step = w / (maxPoints - 1);
+
+                // Desenhar Curva T(t)
+                ctx.strokeStyle = '#f8fafc';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+
+                for (let i = 0; i < tempData.length; i++) {
+                    const x = i * step;
+                    const val = Math.max(20, Math.min(120, tempData[i]));
+                    const y = h - ((val - 20) / (120 - 20)) * h;
+
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+
+                // Ponto Atual e Seta
+                const lastX = (tempData.length - 1) * step;
+                const lastY = h - ((currentTemp - 20) / (120 - 20)) * h;
+
+                ctx.fillStyle = currentTemp > 100 ? '#ef4444' : (currentTemp > 80 ? '#f59e0b' : '#10b981');
+                ctx.beginPath();
+                ctx.arc(lastX, lastY, 7, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.font = '20px Segoe UI';
+                let arrowSymbol = "➡️";
+                if (currentDeriv > 0.10) arrowSymbol = "⬆️";
+                else if (currentDeriv < -0.10) arrowSymbol = "⬇️";
+                ctx.fillText(arrowSymbol, lastX - 25, lastY - 12);
+
+                // Dashboard
+                document.getElementById('tempVal').innerText = currentTemp.toFixed(1) + " ºC";
+                document.getElementById('derivVal').innerText = (currentDeriv >= 0 ? "+" : "") + currentDeriv.toFixed(2) + " ºC/s";
+
+                const arrowEl = document.getElementById('arrowIcon');
+                const signalTextEl = document.getElementById('signalText');
+
+                if (currentDeriv > 0.10) {
+                    arrowEl.innerText = "⬆️";
+                    signalTextEl.innerText = "T' > 0 (Crescente)";
+                    signalTextEl.style.color = "#f59e0b";
+                } else if (currentDeriv < -0.10) {
+                    arrowEl.innerText = "⬇️";
+                    signalTextEl.innerText = "T' < 0 (Decrescente)";
+                    signalTextEl.style.color = "#38bdf8";
+                } else {
+                    arrowEl.innerText = "➡️";
+                    signalTextEl.innerText = "T' ≈ 0 (Estável)";
+                    signalTextEl.style.color = "#10b981";
+                }
+
+                const statusEl = document.getElementById('statusVal');
+                if (coolerBroken) {
+                    statusEl.innerText = "🚨 BLOQUEADA!";
+                    statusEl.style.color = "#ef4444";
+                } else if (currentTemp >= 100) {
+                    statusEl.innerText = "⛔ SHUTDOWN!";
+                    statusEl.style.color = "#ef4444";
+                } else if (currentTemp >= 80) {
+                    statusEl.innerText = "⚠️ Throttling";
+                    statusEl.style.color = "#f59e0b";
+                } else if (currentTemp >= 60) {
+                    statusEl.innerText = "🔵 Jogo Dinâmico";
+                    statusEl.style.color = "#38bdf8";
+                } else {
+                    statusEl.innerText = "🟢 Repouso Normal";
+                    statusEl.style.color = "#10b981";
+                }
+            }
+
+            setInterval(render, 250);
+        });
+    </script>
+</body>
+</html>
