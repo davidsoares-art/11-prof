@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intuição da Derivada e Velocidade</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            gap: 12px;
+        }
+
+        h2 { font-size: 1.2rem; color: #38bdf8; text-align: center; }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            background: #1e293b;
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            width: 100%;
+            max-width: 720px;
+            justify-content: space-around;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            align-items: center;
+        }
+
+        label { font-size: 0.85rem; font-weight: 600; }
+        .label-sec { color: #60a5fa; }
+        .label-tan { color: #f43f5e; }
+
+        input[type=range] {
+            width: 180px;
+            accent-color: #38bdf8;
+            cursor: pointer;
+        }
+
+        .canvas-container {
+            position: relative;
+            background: #090d16;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            padding: 10px;
+            width: 100%;
+            max-width: 720px;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+
+        .legend-item { display: flex; align-items: center; gap: 6px; }
+        .box { width: 12px; height: 12px; border-radius: 2px; }
+    </style>
+</head>
+<body>
+
+    <h2>Intuição Geométrica: Velocidade Média vs. Instantânea</h2>
+
+    <div class="controls">
+        <div class="control-group">
+            <label class="label-sec">1. Velocidade Média (2 Pontos)</label>
+            <div style="display:flex; gap:8px;">
+                <span>t₁:</span> <input type="range" id="t1" min="0" max="10" step="0.1" value="2">
+                <span>t₂:</span> <input type="range" id="t2" min="0" max="10" step="0.1" value="5">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label class="label-tan">2. Velocidade Instantânea (1 Ponto)</label>
+            <div style="display:flex; gap:8px;">
+                <span>Ponto t:</span> <input type="range" id="tInst" min="0" max="10" step="0.1" value="3">
+            </div>
+        </div>
+    </div>
+
+    <div class="canvas-container">
+        <canvas id="mainCanvas" width="700" height="420"></canvas>
+    </div>
+
+    <div class="legend">
+        <div class="legend-item"><div class="box" style="background:#60a5fa;"></div> Velocidade Média (Declive do Triângulo Azul)</div>
+        <div class="legend-item"><div class="box" style="background:#f43f5e;"></div> Velocidade Instantânea (Declive Tangente / Altura no Gráfico de Baixo)</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const t1Input = document.getElementById('t1');
+        const t2Input = document.getElementById('t2');
+        const tInstInput = document.getElementById('tInst');
+
+        // Função de Posição s(t) com curvas e trecho reto entre t=5 e t=8
+        function s(t) {
+            if (t <= 5) {
+                return 2.5 + 3 * Math.sin(t * 0.7);
+            } else if (t <= 8) {
+                // Trecho reto
+                const s5 = 2.5 + 3 * Math.sin(5 * 0.7);
+                const ds5 = 3 * 0.7 * Math.cos(5 * 0.7);
+                return s5 + ds5 * (t - 5);
+            } else {
+                // Curva final
+                const s5 = 2.5 + 3 * Math.sin(5 * 0.7);
+                const ds5 = 3 * 0.7 * Math.cos(5 * 0.7);
+                const s8 = s5 + ds5 * 3;
+                return s8 + Math.sin((t - 8) * 0.8) * 1.5;
+            }
+        }
+
+        // Derivada Numérica (Velocidade Instantânea)
+        function v(t) {
+            const dt = 0.0001;
+            return (s(t + dt) - s(t - dt)) / (2 * dt);
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const w = canvas.width;
+            const padL = 50, padR = 20;
+            const graphW = w - padL - padR;
+
+            // Layout dos dois gráficos
+            const g1Top = 20, g1H = 180;
+            const g2Top = 230, g2H = 150;
+
+            const mapX = (t) => padL + (t / 10) * graphW;
+            const mapY1 = (val) => g1Top + g1H - ((val + 1) / 8) * g1H;
+            const mapY2 = (val) => g2Top + g2H / 2 - (val / 3.5) * (g2H / 2 - 10);
+
+            // Background & Grelha Alinhada
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 1;
+
+            for (let t = 0; t <= 10; t += 2) {
+                let x = mapX(t);
+                ctx.beginPath();
+                ctx.moveTo(x, g1Top); ctx.lineTo(x, g1Top + g1H);
+                ctx.moveTo(x, g2Top); ctx.lineTo(x, g2Top + g2H);
+                ctx.stroke();
+
+                ctx.fillStyle = '#64748b';
+                ctx.font = '10px sans-serif';
+                ctx.fillText(t + 's', x - 6, g2Top + g2H + 15);
+            }
+
+            // --- GRÁFICO 1: POSIÇÃO s(t) ---
+            ctx.fillStyle = '#38bdf8';
+            ctx.font = 'bold 12px sans-serif';
+            ctx.fillText("Posição s(t)", padL, g1Top - 5);
+
+            // Linha do gráfico s(t)
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            for (let px = 0; px <= graphW; px++) {
+                let t = (px / graphW) * 10;
+                let x = mapX(t);
+                let y = mapY1(s(t));
+                if (px === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            // Interações Reta Secante (Velocidade Média)
+            let t1 = parseFloat(t1Input.value);
+            let t2 = parseFloat(t2Input.value);
+            if (t1 !== t2) {
+                let x1 = mapX(t1), y1 = mapY1(s(t1));
+                let x2 = mapX(t2), y2 = mapY1(s(t2));
+
+                // Triângulo do Quociente Δs / Δt
+                ctx.fillStyle = 'rgba(96, 165, 250, 0.15)';
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y1);
+                ctx.lineTo(x2, y2);
+                ctx.closePath();
+                ctx.fill();
+
+                // Lados do Triângulo
+                ctx.strokeStyle = '#60a5fa';
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.moveTo(x1, y1); ctx.lineTo(x2, y1); // Horizontal Δt
+                ctx.moveTo(x2, y1); ctx.lineTo(x2, y2); // Vertical Δs
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                // Reta Secante Prolongada
+                let m = (s(t2) - s(t1)) / (t2 - t1);
+                ctx.strokeStyle = '#3b82f6';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(mapX(0), mapY1(s(t1) + m * (0 - t1)));
+                ctx.lineTo(mapX(10), mapY1(s(t1) + m * (10 - t1)));
+                ctx.stroke();
+
+                // Pontos
+                ctx.fillStyle = '#60a5fa';
+                ctx.beginPath(); ctx.arc(x1, y1, 5, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(x2, y2, 5, 0, Math.PI * 2); ctx.fill();
+            }
+
+            // Interações Reta Tangente (Velocidade Instantânea)
+            let tInst = parseFloat(tInstInput.value);
+            let xInst = mapX(tInst);
+            let yInst = mapY1(s(tInst));
+            let vInst = v(tInst);
+
+            // Tangente Reta
+            ctx.strokeStyle = '#f43f5e';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(mapX(tInst - 1.5), mapY1(s(tInst) - vInst * 1.5));
+            ctx.lineTo(mapX(tInst + 1.5), mapY1(s(tInst) + vInst * 1.5));
+            ctx.stroke();
+
+            // Ponto Instantâneo
+            ctx.fillStyle = '#f43f5e';
+            ctx.beginPath(); ctx.arc(xInst, yInst, 6, 0, Math.PI * 2); ctx.fill();
+
+            // Linha Vertical de Guia entre os dois gráficos
+            ctx.strokeStyle = 'rgba(244, 63, 94, 0.4)';
+            ctx.setLineDash([2, 2]);
+            ctx.beginPath();
+            ctx.moveTo(xInst, g1Top);
+            ctx.lineTo(xInst, g2Top + g2H);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // --- GRÁFICO 2: DERIVADA / VELOCIDADE s'(t) ---
+            ctx.fillStyle = '#38bdf8';
+            ctx.font = 'bold 12px sans-serif';
+            ctx.fillText("Velocidade Instantânea s'(t) [Derivada]", padL, g2Top - 5);
+
+            // Eixo Zero da Velocidade
+            ctx.strokeStyle = '#475569';
+            ctx.beginPath();
+            ctx.moveTo(padL, mapY2(0));
+            ctx.lineTo(w - padR, mapY2(0));
+            ctx.stroke();
+
+            // Curva da Derivada
+            ctx.strokeStyle = '#f43f5e';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (let px = 0; px <= graphW; px++) {
+                let t = (px / graphW) * 10;
+                let x = mapX(t);
+                let y = mapY2(v(t));
+                if (px === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            // Ponto correspondente na Derivada
+            let yDeriv = mapY2(vInst);
+            ctx.fillStyle = '#f43f5e';
+            ctx.beginPath(); ctx.arc(xInst, yDeriv, 6, 0, Math.PI * 2); ctx.fill();
+        }
+
+        [t1Input, t2Input, tInstInput].forEach(input => input.addEventListener('input', draw));
+        draw();
+    </script>
+</body>
+</html>
